@@ -1,0 +1,26 @@
+# Product-engineering environment. Everything runs via `uv run <script>` —
+# never system python. Bootstrap: `uv sync` (add `--extra fea` for analysis,
+# `--extra dev` for the live viewer).
+# If a build123d/OCP wheel is missing for the pinned python, lower the pin
+# (3.12 -> 3.11) and re-run `uv sync`.
+[project]
+name = "product"
+version = "0.1.0"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "build123d>=0.9",
+    "pypdf>=4",       # merging drawing sheets into printable PDFs
+]
+
+[project.optional-dependencies]
+# FEA stack: gmsh wheel bundles the full library (no system install needed);
+# ccx (CalculiX solver) is the only external binary — see Makefile `doctor`.
+# pygccx is NOT on PyPI — installed from git.
+fea = [
+    "gmsh",
+    "pygccx @ git+https://github.com/calculix/pygccx.git",
+    "pyvista",
+]
+dev = [
+    "ocp-vscode",
+]

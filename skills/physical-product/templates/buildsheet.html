@@ -1,0 +1,103 @@
+<title>{{NAZEV_VYROBKU}}</title>
+<!-- Výrobní list skeleton. Before composing: load the artifact-design skill.
+     Replace {{...}} slots; embed images as data URIs (JPEG q82 <=1200px for
+     photoreal, PNG for line art). Keep the drawing-stamp aesthetic. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root { --bg:#FAF8F3; --panel:#FFFEFB; --ink:#211D18; --muted:#6F6759;
+          --accent:#A34527; --hairline:#D9D2C4; --line:#211D18; --slot:#E9E2D4; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+      --bg:#191613; --panel:#211D19; --ink:#E9E2D4; --muted:#9A9083;
+      --accent:#D07850; --hairline:#3A342C; --line:#E9E2D4; --slot:#2A251F; } }
+  :root[data-theme="dark"] { --bg:#191613; --panel:#211D19; --ink:#E9E2D4;
+      --muted:#9A9083; --accent:#D07850; --hairline:#3A342C; --line:#E9E2D4;
+      --slot:#2A251F; }
+  body { background:var(--bg); color:var(--ink); margin:0;
+         font-family:"IBM Plex Sans",system-ui,sans-serif; line-height:1.55;
+         padding:2.5rem 1.25rem 4rem; }
+  .sheet { max-width:980px; margin:0 auto; display:flex; flex-direction:column; gap:2.5rem; }
+  h1,h2 { font-family:"Big Shoulders Display","Arial Narrow",sans-serif; margin:0; text-wrap:balance; }
+  section > h2 { font-size:1.9rem; text-transform:uppercase; letter-spacing:.03em; margin-bottom:1rem; }
+  section > h2::after { content:""; display:block; width:3.5rem; height:3px; background:var(--accent); margin-top:.35rem; }
+  .stamp { border:2px solid var(--line); background:var(--panel); }
+  .stamp-top { padding:1.1rem 1.4rem .9rem; border-bottom:1px solid var(--line);
+               display:flex; flex-wrap:wrap; align-items:baseline; gap:.5rem 1.5rem; }
+  .stamp-top h1 { font-size:clamp(2.6rem,7vw,4rem); }
+  .stamp-top p { margin:0; color:var(--muted); }
+  .stamp-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); }
+  .stamp-fields > div { padding:.6rem 1.4rem .7rem; border-right:1px solid var(--hairline); }
+  .stamp-fields dt { font-size:.68rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin:0 0 .1rem; }
+  .stamp-fields dd { margin:0; font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; }
+  figure { margin:0; background:var(--panel); border:1px solid var(--line);
+           padding:1rem 1rem .75rem; display:flex; flex-direction:column; gap:.5rem; }
+  figure img { max-width:100%; height:auto; display:block; }
+  figcaption { font-size:.85rem; color:var(--muted); border-top:1px solid var(--hairline); padding-top:.5rem; }
+  .figure-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:1.25rem; }
+  .table-wrap { overflow-x:auto; background:var(--panel); border:1px solid var(--line); }
+  table { border-collapse:collapse; width:100%; font-size:.9rem; }
+  caption { text-align:left; font-weight:600; padding:.75rem 1rem .25rem; }
+  th,td { text-align:left; padding:.5rem 1rem; border-top:1px solid var(--hairline); }
+  th { font-size:.7rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); }
+  td.num,td.size { font-family:"IBM Plex Mono",monospace; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  ol.steps { list-style:none; margin:0; padding:0; counter-reset:step; }
+  ol.steps li { counter-increment:step; display:flex; gap:1rem; padding:.8rem 0; border-top:1px solid var(--hairline); }
+  ol.steps li:first-child { border-top:none; }
+  ol.steps li::before { content:counter(step); font-family:"Big Shoulders Display",sans-serif;
+                        font-size:1.6rem; font-weight:700; color:var(--accent); min-width:2rem; }
+  .assumptions { border:1px dashed var(--accent); background:var(--panel); padding:1.25rem 1.5rem; }
+  .assumptions h2::after { display:none; }
+  code { font-family:"IBM Plex Mono",monospace; font-size:.85em; background:var(--slot); padding:.1em .35em; border-radius:3px; }
+  footer { border-top:2px solid var(--line); padding-top:1rem; color:var(--muted); font-size:.85rem; }
+  p.lede { max-width:65ch; margin:0 0 1.25rem; }
+</style>
+
+<div class="sheet">
+  <header class="stamp">
+    <div class="stamp-top"><h1>{{NAZEV_VYROBKU}}</h1><p>{{PODTITUL}} · v{{VERZE}}</p></div>
+    <dl class="stamp-fields">
+      <div><dt>Rozměry</dt><dd>{{ROZMERY}}</dd></div>
+      <div><dt>Materiál</dt><dd>{{MATERIAL}}</dd></div>
+      <div><dt>Hmotnost</dt><dd>{{HMOTNOST}}</dd></div>
+      <div><dt>Datum</dt><dd>{{DATUM}}</dd></div>
+    </dl>
+  </header>
+
+  <section><h2>Koncept</h2>
+    <p class="lede">{{KONCEPT_ODSTAVEC}}</p>
+    <figure><img src="{{HERO_DATA_URI}}" alt="{{HERO_ALT}}">
+      <figcaption><b>Vizualizace.</b> {{HERO_POPIS}}</figcaption></figure>
+  </section>
+
+  <section><h2>Výkresy</h2>
+    <p class="lede">Všechny kóty v milimetrech. Zdrojem pravdy je parametrický model.</p>
+    <div class="figure-grid"><!-- {{VYKRESY_FIGURES}} --></div>
+  </section>
+
+  <section><h2>Kusovník</h2>
+    <div class="table-wrap"><table>
+      <caption>{{KUSOVNIK_MATERIAL_CAPTION}}</caption>
+      <thead><tr><th>Poz.</th><th>Díl</th><th>Rozměr (mm)</th><th>Ks</th><th>Hmotnost</th><th>Pozn.</th></tr></thead>
+      <tbody><!-- {{KUSOVNIK_ROWS}} --></tbody>
+    </table></div>
+  </section>
+
+  <section><h2>Postup montáže</h2>
+    <ol class="steps"><!-- {{MONTAZ_STEPS}} --></ol>
+  </section>
+
+  <section><h2>Finalizace povrchu</h2>
+    <ol class="steps"><!-- {{FINALIZACE_STEPS}} --></ol>
+  </section>
+
+  <section><h2>Analýza</h2>
+    <!-- analytic estimates table, FEA/modal results if run -->
+    <!-- {{ANALYZA}} -->
+  </section>
+
+  <section class="assumptions"><h2>Předpoklady a nejistoty</h2>
+    <ul><!-- {{PREDPOKLADY_ITEMS}} — every assumption + parameter name that changes it --></ul>
+  </section>
+
+  <footer>Zdroj: <code>model.py</code> · výkresy: <code>make drawings</code> ·
+    vizualizace: <code>make viz</code> · kusovník: <code>make bom</code></footer>
+</div>

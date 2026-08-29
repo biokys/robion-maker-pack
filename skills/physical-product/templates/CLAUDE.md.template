@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+{{ONE_LINE_PRODUCT_DESCRIPTION}}. Built with the `physical-product` skill:
+parametric build123d model, dimensioned drawings, Blender renders, BOM, analysis.
+This is a product-engineering project, not a software project — no tests or
+linters; deliverables are drawings, renders, the BOM and the Czech build sheet.
+All dimensions are millimetres. Design decisions and the human-readable
+kusovník live in `README.md` (Czech — keep it Czech).
+
+## Commands
+
+```sh
+uv sync                 # once; add --extra fea for analysis
+make parts              # STEP+STL per part into out/parts/
+make drawings           # dimensioned SVGs (+ PNG via the pattern rule)
+make viz                # Blender renders (log-grepped for crashes)
+make bom                # kusovník into out/bom.md
+make fea                # analysis (degrades to analytic-only without ccx)
+make doctor             # tool availability
+```
+
+Machine paths (this Mac): Chrome/OpenSCAD/KiCad as app bundles — see Makefile
+variables; blender is on PATH.
+
+## Architecture
+
+- `model.py` — parameters (single source of truth) → derived values + asserts →
+  `PARTS` registry (builder + material) → per-part exports + BOM. Never hardcode
+  a dimension inside a builder.
+- `drawings.py` — first-angle dimensioned views from `model.PARTS`.
+- `blender_viz.py` — headless Cycles; per-part materials; bbox-driven scene.
+- `fea.py` — analytic gate, then gmsh+pygccx+CalculiX.
+- Verify visuals by rendering PNG and Reading it; Blender exit code is
+  meaningless (Makefile greps the log).
+
+## Gotchas learned here
+
+<!-- append project-specific tool/geometry gotchas as they are discovered -->
