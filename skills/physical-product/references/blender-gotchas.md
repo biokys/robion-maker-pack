@@ -59,6 +59,12 @@ The `templates/blender_viz.py` encodes these; keep them when modifying it.
   from the union bounding box of imported meshes — never hardcode scene centers.
 - Three-point rig (key/fill/rim area lights) + world at low strength; a rim light
   behind an opening makes through-holes/tunnels read instantly.
+- **Exploded views** (template `EXPLODE` + a shot's `explode` factor): parts
+  translate along per-part directions for that render only and snap back after
+  (locations restored per shot — later shots are always assembled). Camera,
+  lights and floor stay derived from the ASSEMBLED bbox: give the exploded shot
+  a larger `distance`, and floating parts above the floor are normal for
+  exploded views — don't "fix" them.
 - Textures: Poly Haven CC0, URL pattern
   `https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/<asset>/<asset>_<map>_2k.jpg`
   — downloaded by a Makefile pattern rule into `assets/`, never fetched by hand.

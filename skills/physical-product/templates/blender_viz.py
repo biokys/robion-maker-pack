@@ -39,7 +39,14 @@ BEVEL_MM = 0.0
 #            oak_sparovka(seed, lamella_mm, texture_dir)
 # SHOTS: name -> dict(direction=unit-ish vector from bbox center,
 #                    distance=multiple of bbox max size, lens=mm,
-#                    target_offset=fraction of bbox size added to target)
+#                    target_offset=fraction of bbox size added to target,
+#                    explode=factor of bbox size — exploded-view shot)
+# EXPLODE: stl filename -> unit direction (world) the part flies apart in;
+#          shots with an "explode" factor move each part by
+#          direction * factor * bbox_size for that render only, e.g.
+#          EXPLODE = {"lid.stl": (0, 0, 1), "base.stl": (0, 0, -0.3)} and
+#          SHOTS["viz_exploded"] = {..., "distance": 3.0, "explode": 0.5}.
+#          Assembled-position parts (not listed) stay put.
 # --------------------------------------------------------------------------
 TEXTURE_DIR = Path(__file__).resolve().parent / "assets" / "oak_veneer_01"
 
@@ -52,6 +59,8 @@ SHOTS = {
     "viz_hero": {"direction": (-0.7, -1.0, 0.55), "distance": 2.2, "lens": 50},
     "viz_detail": {"direction": (0.3, -1.0, 0.25), "distance": 1.4, "lens": 60},
 }
+
+EXPLODE: dict[str, tuple[float, float, float]] = {}
 
 
 # --------------------------------------------------------------------------
@@ -306,14 +315,14 @@ def setup_scene():
     scene = bpy.context.scene
 
     parts_dir = out_dir() / "parts"
-    imported = []
+    imported: dict[str, bpy.types.Object] = {}
     for stl_name, material in PARTS().items():
         obj = import_stl(parts_dir / stl_name)
         obj.data.materials.append(material)
-        imported.append(obj)
+        imported[stl_name] = obj
 
     bpy.context.view_layer.update()
-    lo, hi = scene_bbox(imported)
+    lo, hi = scene_bbox(imported.values())
     center = (lo + hi) / 2
     size = max((hi - lo).length, 1e-3)
 
@@ -349,14 +358,22 @@ def setup_scene():
         scene.cycles.device = "GPU"
     except Exception as exc:
         print(f"GPU setup failed, CPU fallback: {exc}")
-    return scene, center, size
+    return scene, center, size, imported
 
 
-def render_shots(scene, center, size):
+def render_shots(scene, center, size, objects):
     camera = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
     bpy.context.collection.objects.link(camera)
     scene.camera = camera
     for name, shot in SHOTS.items():
+        # exploded-view shot: move parts along EXPLODE directions, render,
+        # restore — later shots always start from the assembled positions
+        factor = shot.get("explode", 0.0)
+        original = {stl: obj.location.copy() for stl, obj in objects.items()}
+        if factor:
+            for stl, obj in objects.items():
+                obj.location += (Vector(EXPLODE.get(stl, (0, 0, 0)))
+                                 * factor * size)
         direction = Vector(shot["direction"]).normalized()
         camera.location = center + direction * size * shot["distance"]
         camera.data.lens = shot["lens"]
@@ -365,8 +382,11 @@ def render_shots(scene, center, size):
         scene.render.filepath = str(out_dir() / f"{name}.png")
         bpy.ops.render.render(write_still=True)
         print(f"rendered {scene.render.filepath}")
+        if factor:
+            for stl, obj in objects.items():
+                obj.location = original[stl]
 
 
 if __name__ == "__main__":
-    scene, center, size = setup_scene()
-    render_shots(scene, center, size)
+    scene, center, size, objects = setup_scene()
+    render_shots(scene, center, size, objects)
