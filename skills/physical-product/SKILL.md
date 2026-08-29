@@ -16,15 +16,22 @@ comments, commit messages and file names in English.
 
 ## 1 · Intake
 
-Ask (batched, in Czech) before modeling — but never stall: if the user can't answer,
-assume a sensible value and record it under "Předpoklady":
+**Workshop profile first:** read `~/.robion/workshop.yaml` before asking anything —
+it answers machines, tools and materials once for all projects. Missing file ⇒ run
+the one-time workshop interview and create it:
+[references/workshop-profile.md](references/workshop-profile.md).
+
+Then ask what the profile can't know (batched, in the user's language) — but never
+stall: if the user can't answer, assume a sensible value and record it under
+"Předpoklady":
 
 - Function and load case: what does it carry/do, worst realistic load, static or
   dynamic (vibration source nearby?).
 - Dimensions: which are fixed (space constraints, stock material on hand) vs derived.
-- Materials available and preferred (stock sizes they already have matter most).
-- Manufacturing reality: what can the user actually do — svařování? CNC? 3D tisk?
-  jen ruční nářadí? Who makes the metal parts?
+- Materials for THIS project beyond what the profile lists (stock on hand matters
+  most).
+- Manufacturing reality beyond the profile: who makes the parts the user can't —
+  and anything borrowed or one-off for this build.
 - Aesthetic reference (photo) if looks matter.
 - Electronics inside? → PCB stage applies.
 - Depth wanted: quick concept vs full package with FEA.

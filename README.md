@@ -52,4 +52,8 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
 
 - Deliverables are written in the user's language; the current templates
   (title blocks, build sheet, BOM fields) show Czech.
+- The skills remember your workshop (machines, tools, materials on hand) in
+  `~/.robion/workshop.yaml` — created once by a short interview, read at every
+  project intake, yours to hand-edit.
 - Releases are git tags; the marketplace pins the plugin version per release.
+- MIT licensed.

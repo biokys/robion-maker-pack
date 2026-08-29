@@ -72,5 +72,9 @@ Rules that hold across every stage:
 
 - `bom.json` — a structured BOM (items, material, mass, price, supplier,
   bought-state) replacing `bom.md` as the machine-readable artifact.
-- The workshop profile — a persistent description of the user's machines and
-  materials that playbooks branch on.
+- The workshop profile — `~/.robion/workshop.yaml`, a persistent description of
+  the user's machines, tools and materials. A **content-level convention since
+  pack 0.3.0** (schema and rules:
+  `skills/physical-product/references/workshop-profile.md`); contract v2 will
+  make it app-binding (the app may read it — e.g. the printer bed for the
+  viewport outline).
