@@ -53,6 +53,11 @@ OUT = Path(__file__).parent / "out" / "drawings"
 
 DATE: str | None = None          # None -> today; set "2026-08-24" to freeze
 PROJECT = "EDIT-ME PROJECT"      # uppercase project line in the title block
+# ISO 3098 technical lettering (osifont, GPL+font-exception, Czech diacritics
+# and the ⌀ glyph included) — fetched by `make assets/osifont/osifont.ttf`;
+# missing file falls back to OS Arial italic (then write Ø, not ⌀, in labels).
+_OSIFONT = Path(__file__).parent / "assets" / "osifont" / "osifont.ttf"
+FONT_PATH: str | None = str(_OSIFONT) if _OSIFONT.exists() else None
 PAPER_W, PAPER_H = 420.0, 297.0  # A3 landscape, paper mm
 MARGIN = 8.0                     # frame inset from paper edge
 TB_W, TB_H = 190.0, 36.0         # title block size
@@ -71,10 +76,11 @@ MAPPINGS: dict[str, Callable[[float, float, float], tuple[float, float]]] = {
     "left": lambda x, y, z: (-y, z),      # camera at -X
     "right": lambda x, y, z: (y, z),      # camera at +X
     "top": lambda x, y, z: (x, y),        # camera at +Z, up +Y
+    "bottom": lambda x, y, z: (-x, y),    # camera at -Z, up +Y
 }
 CAMERA = {"front": ((0, -1, 0), (0, 0, 1)), "back": ((0, 1, 0), (0, 0, 1)),
           "left": ((-1, 0, 0), (0, 0, 1)), "right": ((1, 0, 0), (0, 0, 1)),
-          "top": ((0, 0, 1), (0, 1, 0))}
+          "top": ((0, 0, 1), (0, 1, 0)), "bottom": ((0, 0, -1), (0, 1, 0))}
 
 
 class View:
@@ -105,14 +111,21 @@ class View:
         a = self._edges_bbox(self.visible)
         sx = (a[1] - a[0]) / (e1 - e0)
         sy = (a[3] - a[2]) / (f1 - f0)
-        tx, ty = a[0] - e0 * sx + shift[0], a[2] - f0 * sy + shift[1]
+        tx, ty = a[0] - e0 * sx, a[2] - f0 * sy
         assert 0.9 < sx < 1.1 and 0.9 < sy < 1.1, \
             f"projection scale off: {sx:.3f}/{sy:.3f}"
-        if shift != (0.0, 0.0):
-            self.visible = [e.translate((*shift, 0)) for e in self.visible]
-            self.hidden = [e.translate((*shift, 0)) for e in self.hidden]
         self._m = mapping
         self._s = (sx, sy, tx, ty)
+        self.translate(*shift)
+
+    def translate(self, dx: float, dy: float) -> None:
+        """Move this view on the sheet; pt() follows. NOTE: translate BEFORE
+        Sheet.add_view — layers keep references to the pre-move edges."""
+        if dx or dy:
+            self.visible = [e.translate((dx, dy, 0)) for e in self.visible]
+            self.hidden = [e.translate((dx, dy, 0)) for e in self.hidden]
+            sx, sy, tx, ty = self._s
+            self._s = (sx, sy, tx + dx, ty + dy)
 
     @staticmethod
     def _edges_bbox(edges) -> tuple[float, float, float, float]:
@@ -131,7 +144,8 @@ class View:
 # --------------------------------------------------------------------------
 def _text(txt: str, size: float, at: tuple[float, float],
           align=(Align.MIN, Align.MIN)):
-    return Pos(*at, 0) * Text(txt, font_size=size, align=align)
+    kwargs = {"font_path": FONT_PATH} if FONT_PATH else {}
+    return Pos(*at, 0) * Text(txt, font_size=size, align=align, **kwargs)
 
 
 def _parse_scale(scale) -> tuple[float, str]:
@@ -174,11 +188,17 @@ class Sheet:
         # P = model mm per paper mm; scale accepts 5, 0.5, "1:5" or "2:1"
         self.P, self.scale_label = _parse_scale(scale)
         if _DRAFTING:
-            self.draft = draft_preset(
-                font_size=3.5 * self.P, decimal_precision=0,
-                font_path=None, font="Arial", font_style=FontStyle.ITALIC,
-                arrow_length=2.5 * self.P, pad_around_text=1.2 * self.P,
-                line_width=0.18 * self.P, extension_gap=1.0 * self.P)
+            style = dict(font_size=3.5 * self.P, decimal_precision=0,
+                         arrow_length=2.5 * self.P,
+                         pad_around_text=1.2 * self.P,
+                         line_width=0.18 * self.P,
+                         extension_gap=1.0 * self.P)
+            if FONT_PATH:   # ISO 3098 lettering (osifont) — upright
+                self.draft = draft_preset(font_path=FONT_PATH, **style)
+            else:           # OS fallback: Arial italic (no ⌀ glyph -> Ø)
+                self.draft = draft_preset(font_path=None, font="Arial",
+                                          font_style=FontStyle.ITALIC,
+                                          **style)
         else:
             try:
                 self.draft = Draft(font_size=3.5 * self.P, font="Arial",
@@ -235,7 +255,7 @@ class Sheet:
         else:
             text = f"{count}x " if count else ""
             self.layers["dims"].append(_text(
-                f"{text}D{d_model:g}{' PRŮCH.' if through else ''}"
+                f"{text}Ø{d_model:g}{' PRŮCH.' if through else ''}"
                 f"{' ' + suffix if suffix else ''}",
                 3.5 * self.P, elbow))
 
@@ -355,11 +375,46 @@ class Sheet:
         numbers match model.bom() by construction."""
         self._parts_rows = list(rows)
 
+    def place_view(self, view: View, side: str, of: View,
+                   gap_paper: float = 12.0) -> None:
+        """Translate `view` so it sits on `side` of `of` ("below"/"above"/
+        "left"/"right"), aligned by the ACTUAL projected edge bboxes.
+
+        Never place views from model-coordinate spans: project_to_viewport
+        centers edges on the part, so a part modeled at e.g. z=1100 lands
+        nowhere near model coordinates. Call BEFORE add_view.
+        """
+        g = gap_paper * self.P
+        b = View._edges_bbox(of.visible)
+        s = View._edges_bbox(view.visible)
+        if side == "below":
+            view.translate(b[0] - s[0], b[2] - g - s[3])
+        elif side == "above":
+            view.translate(b[0] - s[0], b[3] + g - s[2])
+        elif side == "left":
+            view.translate(b[0] - g - s[1], b[2] - s[2])
+        elif side == "right":
+            view.translate(b[1] + g - s[0], b[2] - s[2])
+        else:
+            raise ValueError(f"unknown side {side!r}")
+
     def add_views(self, part: Part, kinds: list[str],
                   gap_paper: float = 12.0) -> dict[str, View]:
-        """Create and add views laid out in first angle; {kind: View}."""
-        shifts = layout_views(part, kinds, gap_paper, self.P)
-        views = {k: View(part, k, shift=shifts[k]) for k in kinds}
+        """Create and add views laid out in first angle (top BELOW front,
+        right view on the LEFT, left/back on the RIGHT); {kind: View}."""
+        views = {k: View(part, k) for k in kinds}
+        base = views[kinds[0]]
+        anchor_right = base
+        for kind in kinds[1:]:
+            v = views[kind]
+            if kind in ("top", "bottom"):
+                self.place_view(v, "below" if kind == "top" else "above",
+                                base, gap_paper)
+            elif kind == "right":
+                self.place_view(v, "left", base, gap_paper)
+            else:                       # "left", "back"
+                self.place_view(v, "right", anchor_right, gap_paper)
+                anchor_right = v
         for v in views.values():
             self.add_view(v)
         return views
@@ -463,15 +518,22 @@ class Sheet:
         cy = (min(b.min.Y for b in boxes) + max(b.max.Y for b in boxes)) / 2
         cw = max(b.max.X for b in boxes) - min(b.min.X for b in boxes)
         ch = max(b.max.Y for b in boxes) - min(b.min.Y for b in boxes)
+        # bottom strip reserved for the title block AND the parts table (the
+        # table grows upward from it — without this a tall assembly always
+        # collides with the kusovník)
+        reserved = TB_H + (len(self._parts_rows) + 1) * 7.0 \
+            if self._parts_rows else TB_H
         if cw > (PAPER_W - 2 * MARGIN) * P or \
-                ch > (PAPER_H - 2 * MARGIN - TB_H) * P:
+                ch > (PAPER_H - 2 * MARGIN - reserved) * P:
             print(f"  WARNING {self.name}: content exceeds A3 at "
-                  f"{self.scale_label}")
-        # frame centered on content; graphics area sits above the title
-        # strip (do NOT add TB_H again to fy0 — classic off-by-strip bug)
+                  f"{self.scale_label}"
+                  + (" (parts table shrinks the graphics area — larger "
+                     "scale_den or fewer rows)" if self._parts_rows else ""))
+        # frame centered on content; graphics area sits above the reserved
+        # strip (do NOT add it again to fy0 — classic off-by-strip bug)
         fx0 = cx - (PAPER_W / 2 - MARGIN) * P
         fx1 = cx + (PAPER_W / 2 - MARGIN) * P
-        fy0 = cy - (PAPER_H - 2 * MARGIN + TB_H) / 2 * P
+        fy0 = cy - (PAPER_H - 2 * MARGIN + reserved) / 2 * P
         fy1 = fy0 + (PAPER_H - 2 * MARGIN) * P
         self.layers["frame"] += [
             Edge.make_line((fx0, fy0, 0), (fx1, fy0, 0)),
@@ -587,44 +649,14 @@ def _update_manifest(sheet: Sheet) -> None:
 
 
 # --------------------------------------------------------------------------
-# View layout + kusovník rows
+# Kusovník rows for assembly sheets
 # --------------------------------------------------------------------------
-def layout_views(part: Part, kinds: list[str], gap_paper: float = 12.0,
-                 P: float = 1.0) -> dict[str, tuple[float, float]]:
-    """First-angle shifts around the primary view kinds[0]: "top" BELOW,
-    "right" view on the LEFT, "left" on the RIGHT, "back" beyond it.
-    Returns {kind: (dx, dy)} for View(part, kind, shift=...).
-    """
-    bb = part.bounding_box()
-    corners = [(x, y, z) for x in (bb.min.X, bb.max.X)
-               for y in (bb.min.Y, bb.max.Y) for z in (bb.min.Z, bb.max.Z)]
-    span = {}
-    for kind in kinds:
-        us, vs = zip(*(MAPPINGS[kind](*c) for c in corners))
-        span[kind] = (min(us), max(us), min(vs), max(vs))
-    g = gap_paper * P
-    b = span[kinds[0]]
-    shifts = {kinds[0]: (0.0, 0.0)}
-    cursor_right = b[1]
-    for kind in kinds[1:]:
-        s = span[kind]
-        if kind == "top":
-            shifts[kind] = (b[0] - s[0], b[2] - g - s[3])
-        elif kind == "right":
-            shifts[kind] = (b[0] - g - s[1], b[2] - s[2])
-        elif kind in ("left", "back"):
-            shifts[kind] = (cursor_right + g - s[0], b[2] - s[2])
-            cursor_right += g + (s[1] - s[0])
-        else:
-            shifts[kind] = (0.0, 0.0)
-    return shifts
-
-
 def parts_rows() -> list[tuple[int, str, int, str]]:
-    """Kusovník rows (poz, název, ks, materiál) in model.bom() order —
-    balloon position numbers match the BOM by construction."""
-    return [(i, spec.czech_name, spec.count, spec.material.czech_name)
-            for i, spec in enumerate(model.PARTS.values(), start=1)]
+    """Kusovník rows (poz, název, ks, materiál) from model.bom_rows() —
+    part-family groups collapsed, balloon numbers match the BOM by
+    construction."""
+    return [(i, name, count, material)
+            for i, name, material, count, _mass, _note in model.bom_rows()]
 
 
 # --------------------------------------------------------------------------
@@ -720,7 +752,8 @@ def sheet_bracket() -> None:
     s.section_indicator(vt, "Y", y_cut, "A", direction=-1)
     kept = part - Pos(-500, y_cut, -500) * Box(1000, 1000, 1000,
                                                align=(Align.MIN,) * 3)
-    vsec = View(kept, "front", shift=(model.bracket_leg_a + 45, 0))
+    vsec = View(kept, "front")
+    s.place_view(vsec, "right", v, gap_paper=40.0)  # before add_view!
     s.add_view(vsec)
     for face in section_faces(part, "Y", y_cut):
         s.hatch(sheet_polygon(face, vsec), "metal")

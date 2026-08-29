@@ -13,28 +13,32 @@ ISO-E" and the project line. Use a **true scale** per sheet — 1:10 large
 panels, 1:5 details, 1:1 small parts — chosen so content fits the A3
 graphics area (the framework warns when it doesn't).
 
-Dimension style: ISO 3098-like **italic** font, thin lines in technical
-blue with **filled** glyphs so dims read apart from the heavy black
-outlines. Annotations come from **`build123d-drafting-helpers`** (pinned
-in pyproject) via `draft_preset(font_size=3.5*P, font_path=None,
-font="Arial", font_style=FontStyle.ITALIC, arrow_length=2.5*P,
-pad_around_text=1.2*P, line_width=0.18*P, extension_gap=1.0*P)` —
-**every size passed to the helpers is absolute model units, so multiply
-by P**; `font_path=None` keeps the OS-Arial italic look (the bundled
-Liberation Sans is regular-only; `Note`/`HoleCallout` text renders
-upright — package limitation, acceptable per ISO). Helper ink is **filled
-faces** (glyphs, arrowheads, thin-rect lines): `fill_color` on the layer
-is mandatory and layer `line_weight` stays hairline (0.1) or glyphs
-fatten. Layer weights: frame/visible 0.7, hidden 0.35 gray ISO_DASH, dims
-0.1 blue filled, marks (centerlines, section traces, balloons) 0.1
-near-black filled, title text filled near-black.
+Lettering: **osifont** — the open ISO 3098 technical font (upright, Czech
+diacritics AND the ⌀ glyph) — fetched once per project by `make font`;
+`drawings.py` picks it up automatically (`FONT_PATH`). Without it the
+sheets fall back to OS Arial italic, which **lacks ⌀ (U+2300)** — then
+write **Ø (U+00D8)** in every hand-written label/note (the helpers'
+`HoleCallout` draws its symbol geometrically, so it is safe either way).
+Annotations come from **`build123d-drafting-helpers`** (pinned in
+pyproject) via `draft_preset(font_size=3.5*P, arrow_length=2.5*P,
+pad_around_text=1.2*P, line_width=0.18*P, extension_gap=1.0*P,
+font_path=FONT_PATH)` — **every size passed to the helpers is absolute
+model units, so multiply by P**. Dims are thin lines in technical blue
+with **filled** glyphs so they read apart from the heavy black outlines;
+helper ink is **filled faces** (glyphs, arrowheads, thin-rect lines):
+`fill_color` on the layer is mandatory and layer `line_weight` stays
+hairline (0.1) or glyphs fatten. Layer weights: frame/visible 0.7, hidden
+0.35 gray ISO_DASH, dims 0.1 blue filled, marks (centerlines, section
+traces, balloons) 0.1 near-black filled, title text filled near-black.
 
 ## View placement — first-angle (ISO-E, European)
 
 - Front view (nárys) is the master view: pick the face that shows the most
   features; draw panels viewed from the side the fabricator claddes first.
 - **Top view goes BELOW the front view** (first-angle!), side view to the
-  right. One sheet communicates one part; per-part sheets.
+  right; a **bottom view goes ABOVE** (kind "bottom" exists — for parts
+  machined from below, often clearer than a section). One sheet
+  communicates one part; per-part sheets.
 - A hole is a **circle only in the view along its axis**; side-on it is
   two dashed hidden lines. Hidden edges dashed; visible solid, heavier.
 - Dimension what the fabricator measures: outer envelope, feature
@@ -70,16 +74,24 @@ near-black filled, title text filled near-black.
   leader note (use for "ŘEZ A–A" titles). Layer routing:
   Dimension/Leader/HoleCallout → `dims` (blue), Centerline/CenterMark/
   section traces/balloons → `marks` (black), Note → `text`.
-- **`add_views(part, kinds, gap_paper)` / `layout_views(...)`** compute
-  first-angle placement automatically (top BELOW front, right view on the
-  LEFT, left on the RIGHT, back beyond) from the part bbox — no manual
-  `shift=` tuples; `View(part, kind, shift=)` still works for special
-  placements (e.g. a section view).
+- **`add_views(part, kinds, gap_paper)`** computes first-angle placement
+  automatically (top BELOW front, right view on the LEFT, left on the
+  RIGHT, back beyond); extra views (sections, details) go through
+  **`place_view(view, side, of, gap_paper)`**. Both place from the
+  **ACTUAL projected edge bboxes** — never compute placement from
+  model-coordinate spans: `project_to_viewport` centers edges on the
+  part, so a part modeled at e.g. z = 1100 mm lands nowhere near its
+  model coordinates and hand-derived shifts throw views off the sheet.
+  `place_view`/`View.translate` must run BEFORE `add_view` (layers keep
+  references to the pre-move edges).
 - **Assembly sheets:** `balloon(n, at, tip=)` draws an ISO 6433 position
   balloon with a dotted leader; `parts_table(parts_rows())` renders the
   kusovník grid above the title block (header at the bottom, positions
-  ascending). `parts_rows()` enumerates `model.PARTS` in `bom()` order,
-  so balloon numbers match the kusovník by construction.
+  ascending). `parts_rows()` comes from `model.bom_rows()` (part-family
+  groups collapsed), so balloon numbers match the kusovník by
+  construction. The frame centering **reserves the table height** — tall
+  content shrinks the graphics area, and the A3-overflow warning says so:
+  respond with a larger scale_den or fewer rows, don't nudge the table.
 - **Missing helpers degrade, not crash:** without `build123d_drafting`
   installed, dims fall back to `ExtensionLine`, callouts to plain text,
   center marks are skipped — each with a printed WARNING. `make doctor`

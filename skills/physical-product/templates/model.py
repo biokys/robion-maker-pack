@@ -3,9 +3,14 @@
 Conventions (do not break):
 - All dimensions in millimetres. Parameters live in the PARAMETERS block only;
   everything else is derived. Asserts guard impossible geometry.
+- Every builder returns its part in ASSEMBLY coordinates (where the part sits
+  in the finished product) — viz, drawings sections and fit checks all rely
+  on it; never build parts around their own origin "to be re-placed later".
 - One builder function per part, registered in PARTS with a material record.
   Downstream stages (drawings, Blender viz, FEA) consume per-part exports —
-  never one merged body.
+  never one merged body. Part families (e.g. 25 unique lamellas) share a
+  PartSpec `group` — the BOM aggregates them into one row; VIZ_COMPOUNDS can
+  merge many parts into one STL for rendering.
 - BOM masses come from exact Shape.volume — no hand-typed weights.
 - Robion's live customizer overrides parameters via ROBION_PARAMS (applied
   right after the PARAMETERS block, so derived values and asserts see them).
@@ -129,11 +134,21 @@ class PartSpec:
     czech_name: str
     count: int = 1
     note: str = ""
+    # Part family: specs sharing a group collapse into ONE kusovnik row
+    # (counts and masses summed, czech_name/material from the first member) —
+    # e.g. group="lamela" on 25 unique lamella specs.
+    group: str | None = None
 
 PARTS: dict[str, PartSpec] = {
     "bracket": PartSpec(build_bracket, STEEL, "úhelník", count=2,
                         note=f"plech {thickness:g} mm, otvory Ø{hole_diameter:g}"),
 }
+
+# Viz-only merged exports: <stl name> -> [PARTS keys]. `export` additionally
+# writes out/parts/<name>.stl fusing the listed parts — blender_viz.py then
+# maps ONE material to the whole family (e.g. a 58-ring stack) instead of
+# needing an entry per part. Empty = no merged exports.
+VIZ_COMPOUNDS: dict[str, list[str]] = {}
 
 
 # --------------------------------------------------------------------------
@@ -146,18 +161,46 @@ def export_parts() -> None:
         export_step(part, str(OUT_DIR / f"{name}.step"))
         export_stl(part, str(OUT_DIR / f"{name}.stl"))
         print(f"exported {name}: {part.volume * spec.material.density:.3f} kg")
+    for name, keys in VIZ_COMPOUNDS.items():
+        merged = Compound(children=[PARTS[k].builder() for k in keys])
+        export_stl(merged, str(OUT_DIR / f"{name}.stl"))
+        print(f"exported viz compound {name}: {len(keys)} parts")
+
+
+def bom_rows() -> list[tuple[int, str, str, int, float, str]]:
+    """Kusovnik rows (poz, name, material, count, mass_kg_per_piece, note),
+    with PartSpec groups collapsed into single rows (counts summed, mass =
+    total group mass / total count). Shared by bom() and the drawings'
+    parts_rows() so balloon numbers always match."""
+    order: list[str] = []                      # group name or part key
+    members: dict[str, list[PartSpec]] = {}
+    for key, spec in PARTS.items():
+        bucket = spec.group or key
+        if bucket not in members:
+            order.append(bucket)
+            members[bucket] = []
+        members[bucket].append(spec)
+    rows = []
+    for i, bucket in enumerate(order, start=1):
+        specs = members[bucket]
+        first = specs[0]
+        count = sum(s.count for s in specs)
+        mass = sum(s.builder().volume * s.material.density * s.count
+                   for s in specs) / count
+        name = first.group or first.czech_name
+        rows.append((i, name, first.material.czech_name, count, mass,
+                     first.note))
+    return rows
 
 
 def bom() -> str:
     rows = ["| Poz. | Díl | Materiál | Ks | Hmotnost | Pozn. |",
             "|---|---|---|---|---|---|"]
     total = 0.0
-    for i, (name, spec) in enumerate(PARTS.items(), start=1):
-        mass = spec.builder().volume * spec.material.density
-        total += mass * spec.count
-        rows.append(
-            f"| {i} | {spec.czech_name} | {spec.material.czech_name} "
-            f"| {spec.count} | {mass:.2f} kg/ks | {spec.note} |")
+    for i, name, material, count, mass, note in bom_rows():
+        total += mass * count
+        rows.append(f"| {i} | {name} | {material} "
+                    f"| {count} | {mass:.2f} kg/ks | {note} |")
     rows.append(f"\nCelková hmotnost dílů: **{total:.2f} kg** "
                 "(bez spojovacího materiálu).")
     table = "\n".join(rows)

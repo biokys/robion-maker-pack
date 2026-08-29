@@ -72,7 +72,12 @@ Verify by Reading pages of the PDF (page count, A4+A3 sizes, light theme).
 ## Page mechanics
 
 - Images inlined as data URIs (JPEG ~q82 for photoreal, PNG for line art);
-  downscale renders to ≤1200 px before embedding.
+  downscale renders to ≤1200 px before embedding — use the shipped helper:
+  `from datauri import data_uri` in the generator, or
+  `uv run datauri.py <img> [--png]` (portable Pillow, no sips/ImageMagick).
+- Optional skeleton slots: `{{EXTRA_FIGURES}}` (more renders in Koncept)
+  and `{{FASTENERS_TABLE}}` (spojovací materiál rows in Kusovník) — they
+  collapse via CSS until filled, so leaving them empty is fine.
 - Theme-aware tokens (light+dark) per artifact rules; body background explicit.
 - Title = product name (short, distinctive); keep favicon stable across updates.
 - README.md in the repo mirrors the same content in Markdown (tables included) so

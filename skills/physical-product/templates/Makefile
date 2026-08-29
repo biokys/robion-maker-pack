@@ -71,11 +71,21 @@ assets/%.jpg:
 	curl -fsSL -o $@ \
 		https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/$(notdir $(patsubst %/,%,$(dir $@)))/$(notdir $@)
 
+# ISO 3098 technical lettering for drawings (GPL + font exception).
+# drawings.py picks it up automatically when present; without it dims fall
+# back to Arial italic (then use Ø instead of ⌀ in labels).
+font: assets/osifont/osifont.ttf
+assets/osifont/osifont.ttf:
+	mkdir -p $(dir $@)
+	curl -fsSL -o $@ \
+		https://github.com/hikikomori82/osifont/raw/master/osifont.ttf
+
 doctor:
 	@echo "tool availability:"
 	@$(UV) --version >/dev/null 2>&1 && echo "  uv        OK" || echo "  uv        MISSING"
 	@$(UV) run python -c "import build123d,sys;print('  build123d OK', build123d.__version__)" 2>/dev/null || echo "  build123d MISSING (uv sync)"
 	@$(UV) run python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
+	@test -f assets/osifont/osifont.ttf && echo "  osifont   OK" || echo "  osifont   MISSING (make font; drawings fall back to Arial)"
 	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
 	@command -v ccx >/dev/null && echo "  ccx       OK" || echo "  ccx       MISSING (FEA -> analytic only)"
@@ -85,4 +95,4 @@ doctor:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: all parts bom drawings drawings-png drawings-pdf pdf viz fea doctor clean
+.PHONY: all parts bom drawings drawings-png drawings-pdf pdf viz fea font doctor clean

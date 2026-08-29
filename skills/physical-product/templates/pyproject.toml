@@ -12,6 +12,8 @@ dependencies = [
     # named-side dims, hole callouts, centerlines; alpha -> cap the minor
     "build123d-drafting-helpers>=0.14.2,<0.15",
     "pypdf>=4",       # merging drawing sheets into printable PDFs
+    "pillow>=10",     # datauri.py (build-sheet images); explicit, not
+                      # relying on it arriving transitively
 ]
 
 [project.optional-dependencies]

@@ -13,6 +13,7 @@ Run: uv run merge_pdfs.py [--komplet]
 
 import json
 import sys
+import tomllib
 from pathlib import Path
 
 from pypdf import PdfWriter
@@ -23,7 +24,14 @@ OUT = ROOT / "out" / "drawings"
 SHEET_ORDER: list[str] = [  # fallback only — used when manifest.json is
     "bracket",              # missing (e.g. hand-built sheets); normally
 ]                           # the manifest wins
-KOMPLET_NAME = "product_komplet.pdf"  # EDIT-ME
+KOMPLET_NAME: str | None = None  # None -> "<pyproject name>_komplet.pdf"
+
+
+def komplet_name() -> str:
+    if KOMPLET_NAME:
+        return KOMPLET_NAME
+    meta = tomllib.loads((ROOT / "pyproject.toml").read_text())
+    return f"{meta['project']['name']}_komplet.pdf"
 
 
 def sheet_stems() -> list[str]:
@@ -50,5 +58,5 @@ if __name__ == "__main__":
     sheets = [OUT / f"{stem}.pdf" for stem in sheet_stems()]
     merge(OUT / "vykresy_A3.pdf", sheets)
     if "--komplet" in sys.argv:
-        merge(ROOT / "out" / KOMPLET_NAME,
+        merge(ROOT / "out" / komplet_name(),
               [ROOT / "out" / "vyrobni_list.pdf", *sheets])

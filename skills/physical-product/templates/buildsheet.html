@@ -65,6 +65,9 @@
   .wordmark { letter-spacing:.12em; font-weight:600; color:var(--bright); text-decoration:none; }
   .wordmark span { color:var(--muted); }
   p.lede { max-width:65ch; margin:0 0 1.25rem; }
+  /* optional slots collapse until filled (EXTRA_FIGURES, FASTENERS_TABLE) */
+  .figure-grid:not(:has(figure)) { display:none; }
+  .table-wrap:not(:has(td)) { display:none; }
   .print-only { display:none; }
   /* PRINT (`make pdf` prints THIS file): A4 pages, light palette forced via
      cascade (headless Chrome may report a dark scheme — these selectors match
@@ -101,6 +104,9 @@
     <p class="lede">{{KONCEPT_ODSTAVEC}}</p>
     <figure><img src="{{HERO_DATA_URI}}" alt="{{HERO_ALT}}">
       <figcaption><b>Vizualizace.</b> {{HERO_POPIS}}</figcaption></figure>
+    <!-- optional extra renders (detail/tunnel/exploded), same figure markup:
+         {{EXTRA_FIGURES}} -->
+    <div class="figure-grid"><!-- {{EXTRA_FIGURES}} --></div>
   </section>
 
   <section><h2>Výkresy</h2>
@@ -115,6 +121,12 @@
       <caption>{{KUSOVNIK_MATERIAL_CAPTION}}</caption>
       <thead><tr><th>Poz.</th><th>Díl</th><th>Rozměr (mm)</th><th>Ks</th><th>Hmotnost</th><th>Pozn.</th></tr></thead>
       <tbody><!-- {{KUSOVNIK_ROWS}} --></tbody>
+    </table></div>
+    <!-- optional second table — spojovací a dokončovací materiál: -->
+    <div class="table-wrap" style="margin-top:1.25rem"><table>
+      <caption>Spojovací a dokončovací materiál</caption>
+      <thead><tr><th>Položka</th><th>Množství</th><th>Účel</th></tr></thead>
+      <tbody><!-- {{FASTENERS_TABLE}} --></tbody>
     </table></div>
   </section>
 

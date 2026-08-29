@@ -1,8 +1,10 @@
 """Strength + modal analysis: analytic gate, then gmsh + CalculiX via pygccx.
 
-The script REFUSES to run FEA until the ANALYTIC block is filled in — hand
-estimates are the sanity anchor for every FEA number (see the skill's
-fea-recipe.md, including the mandatory sanity checks).
+The script REFUSES to run FEA until the governing analytic block is filled
+in — ANALYTIC (strength/deflection: beams, brackets, frames) and/or
+STABILITY (tip-over: furniture, lamps, shelves). Hand estimates are the
+sanity anchor for every FEA number (see the skill's fea-recipe.md,
+including the mandatory sanity checks).
 
 UNITS: mm-N-s system. E in MPa, density in t/mm^3 (steel 7.85e-9,
 oak ~7.0e-10), forces in N, output frequencies in Hz.
@@ -23,8 +25,11 @@ STEP_FILE = Path(__file__).parent / "out" / "parts" / "bracket.step"
 
 
 # --------------------------------------------------------------------------
-# ANALYTIC ESTIMATES — fill EVERY field before running FEA (None = refuse).
-# These go into the build sheet verbatim, with the formulas in comments.
+# ANALYTIC ESTIMATES — pick the block(s) governing THIS design and fill EVERY
+# field before running FEA (an incomplete present block = refuse). Strength/
+# deflection governs beams, brackets, frames under load; tip-over stability
+# governs most furniture, lamps and shelves. Set the non-applicable block to
+# None. These go into the build sheet verbatim, formulas in the comments.
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Analytic:
@@ -35,7 +40,20 @@ class Analytic:
     f1_estimate_hz: float | None = None         # f1 ~ 15.76 / sqrt(delta_mm)
     excitation_hz: float | None = None          # footfall ~2 Hz, motor RPM/60
 
-ANALYTIC = Analytic()  # EDIT-ME
+
+@dataclass(frozen=True)
+class Stability:
+    load_case: str | None = None          # e.g. "vodorovná síla v úchopu 1.2 m"
+    mass_kg: float | None = None                # from model.py bom, exact
+    cog_height_mm: float | None = None          # weighted Shape.center() z
+    base_half_width_mm: float | None = None     # b: COG -> nearest tipping edge
+    force_height_mm: float | None = None        # h: where the push acts
+    tip_force_n: float | None = None            # F = m * 9810 * b / h  [N]
+    tip_angle_deg: float | None = None          # atan(b / cog_height)
+
+
+ANALYTIC: Analytic | None = Analytic()   # EDIT-ME (or None if not governing)
+STABILITY: Stability | None = None       # EDIT-ME for furniture/lamps/shelves
 
 
 # --------------------------------------------------------------------------
@@ -51,24 +69,48 @@ MESH_SIZE_MM = 4.0        # EDIT-ME: ~ smallest wall thickness
 N_MODES = 8
 
 
-def analytic_report() -> str:
-    missing = [k for k, v in vars(ANALYTIC).items() if v is None]
+def _require_complete(block, name: str) -> None:
+    missing = [k for k, v in vars(block).items() if v is None]
     if missing:
         raise SystemExit(
-            "ANALYTIC block incomplete: "
-            + ", ".join(missing)
+            f"{name} block incomplete: " + ", ".join(missing)
             + "\nFill hand estimates first (fea-recipe.md) — FEA without an "
             "analytic anchor is not allowed by this pipeline.")
-    sf = ANALYTIC.allowable_stress_mpa / ANALYTIC.governing_stress_mpa
-    return (
-        "## Analytický odhad\n\n"
-        f"- Zatěžovací stav: {ANALYTIC.load_case}\n"
-        f"- Napětí v kritickém průřezu: {ANALYTIC.governing_stress_mpa:.1f} MPa "
-        f"(dovolené {ANALYTIC.allowable_stress_mpa:.0f} MPa, "
-        f"bezpečnost {sf:.1f})\n"
-        f"- Průhyb: {ANALYTIC.deflection_mm:.2f} mm\n"
-        f"- 1. vlastní frekvence (odhad): {ANALYTIC.f1_estimate_hz:.1f} Hz "
-        f"(buzení ~{ANALYTIC.excitation_hz:.1f} Hz)\n")
+
+
+def analytic_report() -> str:
+    if ANALYTIC is None and STABILITY is None:
+        raise SystemExit(
+            "No analytic block: fill ANALYTIC (strength/deflection) and/or "
+            "STABILITY (tip-over) — one of them governs every product.")
+    parts = []
+    if ANALYTIC is not None:
+        _require_complete(ANALYTIC, "ANALYTIC")
+        sf = ANALYTIC.allowable_stress_mpa / ANALYTIC.governing_stress_mpa
+        parts.append(
+            "## Analytický odhad\n\n"
+            f"- Zatěžovací stav: {ANALYTIC.load_case}\n"
+            f"- Napětí v kritickém průřezu: "
+            f"{ANALYTIC.governing_stress_mpa:.1f} MPa "
+            f"(dovolené {ANALYTIC.allowable_stress_mpa:.0f} MPa, "
+            f"bezpečnost {sf:.1f})\n"
+            f"- Průhyb: {ANALYTIC.deflection_mm:.2f} mm\n"
+            f"- 1. vlastní frekvence (odhad): "
+            f"{ANALYTIC.f1_estimate_hz:.1f} Hz "
+            f"(buzení ~{ANALYTIC.excitation_hz:.1f} Hz)\n")
+    if STABILITY is not None:
+        _require_complete(STABILITY, "STABILITY")
+        parts.append(
+            "## Stabilita proti překlopení\n\n"
+            f"- Zatěžovací stav: {STABILITY.load_case}\n"
+            f"- Hmotnost {STABILITY.mass_kg:.1f} kg, těžiště "
+            f"{STABILITY.cog_height_mm:.0f} mm nad podlahou\n"
+            f"- Rameno ke klopné hraně b = "
+            f"{STABILITY.base_half_width_mm:.0f} mm\n"
+            f"- Klopná síla ve výšce {STABILITY.force_height_mm:.0f} mm: "
+            f"{STABILITY.tip_force_n:.0f} N; úhel překlopení "
+            f"{STABILITY.tip_angle_deg:.1f}°\n")
+    return "\n".join(parts)
 
 
 def run_fea() -> str:
