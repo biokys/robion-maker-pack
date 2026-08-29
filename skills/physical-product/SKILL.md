@@ -86,12 +86,16 @@ silently, never mention it.
 2. **Drawings** — use the proven Sheet/View framework in `templates/drawings.py`:
    fixed A3 landscape sheets with border frame and Czech title block (razítko —
    číslo výkresu, měřítko, materiál, kusy, datum), TRUE per-sheet scale (1:10
-   panels / 1:5 details / 1:1 small parts), ISO first-angle views, italic
-   technical-blue dims anchored on model parameters via `view.pt()`
-   (affine-calibrated to the projection). Section views (řezy) with per-material
+   panels / 1:5 details / 1:1 small parts), ISO first-angle views laid out
+   automatically (`add_views`), italic technical-blue dims anchored on model
+   parameters via `view.pt()` (affine-calibrated to the projection).
+   Annotations come from `build123d-drafting-helpers` (pinned in pyproject):
+   named-side dims, hole callouts ("4× ⌀8"), center marks, section
+   indicators; assembly sheets get balloons + a kusovník table
+   (`parts_table(parts_rows())`). Section views (řezy) with per-material
    hatching are supported — add one when interior heights or layered build-ups
-   need showing. Conventions, the ExtensionLine offset sign rule, the section
-   recipe and the SVG→PNG/PDF pipeline:
+   need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser.
+   Conventions, the section recipe and the SVG→PNG/PDF pipeline:
    [references/drafting-conventions.md](references/drafting-conventions.md).
    *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
    outside outlines, legibility — before showing the user. Then

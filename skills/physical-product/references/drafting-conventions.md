@@ -13,13 +13,21 @@ ISO-E" and the project line. Use a **true scale** per sheet — 1:10 large
 panels, 1:5 details, 1:1 small parts — chosen so content fits the A3
 graphics area (the framework warns when it doesn't).
 
-Dimension style: ISO 3098-like **italic** font (`Draft(font="Arial",
-font_style=FontStyle.ITALIC, arrow_length=2.5*P, pad_around_text=1.2*P)`),
-thin lines in technical blue with **filled** glyphs so dims read apart
-from the heavy black outlines. Layer weights: frame/visible 0.7, hidden
-0.35 gray ISO_DASH, dims 0.25 blue, title text filled near-black.
-`ExportSVG.add_layer(fill_color=…)` fills dimension text and arrows —
-without it glyphs render hollow (guard with try/except for old versions).
+Dimension style: ISO 3098-like **italic** font, thin lines in technical
+blue with **filled** glyphs so dims read apart from the heavy black
+outlines. Annotations come from **`build123d-drafting-helpers`** (pinned
+in pyproject) via `draft_preset(font_size=3.5*P, font_path=None,
+font="Arial", font_style=FontStyle.ITALIC, arrow_length=2.5*P,
+pad_around_text=1.2*P, line_width=0.18*P, extension_gap=1.0*P)` —
+**every size passed to the helpers is absolute model units, so multiply
+by P**; `font_path=None` keeps the OS-Arial italic look (the bundled
+Liberation Sans is regular-only; `Note`/`HoleCallout` text renders
+upright — package limitation, acceptable per ISO). Helper ink is **filled
+faces** (glyphs, arrowheads, thin-rect lines): `fill_color` on the layer
+is mandatory and layer `line_weight` stays hairline (0.1) or glyphs
+fatten. Layer weights: frame/visible 0.7, hidden 0.35 gray ISO_DASH, dims
+0.1 blue filled, marks (centerlines, section traces, balloons) 0.1
+near-black filled, title text filled near-black.
 
 ## View placement — first-angle (ISO-E, European)
 
@@ -43,16 +51,39 @@ without it glyphs render hollow (guard with try/except for old versions).
   so parameters, not retyped numbers, drive the dims and the projection's
   mild perspective (~0.3 %) cannot detach them. `shift` places secondary
   views (first angle: top view shifts −Y by view height + gap).
-- **`Sheet(name, number, title, scale_den, material, count, note)`** owns
-  layers, the Draft style scaled by P = scale_den, `dim(p1, p2,
-  offset_paper_mm, label)`, the A3 frame and the title block. Pass
+- **`Sheet(name, number, title, scale, material, count, note)`** owns
+  layers, the draft style scaled by P, the A3 frame and the title block.
+  `scale` accepts `5`, `0.5`, `"1:5"` or `"2:1"`; DATUM defaults to today
+  (set the `DATE` constant to freeze it).
+- **`dim(p1, p2, side, offset_paper_mm, label)`** — linear dimension with
+  a **named side** (`"above"/"below"/"left"/"right"` of the measured
+  span); the offset sign is computed for you (helpers' right-hand-normal
+  rule; the same rule is replicated in `_side_sign` for the
+  no-helpers fallback). Offset is PAPER mm, always positive. Pass
   explicit `label=` strings from parameters — auto labels append units
   ("150mm") and drift is invisible.
-- **ExtensionLine offset sign rule (verified empirically):** positive
-  offset lies on the border edge's **right-hand normal** (p1→p2 rotated
-  −90°). Horizontal left→right border ⇒ positive is BELOW; vertical
-  bottom→top ⇒ positive is RIGHT. Choose the p1/p2 order so dims land
-  outside the outline; iterate on the rendered PNG.
+- **Annotation methods** (all take sheet coords from `view.pt()`):
+  `hole_note(at, d_model, count=, through=, offset_paper=(dx, dy))` —
+  leader + "4× ⌀8 THRU" callout with real ⌀ glyphs; `center_mark(at,
+  d_model)` and `centerline(p1, p2)` — ISO chain marks for every hole in
+  its axis view; `note(text, at, leader_from=)` — free note or arrowed
+  leader note (use for "ŘEZ A–A" titles). Layer routing:
+  Dimension/Leader/HoleCallout → `dims` (blue), Centerline/CenterMark/
+  section traces/balloons → `marks` (black), Note → `text`.
+- **`add_views(part, kinds, gap_paper)` / `layout_views(...)`** compute
+  first-angle placement automatically (top BELOW front, right view on the
+  LEFT, left on the RIGHT, back beyond) from the part bbox — no manual
+  `shift=` tuples; `View(part, kind, shift=)` still works for special
+  placements (e.g. a section view).
+- **Assembly sheets:** `balloon(n, at, tip=)` draws an ISO 6433 position
+  balloon with a dotted leader; `parts_table(parts_rows())` renders the
+  kusovník grid above the title block (header at the bottom, positions
+  ascending). `parts_rows()` enumerates `model.PARTS` in `bom()` order,
+  so balloon numbers match the kusovník by construction.
+- **Missing helpers degrade, not crash:** without `build123d_drafting`
+  installed, dims fall back to `ExtensionLine`, callouts to plain text,
+  center marks are skipped — each with a printed WARNING. `make doctor`
+  shows `b3d-drafting` status.
 - Frame centering: `fy0 = cy − (PAPER_H − 2·MARGIN + TB_H)/2 · P` — do
   NOT add TB_H·P again (classic bug: content overlaps the title block).
 - Construct drafting objects standalone (Algebra mode) — building an
@@ -66,8 +97,9 @@ without it glyphs render hollow (guard with try/except for old versions).
 
 ## Section views (řezy) — proven recipe
 
-No native section support needed; three steps, all in the framework
-(`Sheet.hatch`, `section_faces`, `sheet_polygon` in templates/drawings.py):
+No native section support needed; four steps, all in the framework
+(`Sheet.hatch`, `Sheet.section_indicator`, `section_faces`,
+`sheet_polygon` in templates/drawings.py):
 
 1. **Cut & project:** `kept = solid − half-space-box` per part (skip
    empties, and skip parts between viewer and plane entirely);
@@ -76,9 +108,10 @@ No native section support needed; three steps, all in the framework
    what a section drawing shows. Use `Compound(children=…)`, not `+`
    (fusing would erase layer-interface edges).
 2. **Section faces:** intersect the solid with a 1 mm sliver at the plane
-   and keep the sliver faces lying in it (`section_faces`) — exact for
-   prismatic-along-normal geometry and boolean-robust always (avoid
-   edge∩face intersections, they are fragile).
+   and keep the sliver faces lying in it (`section_faces(solid, axis,
+   coord)` — any of "X"/"Y"/"Z") — exact for prismatic-along-normal
+   geometry and boolean-robust always (avoid edge∩face intersections,
+   they are fragile).
 3. **Hatch in sheet space:** map each polygonal face's ordered wire
    vertices through `view.pt()` (`sheet_polygon` — exact for straight
    edges), then `Sheet.hatch(poly, style)` clips thin 45° stripe
@@ -87,6 +120,11 @@ No native section support needed; three steps, all in the framework
    metal 45°/2.5 mm. Different patterns per sandwich layer sell the
    skladba — keep per-layer solids accessible in the model
    (`PanelData.layer_solids`-style field), since fused panels lose them.
+4. **Indicator on the parent view:**
+   `sheet.section_indicator(parent_view, axis, coord, "A", direction=±1)`
+   draws the ISO 128-44 cutting-plane trace (chain line, thick end
+   strokes, sight arrows along `direction`, view letters); title the
+   section view "ŘEZ A–A" via `sheet.note()` centered under it.
 
 Pick the plane to cut through the most informative features (openings,
 sandwich stacks, internal fittings) while avoiding lengthwise slices of
@@ -97,7 +135,8 @@ show (clear height, fitting heights above floor, sill heights).
 
 ## Outputs & conversion pipeline
 
-Each `Sheet.write()` emits three files into `out/drawings/`:
+Each `Sheet.write()` emits three files into `out/drawings/` (plus two
+optional ones):
 
 1. `<name>.svg` — the drawing; `ExportSVG(scale=1/P)` ⇒ **SVG units =
    paper mm** (this is what makes true-scale print possible).
@@ -108,8 +147,15 @@ Each `Sheet.write()` emits three files into `out/drawings/`:
    image sized to the SVG's native units **in mm** ⇒
    `chrome --headless --print-to-pdf` produces a vector A3 PDF at exactly
    1:P. `make drawings-pdf` prints all sheets and merges them via
-   `merge_pdfs.py` (pypdf, sheet order = drawing numbers) into
-   `out/drawings/vykresy_A3.pdf`.
+   `merge_pdfs.py` into `out/drawings/vykresy_A3.pdf`.
+4. `manifest.json` — sheet list sorted by drawing number, maintained by
+   `write()`; `merge_pdfs.py` takes the merge order from it (its
+   `SHEET_ORDER` list is only a fallback when no manifest exists).
+5. `<name>.dxf` — with `write(dxf=True)`: layered DXF in **model mm, true
+   1:1** — the `visible` layer is the CNC/laser-usable geometry.
+   Annotations/text export as outline curves at P× paper size and DXF
+   lineweights snap to the ezdxf value set (0.05/0.09/0.13/0.25/0.35/…) —
+   both cosmetic caveats, the cut geometry is exact.
 
 `make pdf` additionally prints the build sheet's A4 `.print.html` variant
 and prepends it → **one complete printable PDF** (A4 document + A3
@@ -120,7 +166,8 @@ build-sheet print variant (forced light theme + break rules).
 
 Every sheet: `make drawings-png` → **Read each PNG** — check view
 placement, dims outside outlines and matching the model parameters,
-hidden lines dashed, title block not overlapped. Fix by flipping dim
-p1/p2 or offsets per the sign rule; re-render; only then show the user.
+annotations not colliding (callouts vs section arrows vs dims), hidden
+lines dashed, title block not overlapped. Fix by changing the dim `side`
+or nudging callout `offset_paper`; re-render; only then show the user.
 For the PDFs, Read a few pages of the merged file (the Read tool renders
 PDF pages) to confirm order, page sizes and vector output.

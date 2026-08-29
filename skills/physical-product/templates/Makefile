@@ -26,7 +26,8 @@ $(OUT)/drawings/%.png: $(OUT)/drawings/%.svg $(OUT)/drawings/%.html
 		"file://$(CURDIR)/$(OUT)/drawings/$*.html"
 
 drawings-png: drawings
-	@for f in $(OUT)/drawings/*[!t].html; do \
+	@for f in $(OUT)/drawings/*.html; do \
+		case $$f in *.print.html) continue;; esac; \
 		$(MAKE) --no-print-directory $${f%.html}.png; done
 
 # Printable vector PDFs: one true-scale A3 sheet each (via the .print.html
@@ -74,6 +75,7 @@ doctor:
 	@echo "tool availability:"
 	@$(UV) --version >/dev/null 2>&1 && echo "  uv        OK" || echo "  uv        MISSING"
 	@$(UV) run python -c "import build123d,sys;print('  build123d OK', build123d.__version__)" 2>/dev/null || echo "  build123d MISSING (uv sync)"
+	@$(UV) run python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
 	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
 	@command -v ccx >/dev/null && echo "  ccx       OK" || echo "  ccx       MISSING (FEA -> analytic only)"
