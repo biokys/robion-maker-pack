@@ -58,12 +58,31 @@ when tools are missing: [references/toolchain.md](references/toolchain.md).
 Run stages in order; each has a gate. Skipping a stage is fine when the user says so
 — note it in the build sheet.
 
+**Robion cockpit — build it unprompted.** When the `set_controls` MCP tool exists,
+the cockpit is part of stage 1, not an optional extra (read `controls_help` first):
+
+- `param: true` sliders **named exactly after the parameters in `model.py`** —
+  the viewport and every run-button then receive them as `ROBION_PARAMS`
+  automatically.
+- `viewport: {path: 'model.py'}` — the live 3D; sliders re-render it in ~0.4 s.
+- A photoreal button: `{kind:'run', command:'make viz',
+  output:'out/viz_hero.png', autoClose: true}` — the finished terminal closes
+  itself and the viewport switches to the render.
+- `image` tiles for `out/viz_*.png` and drawings — they refresh on their own
+  whenever the files are regenerated.
+- A `set` preset button restoring the defaults.
+
+Keep the cockpit current as stages advance (BOM stage: a shopping `checklist`;
+plans: image tiles of the sheets). No `set_controls` tool (a bare terminal) ⇒ skip
+silently, never mention it.
+
 1. **Model** — parameters at the top of `model.py` are the single source of truth;
    derived values + asserts right below; every part is a builder function registered
    in `PARTS` with a material record. Export per-part STEP+STL (viz, drawings and FEA
-   each need separate bodies). *Gate:* show the user quick renders (`make parts` +
-   OpenSCAD-style screenshot or ocp preview) and get geometry approved before
-   investing in drawings/viz.
+   each need separate bodies). *Gate:* in Robion the cockpit is the gate — the user
+   tunes the sliders on the live viewport and approves; elsewhere show quick renders
+   (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
+   drawings/viz.
 2. **Drawings** — use the proven Sheet/View framework in `templates/drawings.py`:
    fixed A3 landscape sheets with border frame and Czech title block (razítko —
    číslo výkresu, měřítko, materiál, kusy, datum), TRUE per-sheet scale (1:10
