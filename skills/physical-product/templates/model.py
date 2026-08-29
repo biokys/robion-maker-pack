@@ -7,6 +7,8 @@ Conventions (do not break):
   Downstream stages (drawings, Blender viz, FEA) consume per-part exports —
   never one merged body.
 - BOM masses come from exact Shape.volume — no hand-typed weights.
+- Robion's live customizer overrides parameters via ROBION_PARAMS (applied
+  right after the PARAMETERS block, so derived values and asserts see them).
 
 CLI (via uv):
     uv run model.py export   # STEP + STL per part into out/parts/
@@ -16,12 +18,45 @@ CLI (via uv):
 
 from __future__ import annotations
 
+import json
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
 from build123d import *  # noqa: F403 - conventional for build123d scripts
+
+
+def _apply_robion_params() -> None:
+    """Apply live-customizer overrides from Robion (CONTRACT.md §2).
+
+    Robion re-runs this script with ROBION_PARAMS set to one JSON object,
+    e.g. {"thickness": 6.0}. Only existing scalar parameters are overridden
+    and each keeps its original type; anything else warns on stderr. Without
+    the variable this is a no-op, so plain CLI runs are unaffected.
+    """
+    raw = os.environ.get("ROBION_PARAMS", "")
+    if not raw:
+        return
+    try:
+        overrides = json.loads(raw)
+    except json.JSONDecodeError as err:
+        print(f"ROBION_PARAMS ignored — invalid JSON: {err}", file=sys.stderr)
+        return
+    if not isinstance(overrides, dict):
+        print("ROBION_PARAMS ignored — expected a JSON object", file=sys.stderr)
+        return
+    params = globals()
+    for key, value in overrides.items():
+        if key.startswith("_") or not isinstance(params.get(key), (bool, int, float, str)):
+            print(f"ROBION_PARAMS: no parameter named {key!r}", file=sys.stderr)
+            continue
+        try:
+            params[key] = type(params[key])(value)
+        except (TypeError, ValueError):
+            print(f"ROBION_PARAMS: cannot apply {key}={value!r}", file=sys.stderr)
+
 
 # --------------------------------------------------------------------------
 # PARAMETERS (single source of truth) — replace the demo bracket with the
@@ -34,6 +69,8 @@ thickness = 5.0
 hole_diameter = 8.0
 hole_edge_offset = 20.0
 fillet_radius = 6.0
+
+_apply_robion_params()  # slider overrides land here, before anything derives
 
 # Derived values + guards ---------------------------------------------------
 hole_positions_a = [

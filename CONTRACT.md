@@ -36,8 +36,10 @@ values:
 - **build123d / Python** — the values arrive as the `ROBION_PARAMS` environment
   variable: one JSON object, e.g. `{"wall": 2.4, "holes": 4}`. A script opts into
   live tuning by reading it and overriding its module-level parameters **before**
-  derived values are computed. *Status: the v0.1 template does not read
-  `ROBION_PARAMS` yet — planned as the next template change.*
+  derived values are computed. The template's `_apply_robion_params()` (in
+  `templates/model.py` since pack 0.2.0) is the reference implementation: it
+  overrides only existing scalar parameters, preserves each parameter's type,
+  warns on stderr about unknown keys, and is a no-op without the variable.
 - **OpenSCAD** — the values arrive as `-D key=value` definitions (arrays are
   rendered as OpenSCAD vectors).
 
