@@ -3,9 +3,12 @@
 The final deliverable: one Czech artifact page a user can print or hand to a
 fabricator, mirroring the project README.md. Compose from
 `templates/buildsheet.html`. **Load the `artifact-design` skill before composing
-the page** (required for artifacts), keep the technical-drawing "razítko"
-aesthetic, publish via the Artifact tool, and keep republishing to the same URL
-across iterations.
+the page** (required for artifacts). The aesthetic is the Robion brand
+(robion.app): JetBrains Mono, hairlines instead of borders, dark cockpit palette
+with a paper-light print counterpart, and the violet→cyan gradient as the one
+saturated accent (section strips, step numbers) — keep the razítko *structure*,
+never reintroduce a second accent color. Publish via the Artifact tool and keep
+republishing to the same URL across iterations.
 
 ## Section order (proven structure)
 
@@ -32,7 +35,9 @@ across iterations.
 9. **Předpoklady a nejistoty** — ALWAYS present; every assumed load, dimension
    guess, skipped stage (degrade sentences from toolchain.md), with the parameter
    name that changes it.
-10. Footer: source files, `make` commands, material constants used.
+10. Footer: source files, `make` commands, material constants used — and the
+    Robion credit line linking https://robion.app (already in the template; keep
+    it).
 
 ## Czech terminology (keep it idiomatic)
 
