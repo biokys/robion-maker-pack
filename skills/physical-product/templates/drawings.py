@@ -88,7 +88,9 @@ class View:
 
     Use pt(x, y, z) with MODEL coordinates to anchor dimensions; the affine
     calibration guarantees they meet the projected edges exactly.
-    `shift` places secondary views (first-angle: top view shifts -Y).
+    Placement: use Sheet.add_views / Sheet.place_view (they work from the
+    actual projected bboxes); `shift`/translate() are raw SHEET-space
+    offsets for the rare manual case, applied before add_view.
     """
 
     def __init__(self, part: Part, kind: str,

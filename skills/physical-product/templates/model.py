@@ -144,11 +144,16 @@ PARTS: dict[str, PartSpec] = {
                         note=f"plech {thickness:g} mm, otvory Ø{hole_diameter:g}"),
 }
 
-# Viz-only merged exports: <stl name> -> [PARTS keys]. `export` additionally
-# writes out/parts/<name>.stl fusing the listed parts — blender_viz.py then
-# maps ONE material to the whole family (e.g. a 58-ring stack) instead of
-# needing an entry per part. Empty = no merged exports.
-VIZ_COMPOUNDS: dict[str, list[str]] = {}
+# Viz-only merged exports: <stl name> -> [PARTS keys] OR a zero-arg callable
+# returning any Shape. `export` additionally writes out/parts/<name>.stl —
+# blender_viz.py then maps ONE material to the whole export instead of
+# needing an entry per part. The callable form covers what a key list
+# cannot: N shifted copies of one part
+#   "rings": lambda: Compound(children=[Pos(0, 0, i * ring_pitch)
+#                                       * build_ring() for i in range(58)])
+# and purchased hardware modeled only for the render (tyče, objímka,
+# žárovka) that has no PARTS entry. Empty = no merged exports.
+VIZ_COMPOUNDS: dict[str, list[str] | Callable[[], Shape]] = {}
 
 
 # --------------------------------------------------------------------------
@@ -161,10 +166,11 @@ def export_parts() -> None:
         export_step(part, str(OUT_DIR / f"{name}.step"))
         export_stl(part, str(OUT_DIR / f"{name}.stl"))
         print(f"exported {name}: {part.volume * spec.material.density:.3f} kg")
-    for name, keys in VIZ_COMPOUNDS.items():
-        merged = Compound(children=[PARTS[k].builder() for k in keys])
+    for name, source in VIZ_COMPOUNDS.items():
+        merged = source() if callable(source) else Compound(
+            children=[PARTS[k].builder() for k in source])
         export_stl(merged, str(OUT_DIR / f"{name}.stl"))
-        print(f"exported viz compound {name}: {len(keys)} parts")
+        print(f"exported viz compound {name}")
 
 
 def bom_rows() -> list[tuple[int, str, str, int, float, str]]:

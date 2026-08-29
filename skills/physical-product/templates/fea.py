@@ -30,6 +30,14 @@ STEP_FILE = Path(__file__).parent / "out" / "parts" / "bracket.step"
 # deflection governs beams, brackets, frames under load; tip-over stability
 # governs most furniture, lamps and shelves. Set the non-applicable block to
 # None. These go into the build sheet verbatim, formulas in the comments.
+#
+# Fill by COMPUTING from model.py — `import model` and derive: masses from
+# spec.builder().volume * density, COG from Shape.center().Z, lever arms
+# from parameters. NEVER retype a number that exists in model.py — a
+# parameter change must reflow the analytics too, e.g.:
+#   STABILITY = Stability(load_case="200 N vodorovně v úchopu",
+#       mass_kg=sum(s.builder().volume * s.material.density * s.count
+#                   for s in model.PARTS.values()), ...)
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Analytic:
