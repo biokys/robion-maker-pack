@@ -26,6 +26,12 @@ every project, so intake never asks the same questions twice:
   material goes into the project brief/README, not into the profile.
 - The file is the user's: hand-edits are expected, unknown extra keys must
   survive round-trips, comments are welcome.
+- **Structure in English, content in the user's language.** Keys, units and
+  numbers are the standard (`machines`, `bed_mm`, millimetres, `null`) — that is
+  what tools may ever parse. Free-text values (tool names, materials, notes)
+  stay in the user's own words: never translate them to English "for
+  consistency", and never force English terms on the user. The reader is a
+  language model; it understands the user's language.
 
 ## Schema by example
 
