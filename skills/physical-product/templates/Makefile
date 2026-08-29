@@ -40,13 +40,13 @@ drawings-pdf: drawings
 		echo "  pdf $${f%.print.html}.pdf"; done
 	$(UV) run merge_pdfs.py
 
-# One complete PDF: A4 build sheet + all A3 drawing sheets. Requires the
-# build-sheet generator to emit out/vyrobni_list.print.html (light theme
-# forced, @page A4) — see the skill's buildsheet.md.
+# One complete PDF: A4 build sheet + all A3 drawing sheets. The build-sheet
+# HTML carries its own @media print rules (A4 pages, forced light palette)
+# — see templates/buildsheet.html and the skill's buildsheet.md.
 pdf: drawings-pdf
 	"$(CHROME)" --headless --no-pdf-header-footer \
 		--print-to-pdf=$(OUT)/vyrobni_list.pdf \
-		"file://$(CURDIR)/$(OUT)/vyrobni_list.print.html" 2>/dev/null
+		"file://$(CURDIR)/$(OUT)/vyrobni_list.html" 2>/dev/null
 	$(UV) run merge_pdfs.py --komplet
 
 # Blender exits 0 even when the python script throws — the grep IS the check.

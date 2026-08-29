@@ -4,7 +4,9 @@
      photoreal, PNG for line art). Aesthetic = the Robion brand (robion.app):
      JetBrains Mono everywhere, hairlines not borders, the violet→cyan gradient
      as the ONE saturated accent, 3px rail strips on section headings. Dark is
-     the brand; light is its paper counterpart (the print variant relies on it). -->
+     the brand; light is its paper counterpart. Print rules ship in the @media
+     print block below — ONE file serves both the artifact page and
+     `make pdf`; do not derive a separate .print.html variant. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root { --bg:#f4f6f8; --panel:#ffffff; --ink:#242b34; --bright:#111820;
@@ -63,6 +65,25 @@
   .wordmark { letter-spacing:.12em; font-weight:600; color:var(--bright); text-decoration:none; }
   .wordmark span { color:var(--muted); }
   p.lede { max-width:65ch; margin:0 0 1.25rem; }
+  .print-only { display:none; }
+  /* PRINT (`make pdf` prints THIS file): A4 pages, light palette forced via
+     cascade (headless Chrome may report a dark scheme — these selectors match
+     both dark blocks above and win by source order), page breaks per section,
+     drawing figures swapped for a note (A3 sheets are appended full-size). */
+  @media print {
+    :root, :root:not([data-theme="light"]), :root[data-theme="dark"] {
+      --bg:#ffffff; --panel:#ffffff; --ink:#242b34; --bright:#111820;
+      --muted:#5b6470; --hairline:#dde2e8; --line:#b9c1cb; --slot:#eaeef2;
+      --link:#3d7d99; }
+    @page { size: 210mm 297mm; margin: 11mm; }
+    body { padding:0; font-size:12px; }
+    .sheet { max-width:none; gap:1.25rem; }
+    section { break-before: page; }
+    section:first-of-type { break-before: auto; }
+    figure, .table-wrap, ol.steps li, .stamp, .assumptions { break-inside: avoid; }
+    .screen-only { display:none; }
+    .print-only { display:block; }
+  }
 </style>
 
 <div class="sheet">
@@ -84,7 +105,9 @@
 
   <section><h2>Výkresy</h2>
     <p class="lede">Všechny kóty v milimetrech. Zdrojem pravdy je parametrický model.</p>
-    <div class="figure-grid"><!-- {{VYKRESY_FIGURES}} --></div>
+    <div class="figure-grid screen-only"><!-- {{VYKRESY_FIGURES}} --></div>
+    <p class="print-only">Výrobní výkresy A3 následují za tímto dokumentem
+      v plné velikosti (měřítko dle razítka jednotlivých listů).</p>
   </section>
 
   <section><h2>Kusovník</h2>

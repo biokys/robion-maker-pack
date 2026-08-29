@@ -119,9 +119,9 @@ silently, never mention it.
 8. **Build sheet** — assemble the Czech výrobní list artifact from
    `templates/buildsheet.html` per [references/buildsheet.md](references/buildsheet.md);
    load the `artifact-design` skill before composing the page; mirror the content in
-   the project README.md. Also emit the A4 print variant and run `make pdf` →
-   one complete printable PDF (build sheet + all A3 drawing sheets), per the
-   print-variant section of buildsheet.md.
+   the project README.md. The template's `@media print` block makes the same
+   `out/vyrobni_list.html` printable — `make pdf` → one complete PDF (A4 build
+   sheet + all A3 drawing sheets), per the print-variant section of buildsheet.md.
 
 ## 5 · Verification habits (non-negotiable)
 

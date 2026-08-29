@@ -54,17 +54,19 @@ montáží na místě" when heavy).
 
 ## Print variant → one complete PDF
 
-Generate the build sheet with a script that imports the parametric model
-(single source of truth) and writes TWO files: the artifact page and a
-`out/vyrobni_list.print.html` variant for `chrome --headless
---print-to-pdf`. The print variant adds:
-`<script>document.documentElement.dataset.theme='light'</script>` (forces
-the light tokens — headless Chrome may report dark scheme), `@page { size:
-210mm 297mm; margin: 11mm }`, `section { break-before: page }` (except the
-first), `break-inside: avoid` on figures/tables/steps/stamp, and replaces
-the inline drawing figures with a note that the A3 sheets follow (they are
-appended full-size). `make pdf` prints it and merges with the drawing
-sheets via `merge_pdfs.py --komplet` → `out/<product>_komplet.pdf`.
+The print rules **ship in the template** (`templates/buildsheet.html`,
+`@media print` block) — the generator script imports the parametric model
+(single source of truth) and writes ONE file, `out/vyrobni_list.html`,
+which serves both the artifact page and printing. The shipped block
+provides: forced light palette (CSS-only — its selectors match both dark
+blocks and win by source order, since headless Chrome may report a dark
+scheme), `@page { size: 210mm 297mm; margin: 11mm }`, `section {
+break-before: page }` (except the first), `break-inside: avoid` on
+figures/tables/steps/stamp, and the `screen-only`/`print-only` class pair
+that swaps the inline drawing figures for a note that the A3 sheets
+follow full-size — keep those classes when filling the Výkresy section.
+`make pdf` prints the file and merges with the drawing sheets via
+`merge_pdfs.py --komplet` → `out/<product>_komplet.pdf`.
 Verify by Reading pages of the PDF (page count, A4+A3 sizes, light theme).
 
 ## Page mechanics
