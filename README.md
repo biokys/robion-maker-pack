@@ -28,7 +28,7 @@ it needs:
 | Layer | Where | What it is |
 |---|---|---|
 | **Spine** | `SKILL.md` | Intake, vertical routing, the stage pipeline with gates, verification habits. Every project walks it. |
-| **Verticals** | `references/verticals/` | Playbooks for WHAT is being made: woodworking, metalwork, 3d-print, laser, cnc-router, electronics, sewing. Pure content — the anatomy is fixed by `_template.md`. |
+| **Verticals** | `references/verticals/` | Playbooks for WHAT is being made — 14 of them: woodworking, metalwork, sheet-metal, 3d-print, laser, cnc-router, electronics, sewing, leather-goods, upholstery, van-conversion, fitness-equipment, animal-housing, aquarium-terrarium. Pure content — the anatomy is fixed by `_template.md`. |
 | **Stacks** | `references/stacks/` | Recipes for HOW artifacts are produced: `solids` (build123d), `patterns2d` (2D cutting patterns), `pcb` (KiCad). |
 | **Core** | `references/core/` | Shared conventions: the workshop profile, toolchain & degrade rules, the build sheet. |
 | **Templates** | `templates/` | Project scaffold: `common/` + one stack directory, copied flat into a new project. |

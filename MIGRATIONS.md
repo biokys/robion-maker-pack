@@ -9,6 +9,15 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.17.0
+
+No template changes (content only): seven new vertical playbooks —
+leather-goods, van-conversion, fitness-equipment, animal-housing,
+upholstery, aquarium-terrarium, sheet-metal (rozvin via bend allowance on
+the solids stack). Upholstery defines the pack-wide two-stack sub-scaffold
+convention (secondary stack in a subdirectory); SKILL.md routing and
+triggers grew accordingly.
+
 ## v0.16.0
 
 - Pack restructured into core/stacks/verticals: references moved to

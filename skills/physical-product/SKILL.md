@@ -1,6 +1,6 @@
 ---
 name: physical-product
-description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut parts, CNC-routed parts, electronics with a PCB, sewn goods: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru), výrobní výkres, kusovník, nářezový plán, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, parametric 3D model, build sheet, BOM, technical drawing, FEA."
+description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut and sheet-metal parts, CNC-routed parts, electronics with a PCB, sewn and leather goods, van build-outs, fitness gear, animal housing, upholstered pieces, aquarium stands: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán, rozvin), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru, peněženku, vestavbu do dodávky, hrazdu, plyo box, úl, kurník, králíkárnu, budku, čalouněnou lavici, stolek pod akvárium, krabičku z plechu), výrobní výkres, kusovník, nářezový plán, rozvin plechu, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, leather wallet, parametric 3D model, build sheet, BOM, technical drawing, FEA."
 ---
 
 # Physical Product
@@ -63,7 +63,14 @@ applies and compose; the spine stays single.
 | flat parts laser-cut from plywood/acrylic/steel | [verticals/laser.md](references/verticals/laser.md) |
 | flat parts machined on a CNC router | [verticals/cnc-router.md](references/verticals/cnc-router.md) |
 | contains a PCB / electronics | [verticals/electronics.md](references/verticals/electronics.md) |
-| sewn from fabric, canvas or leather — bag, apron, cover, simple garment | [verticals/sewing.md](references/verticals/sewing.md) |
+| sewn from fabric or canvas — bag, apron, cover, simple garment | [verticals/sewing.md](references/verticals/sewing.md) |
+| cut & stitched from leather — wallet, belt, pouch, bag | [verticals/leather-goods.md](references/verticals/leather-goods.md) |
+| furniture built into a vehicle — vestavba, camper module | [verticals/van-conversion.md](references/verticals/van-conversion.md) |
+| training gear carrying a moving human — hrazda, plyo box, stojan | [verticals/fitness-equipment.md](references/verticals/fitness-equipment.md) |
+| housing for animals — úl, kurník, králíkárna, budka | [verticals/animal-housing.md](references/verticals/animal-housing.md) |
+| padded & covered furniture — čalouněná lavice, sedáky, pelíšek | [verticals/upholstery.md](references/verticals/upholstery.md) |
+| a stand, cabinet or hood for an aquarium/terrarium | [verticals/aquarium-terrarium.md](references/verticals/aquarium-terrarium.md) |
+| thin-sheet parts with straight bends — krabička z plechu, kryt, držák | [verticals/sheet-metal.md](references/verticals/sheet-metal.md) |
 
 No row matches ⇒ run the spine bare — it is complete by itself. If the project
 taught vertical-specific lessons, propose a new playbook at retrospective time
@@ -88,7 +95,12 @@ New project: copy `templates/common/` plus the chosen stack's
 in pyproject.toml to the product slug**, fill the `{{PACK_VERSION}}` stamp in
 CLAUDE.md with the installed pack version (it tells future sessions which
 template vintage the project has — see MIGRATIONS.md in the pack), run
-`uv sync`, then `make doctor` to see which tools exist. Stack-specific
+`uv sync`, then `make doctor` to see which tools exist. A project combining
+TWO template stacks (e.g. a solids frame with patterns2d covers) keeps the
+primary stack at the root and scaffolds the secondary into a subdirectory
+with its own pyproject/Makefile — the convention is defined in
+[verticals/upholstery.md](references/verticals/upholstery.md); the build
+sheet stays one. Stack-specific
 bootstrap steps (fonts, extras) and the canonical `out/` layout are listed in
 the stack recipe. Environment specifics and the degrade matrix when tools are
 missing: [references/core/toolchain.md](references/core/toolchain.md).
