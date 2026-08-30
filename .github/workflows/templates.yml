@@ -1,0 +1,108 @@
+# Smoke-tests the product templates end to end: scaffold a project the way
+# the skill does, then run the real pipeline (model -> check -> drawings ->
+# PNG/PDF) plus the negative gates (fea refusal, drafting-helpers degrade).
+#
+# Deliberately NO uv.lock: every run resolves fresh, so this doubles as a
+# canary for upstream breakage (a new build123d or drafting-helpers release)
+# — exactly what a product project would hit at `uv sync` time.
+#
+# Blender viz is skipped: a multi-hundred-MB install plus minutes of Cycles
+# render; the viz path stays covered by local `make doctor` + product runs.
+name: templates
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/physical-product/templates/**"
+      - ".github/workflows/templates.yml"
+  pull_request:
+    paths:
+      - "skills/physical-product/templates/**"
+      - ".github/workflows/templates.yml"
+
+concurrency:
+  group: templates-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      PROJ: ${{ runner.temp }}/proj
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "skills/physical-product/templates/pyproject.toml"
+
+      - name: System deps for OCP (libGL)
+        run: sudo apt-get update -q && sudo apt-get install -y -q libgl1
+
+      - name: Scaffold project from templates (as the skill does)
+        run: |
+          mkdir -p "$PROJ"
+          cp -R skills/physical-product/templates/. "$PROJ/"
+
+      - name: uv sync
+        working-directory: ${{ env.PROJ }}
+        run: uv sync
+
+      - name: Font (osifont — exercises the ISO 3098 lettering path)
+        working-directory: ${{ env.PROJ }}
+        run: make font
+
+      - name: Model pipeline (export, bom, check, drawings)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv run model.py export
+          uv run model.py bom
+          uv run model.py check
+          uv run drawings.py
+
+      - name: Assert expected outputs
+        working-directory: ${{ env.PROJ }}
+        run: |
+          for f in out/parts/bracket.step out/parts/bracket.stl out/bom.md \
+                   out/drawings/bracket.svg out/drawings/bracket.dxf \
+                   out/drawings/overview.svg out/drawings/manifest.json; do
+            test -f "$f" || { echo "MISSING $f"; exit 1; }
+          done
+          grep -q "Celková hmotnost" out/bom.md
+          uv run python -c "import json; json.load(open('out/drawings/manifest.json'))"
+
+      - name: PNG smoke via preinstalled Chrome
+        working-directory: ${{ env.PROJ }}
+        run: |
+          make drawings-png CHROME=google-chrome
+          find out/drawings -name 'bracket.png' -size +20k | grep -q . \
+            || { echo "bracket.png missing or suspiciously small"; exit 1; }
+
+      - name: PDF smoke (merge_pdfs.py + manifest order)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          make drawings-pdf CHROME=google-chrome
+          test -f out/drawings/vykresy_A3.pdf
+
+      - name: FEA gate must refuse incomplete analytics (nonzero is EXPECTED)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          if uv run fea.py --analytic-only; then
+            echo "fea gate FAILED TO FAIL — incomplete ANALYTIC accepted"
+            exit 1
+          fi
+          echo "fea gate refused as expected"
+
+      # LAST: mutates the venv. `--no-sync` is load-bearing — plain `uv run`
+      # would re-sync and silently reinstall the package just uninstalled.
+      - name: Degrade test — drawings survive without drafting-helpers
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv pip uninstall build123d-drafting-helpers
+          uv run --no-sync drawings.py | tee degrade.log
+          grep -q "WARNING: build123d_drafting unavailable" degrade.log
+          test -f out/drawings/bracket.svg
