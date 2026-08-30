@@ -18,11 +18,13 @@ Conventions (do not break):
 CLI (via uv):
     uv run model.py export   # STEP + STL per part into out/parts/
     uv run model.py bom      # Czech kusovnik table into out/bom.md (+ stdout)
+    uv run model.py check    # mass/COG + interference + clearance gate
     uv run model.py show     # list parts and computed masses
 """
 
 from __future__ import annotations
 
+import itertools
 import json
 import os
 import sys
@@ -155,6 +157,13 @@ PARTS: dict[str, PartSpec] = {
 # žárovka) that has no PARTS entry. Empty = no merged exports.
 VIZ_COMPOUNDS: dict[str, list[str] | Callable[[], Shape]] = {}
 
+# --- assembly check configuration (uv run model.py check) ------------------
+INTERFERENCE_TOL_MM3 = 1.0    # boolean noise floor, mm^3
+# Intentional overlaps (press fits, threaded joints): {sorted key pair: max mm^3}
+ALLOWED_INTERFERENCE: dict[tuple[str, str], float] = {}
+# Required minimum gaps (sliding parts, cable paths): {sorted key pair: mm}
+MIN_CLEARANCE: dict[tuple[str, str], float] = {}
+
 
 # --------------------------------------------------------------------------
 # Pipeline commands
@@ -216,12 +225,106 @@ def bom() -> str:
     return table
 
 
+def _built_parts() -> dict[str, Part]:
+    """Build every PARTS entry once (shared across the check passes)."""
+    return {name: spec.builder() for name, spec in PARTS.items()}
+
+
+def mass_properties(shapes: dict[str, Part] | None = None):
+    """(total_kg, cog: Vector). Mass is exact (volume × density × count).
+
+    COG counts count>1 parts at their single modeled position N times:
+    Z is exact when the duplicates sit at the same height (legs, lamellas
+    — the case fea.py STABILITY reads), X/Y are approximate. For exact XY,
+    model each instance as its own PARTS entry sharing a `group`.
+    """
+    shapes = shapes or _built_parts()
+    total, moment = 0.0, Vector(0, 0, 0)
+    for name, spec in PARTS.items():
+        mass = shapes[name].volume * spec.material.density * spec.count
+        total += mass
+        moment += shapes[name].center(CenterOf.MASS) * mass
+    return total, moment / total
+
+
+def _bboxes_overlap(a, b, pad: float = 0.1) -> bool:
+    return (a.min.X - pad < b.max.X and b.min.X - pad < a.max.X
+            and a.min.Y - pad < b.max.Y and b.min.Y - pad < a.max.Y
+            and a.min.Z - pad < b.max.Z and b.min.Z - pad < a.max.Z)
+
+
+def check() -> list[str]:
+    """Assembly sanity gate: mass/COG report, pairwise interference,
+    declared clearances. Returns violation strings (empty = pass).
+
+    Copies of a count>1 part are NOT checked against each other — only one
+    instance is modeled.
+    """
+    for cfg_name, cfg in (("ALLOWED_INTERFERENCE", ALLOWED_INTERFERENCE),
+                          ("MIN_CLEARANCE", MIN_CLEARANCE)):
+        for pair in cfg:
+            unknown = [k for k in pair if k not in PARTS]
+            assert not unknown, f"{cfg_name}: unknown part(s) {unknown}"
+            assert tuple(sorted(pair)) == pair, \
+                f"{cfg_name}: key {pair} must be alphabetically sorted"
+    shapes = _built_parts()
+    instances = sum(s.count for s in PARTS.values())
+    print(f"assembly check: {len(shapes)} part(s), {instances} instance(s)")
+    total, cog = mass_properties(shapes)
+    print(f"mass {total:.3f} kg   COG ({cog.X:.1f}, {cog.Y:.1f}, "
+          f"{cog.Z:.1f}) mm")
+    multi = [f"{n} (x{s.count})" for n, s in PARTS.items() if s.count > 1]
+    if multi:
+        print("  caveat: count>1 parts counted at their modeled position: "
+              + ", ".join(multi)
+              + " — COG X/Y approximate, Z exact for same-height duplicates")
+
+    violations: list[str] = []
+    bbs = {n: s.bounding_box() for n, s in shapes.items()}
+    checked = skipped = 0
+    for a, b in itertools.combinations(shapes, 2):
+        if not _bboxes_overlap(bbs[a], bbs[b]):
+            skipped += 1
+            continue
+        checked += 1
+        inter = shapes[a] & shapes[b]
+        vol = 0.0 if inter is None else inter.volume
+        allowed = ALLOWED_INTERFERENCE.get(tuple(sorted((a, b))),
+                                           INTERFERENCE_TOL_MM3)
+        if vol > allowed:
+            violations.append(f"INTERFERENCE {a} x {b}: {vol:.1f} mm^3 "
+                              f"overlap (allowed {allowed:g})")
+    print(f"interference: {checked} pair(s) checked, {skipped} skipped by "
+          f"bbox prefilter — {'OK' if not violations else 'see below'}")
+
+    if MIN_CLEARANCE:
+        for (a, b), required in MIN_CLEARANCE.items():
+            d, p1, _ = shapes[a].distance_to_with_closest_points(shapes[b])
+            if d < required:
+                touch = " — parts touch/intersect" if d == 0.0 else ""
+                violations.append(
+                    f"CLEARANCE {a} x {b}: {d:.1f} mm < {required:g} mm "
+                    f"required, near ({p1.X:.1f}, {p1.Y:.1f}, "
+                    f"{p1.Z:.1f}){touch}")
+        print(f"clearance: {len(MIN_CLEARANCE)} pair(s) checked")
+    else:
+        print("clearance: no MIN_CLEARANCE configured — skipped")
+
+    for violation in violations:
+        print(violation)
+    print("CHECK OK" if not violations
+          else f"CHECK FAILED: {len(violations)} violation(s)")
+    return violations
+
+
 if __name__ == "__main__":
     command = sys.argv[1] if len(sys.argv) > 1 else "show"
     if command == "export":
         export_parts()
     elif command == "bom":
         print(bom())
+    elif command == "check":
+        raise SystemExit(1 if check() else 0)
     elif command == "show":
         for name, spec in PARTS.items():
             part = spec.builder()
@@ -229,4 +332,4 @@ if __name__ == "__main__":
                   f"mass {part.volume * spec.material.density:.3f} kg, "
                   f"bbox {part.bounding_box().size}")
     else:
-        raise SystemExit(f"unknown command: {command} (export|bom|show)")
+        raise SystemExit(f"unknown command: {command} (export|bom|check|show)")

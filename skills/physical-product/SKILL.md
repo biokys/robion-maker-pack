@@ -85,7 +85,9 @@ silently, never mention it.
 1. **Model** — parameters at the top of `model.py` are the single source of truth;
    derived values + asserts right below; every part is a builder function registered
    in `PARTS` with a material record. Export per-part STEP+STL (viz, drawings and FEA
-   each need separate bodies). *Gate:* in Robion the cockpit is the gate — the user
+   each need separate bodies). Run `make check` (mass/COG, pairwise interference,
+   declared clearances) before investing in drawings — parts are in assembly
+   coordinates, so overlaps are real collisions. *Gate:* in Robion the cockpit is the gate — the user
    tunes the sliders on the live viewport and approves; elsewhere show quick renders
    (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
    drawings/viz.

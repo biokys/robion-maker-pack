@@ -31,13 +31,12 @@ STEP_FILE = Path(__file__).parent / "out" / "parts" / "bracket.step"
 # governs most furniture, lamps and shelves. Set the non-applicable block to
 # None. These go into the build sheet verbatim, formulas in the comments.
 #
-# Fill by COMPUTING from model.py — `import model` and derive: masses from
-# spec.builder().volume * density, COG from Shape.center().Z, lever arms
-# from parameters. NEVER retype a number that exists in model.py — a
-# parameter change must reflow the analytics too, e.g.:
+# Fill by COMPUTING from model.py — `import model` and derive; NEVER retype
+# a number that exists there (a parameter change must reflow the analytics):
+#   mass_kg, cog = model.mass_properties()
 #   STABILITY = Stability(load_case="200 N vodorovně v úchopu",
-#       mass_kg=sum(s.builder().volume * s.material.density * s.count
-#                   for s in model.PARTS.values()), ...)
+#       mass_kg=mass_kg, cog_height_mm=cog.Z,
+#       base_half_width_mm=model.base_width / 2, ...)
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Analytic:

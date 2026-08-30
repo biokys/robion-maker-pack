@@ -6,13 +6,18 @@ CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KICAD_CLI ?= /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
 OUT := out
 
-all: parts drawings bom
+all: parts check drawings bom
 
 parts:
 	$(UV) run model.py export
 
 bom:
 	$(UV) run model.py bom
+
+# assembly gate: mass/COG + pairwise interference + declared clearances;
+# fails fast before the expensive drawing stage
+check:
+	$(UV) run model.py check
 
 drawings: parts
 	$(UV) run drawings.py
@@ -95,4 +100,4 @@ doctor:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: all parts bom drawings drawings-png drawings-pdf pdf viz fea font doctor clean
+.PHONY: all parts bom check drawings drawings-png drawings-pdf pdf viz fea font doctor clean
