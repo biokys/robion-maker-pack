@@ -50,8 +50,11 @@ model.py, drawings.py, merge_pdfs.py, blender_viz.py, fea.py, datauri.py,
 buildsheet.html, CLAUDE.md.template → CLAUDE.md), **rename `[project].name`
 in pyproject.toml to the product slug** (merge_pdfs.py derives
 `<name>_komplet.pdf` from it — the default leaves `product_komplet.pdf`),
-run `uv sync`, then `make font` (ISO 3098 lettering for drawings; skip
-offline — Arial fallback) and `make doctor` to see which tools exist. Canonical outputs: `out/parts/*.{step,stl}`, `out/drawings/` (SVG +
+fill the `{{PACK_VERSION}}` stamp in CLAUDE.md with the installed pack
+version (it tells future sessions which template vintage the project has —
+see MIGRATIONS.md in the pack), run `uv sync`, then `make font` (ISO 3098
+lettering for drawings; skip offline — Arial fallback) and `make doctor`
+to see which tools exist. Canonical outputs: `out/parts/*.{step,stl}`, `out/drawings/` (SVG +
 PNG checks + per-sheet PDF + merged `vykresy_A3.pdf`), `out/viz_*.png`,
 `out/fea/`, `out/bom.md`, `out/<product>_komplet.pdf`; textures in `assets/`. Environment specifics and the degrade matrix
 when tools are missing: [references/toolchain.md](references/toolchain.md).
@@ -97,7 +100,9 @@ silently, never mention it.
    indicators; assembly sheets get balloons + a kusovník table
    (`parts_table(parts_rows())`). Section views (řezy) with per-material
    hatching are supported — add one when interior heights or layered build-ups
-   need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser.
+   need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser;
+   for actual CNC routing use exact face-wire DXFs per
+   [references/cnc-router.md](references/cnc-router.md), not projected views.
    Conventions, the section recipe and the SVG→PNG/PDF pipeline:
    [references/drafting-conventions.md](references/drafting-conventions.md).
    *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
@@ -151,3 +156,11 @@ Missing tool ⇒ skip that stage gracefully and say so in the build sheet (exact
 sentences in [references/toolchain.md](references/toolchain.md)). Never install
 system packages (brew) without asking. The build sheet always ends with a
 "Předpoklady a nejistoty" section listing every assumption made.
+
+## 8 · Retrospective (end of project)
+
+After the user approves the build sheet, write `RETRO.md` into the project:
+what worked, what ground (ordered by severity), and every gotcha already
+recorded in the project CLAUDE.md. Then offer to turn the findings into pack
+patches — the pack's templates improve only through this loop (MIGRATIONS.md
+in the pack repo tracks what changed between versions for running projects).

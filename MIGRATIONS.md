@@ -1,0 +1,86 @@
+# Template migrations
+
+Templates are copied into product projects at scaffold time, so a running
+project does not pick up pack updates by itself. This file lists, per pack
+release, what changed in `skills/physical-product/templates/` and how to
+migrate an existing project — apply only the sections newer than the pack
+version stamped in the project's CLAUDE.md.
+
+Migrating is always optional: projects keep working on the template vintage
+they were scaffolded with.
+
+## v0.10.0
+
+- `VIZ_COMPOUNDS` values may be a zero-arg callable returning any Shape
+  (N shifted copies, purchased hardware) — the key-list form still works.
+- `merge_pdfs.py` derives `<name>_komplet.pdf` from `[project].name` in
+  pyproject.toml; `KOMPLET_NAME` is only an override.
+- fea.py rule: fill ANALYTIC/STABILITY by computing from model.py.
+
+**Migrate:** replace hand-merged viz exports with a `VIZ_COMPOUNDS` callable;
+set `[project].name` to the product slug (or keep `KOMPLET_NAME`); replace any
+retyped numbers in fea.py blocks with `import model` derivations.
+
+## v0.9.0
+
+- View placement rewritten to use ACTUAL projected edge bboxes:
+  `Sheet.add_views(part, kinds)` and `Sheet.place_view(view, side, of)`
+  replace `layout_views()` (removed) and hand-computed `shift=` tuples —
+  the old model-span math threw views off-sheet for parts modeled away
+  from the origin.
+- Lettering: osifont (ISO 3098, has ⌀ and Czech diacritics) fetched by
+  `make font`, auto-detected via `FONT_PATH`; Arial-italic fallback → use
+  Ø (U+00D8) in labels there.
+- `PartSpec.group` collapses part families into one BOM row; shared
+  `model.bom_rows()` feeds `bom()` and `drawings.parts_rows()`.
+- `VIZ_COMPOUNDS` (key-list form) for merged viz STLs; builders must
+  return parts in ASSEMBLY coordinates (now an explicit convention).
+- fea.py: second analytic block `Stability` (tip-over) beside `Analytic`.
+- buildsheet.html: optional `{{EXTRA_FIGURES}}` / `{{FASTENERS_TABLE}}`
+  slots (collapse until filled); new `datauri.py` helper (Pillow) replaces
+  sips; `pillow` added to dependencies.
+- New view kind `"bottom"`; parts-table height reserved by frame centering.
+- Makefile: `font` target + doctor lines for osifont.
+
+**Migrate:** replace `View(part, kind, shift=(dx, dy))` layouts with
+`s.add_views(...)` / `s.place_view(...)`; run `make font`; swap `sips`
+usage for `uv run datauri.py`; add `pillow>=10` to dependencies; if the
+BOM has repeated families, add `group=` to their PartSpecs.
+
+## v0.8.0
+
+- buildsheet.html carries its own `@media print` block (A4 pages, light
+  palette via cascade, screen-only/print-only swap) — ONE file serves the
+  artifact page and `make pdf`; the derived `.print.html` variant is gone
+  and the Makefile `pdf` target prints `out/vyrobni_list.html`.
+
+**Migrate:** drop the project's `.print.html` generator branch; make the
+generator write only `out/vyrobni_list.html`; update Makefile `pdf` target
+path (or re-copy the template Makefile).
+
+## v0.7.0
+
+- blender_viz.py: exploded-view shots — per-part `EXPLODE` directions +
+  an `"explode": factor` key on any SHOTS entry; locations restore after
+  each shot.
+
+**Migrate:** re-copy blender_viz.py helpers or port the EXPLODE block +
+`render_shots` changes; keep your PARTS()/SHOTS config.
+
+## v0.6.0
+
+- drawings.py adopted `build123d-drafting-helpers` (pinned `<0.15`):
+  named-side `dim(p1, p2, side, offset, label)` replaces the signed-offset
+  ExtensionLine rule; new `hole_note` / `center_mark` / `centerline` /
+  `note` / `section_indicator` / `balloon` / `parts_table`; new `marks`
+  layer; `section_faces(solid, axis, coord)` generalized to X/Y/Z.
+- `write(dxf=True)` layered DXF (model mm, 1:1); `manifest.json` drives
+  merge_pdfs.py sheet order (SHEET_ORDER is a fallback); scale accepts
+  ratios ("2:1"); DATE defaults to today.
+- Makefile: `drawings-png` glob fixed (previously skipped any sheet whose
+  name ended in "t" — including the demo).
+
+**Migrate:** add `build123d-drafting-helpers>=0.14.2,<0.15` to
+dependencies; change `dim()` calls from signed offsets to named sides;
+re-copy the Makefile `drawings-png` recipe; delete manual SHEET_ORDER
+maintenance (keep the list as fallback only).

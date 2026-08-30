@@ -56,4 +56,6 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
   `~/.robion/workshop.yaml` — created once by a short interview, read at every
   project intake, yours to hand-edit.
 - Releases are git tags; the marketplace pins the plugin version per release.
+  Template changes between versions and how to migrate a running project:
+  [MIGRATIONS.md](MIGRATIONS.md).
 - MIT licensed.

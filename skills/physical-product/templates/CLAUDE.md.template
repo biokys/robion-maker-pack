@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 {{ONE_LINE_PRODUCT_DESCRIPTION}}. Built with the `physical-product` skill:
 parametric build123d model, dimensioned drawings, Blender renders, BOM, analysis.
+Pack: robion-maker-pack v{{PACK_VERSION}} — template change log & migration
+steps live in MIGRATIONS.md in the pack repo.
 This is a product-engineering project, not a software project — no tests or
 linters; deliverables are drawings, renders, the BOM and the Czech build sheet.
 All dimensions are millimetres. Design decisions and the human-readable
