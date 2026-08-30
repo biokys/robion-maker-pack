@@ -9,6 +9,45 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.14.0
+
+- drawings.py machine lint at every `write()`: dim-truth (label vs
+  measured anchor distance; `(ref)`, `~`, `×`, `°` labels skipped) and
+  text-collision checks (label×label, strokes/edges through labels), plus
+  `uv run drawings.py lint-selftest`.
+- New `Sheet.detail(view, center, radius, "2:1", ...)` circular detail
+  views with `Detail.pt()` anchors; `Sheet.auto_holes(view, part)` via
+  the new optional `recognise` extra (b123d-recognisers); `hole_note`
+  gained depth/cbore/csink pass-through.
+
+**Migrate:** re-copy drawings.py (keep your sheet functions; the Sheet
+API is backward compatible), add the `recognise` extra to pyproject if
+auto_holes is wanted, and fix any lint WARNINGs the first run prints —
+they are real findings, not noise.
+
+## v0.13.0
+
+No template changes (pack-side CI only).
+
+## v0.12.0
+
+- model.py: `check` CLI command (pairwise interference with
+  ALLOWED_INTERFERENCE whitelist, optional MIN_CLEARANCE pairs) and
+  `mass_properties()`; Makefile `check` target wired into `all`.
+
+**Migrate:** re-copy model.py's check block (config constants +
+`_built_parts`/`mass_properties`/`check` + the CLI branch) and the
+Makefile `check` target; derive fea.py STABILITY from
+`model.mass_properties()`.
+
+## v0.11.0
+
+- CLAUDE.md.template gained the pack-version stamp line; SKILL.md gained
+  the end-of-project retrospective step; new references/cnc-router.md.
+
+**Migrate:** add `Pack: robion-maker-pack v<version>` + MIGRATIONS.md
+pointer to the project CLAUDE.md.
+
 ## v0.10.0
 
 - `VIZ_COMPOUNDS` values may be a zero-arg callable returning any Shape

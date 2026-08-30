@@ -49,9 +49,9 @@ jobs:
           mkdir -p "$PROJ"
           cp -R skills/physical-product/templates/. "$PROJ/"
 
-      - name: uv sync
+      - name: uv sync (with the recognise extra — exercises auto_holes)
         working-directory: ${{ env.PROJ }}
-        run: uv sync
+        run: uv sync --extra recognise
 
       - name: Font (osifont — exercises the ISO 3098 lettering path)
         working-directory: ${{ env.PROJ }}
@@ -88,6 +88,10 @@ jobs:
         run: |
           make drawings-pdf CHROME=google-chrome
           test -f out/drawings/vykresy_A3.pdf
+
+      - name: Drawing lint selftest (deliberately broken sheet must trip)
+        working-directory: ${{ env.PROJ }}
+        run: uv run drawings.py lint-selftest
 
       - name: FEA gate must refuse incomplete analytics (nonzero is EXPECTED)
         working-directory: ${{ env.PROJ }}

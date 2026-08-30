@@ -91,6 +91,7 @@ doctor:
 	@$(UV) run python -c "import build123d,sys;print('  build123d OK', build123d.__version__)" 2>/dev/null || echo "  build123d MISSING (uv sync)"
 	@$(UV) run python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
 	@test -f assets/osifont/osifont.ttf && echo "  osifont   OK" || echo "  osifont   MISSING (make font; drawings fall back to Arial)"
+	@$(UV) run python -c "import b123d_recognisers;print('  recognisers OK')" 2>/dev/null || echo "  recognisers MISSING (uv sync --extra recognise; auto_holes degrades)"
 	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
 	@command -v ccx >/dev/null && echo "  ccx       OK" || echo "  ccx       MISSING (FEA -> analytic only)"

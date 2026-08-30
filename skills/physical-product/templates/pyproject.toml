@@ -29,3 +29,8 @@ fea = [
 dev = [
     "ocp-vscode",
 ]
+# hole/pattern recognition for drawings.auto_holes; alpha, breaking 0.x
+# minors -> capped; drawings degrade gracefully without it
+recognise = [
+    "b123d-recognisers>=0.4.5,<0.5",
+]

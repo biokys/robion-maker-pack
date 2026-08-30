@@ -32,6 +32,7 @@ import datetime
 import json
 import math
 import re
+import sys
 from pathlib import Path
 from typing import Callable
 
@@ -48,6 +49,12 @@ except Exception as _err:
     _DRAFTING = False
     print(f"WARNING: build123d_drafting unavailable ({_err}) — dims fall "
           "back to ExtensionLine; center marks and hole callouts degrade")
+
+try:
+    from b123d_recognisers import recognise_countersinks, recognise_holes
+    _RECOGNISERS = True
+except Exception:
+    _RECOGNISERS = False    # auto_holes prints the install hint when called
 
 OUT = Path(__file__).parent / "out" / "drawings"
 
@@ -95,6 +102,7 @@ class View:
 
     def __init__(self, part: Part, kind: str,
                  shift: tuple[float, float] = (0.0, 0.0)):
+        self.kind = kind                    # used by Sheet.auto_holes
         direction, up = CAMERA[kind]
         bb = part.bounding_box()
         self.bbox = bb                      # used by Sheet.section_indicator
@@ -173,6 +181,59 @@ def _side_sign(p1, p2, side: str) -> float:
     return 1.0 if dy * sx - dx * sy >= 0 else -1.0
 
 
+_DIM_NUM = re.compile(r"^[⌀ØR]?\s*(\d+(?:[.,]\d+)?)")
+
+
+def _parse_dim_label(label: str) -> float | None:
+    """Leading number of a checkable dim label, or None for labels that are
+    deliberately not the measured distance: "(60)" reference dims, "~"/"≈"
+    approximations, counts ("2× 30"), angles ("45°"), non-numeric text.
+    ⌀/Ø/R prefixes are stripped, not skipped — those ARE checkable."""
+    s = label.strip()
+    if s.startswith(("(", "~", "≈")) or "×" in s or "°" in s:
+        return None
+    m = _DIM_NUM.match(s)
+    return float(m.group(1).replace(",", ".")) if m else None
+
+
+def _clip_len(seg, box) -> float:
+    """Length of the segment portion inside an AABB (Liang–Barsky)."""
+    (x0, y0), (x1, y1) = seg
+    dx, dy = x1 - x0, y1 - y0
+    t0, t1 = 0.0, 1.0
+    for p, q in ((-dx, x0 - box[0]), (dx, box[2] - x0),
+                 (-dy, y0 - box[1]), (dy, box[3] - y0)):
+        if p == 0:
+            if q < 0:
+                return 0.0
+            continue
+        r = q / p
+        if p < 0:
+            t0 = max(t0, r)
+        else:
+            t1 = min(t1, r)
+    return 0.0 if t0 >= t1 else math.hypot(dx, dy) * (t1 - t0)
+
+
+def _label_of(sketch) -> str:
+    return getattr(sketch, "label", "") or "⌀ callout"
+
+
+class Detail:
+    """Handle returned by Sheet.detail(): pt() maps MODEL coordinates into
+    the blown-up detail so dims anchor exactly (labels stay true model mm —
+    the dim-truth lint divides measured lengths by k inside details)."""
+
+    def __init__(self, src: tuple[float, float], k: float,
+                 at: tuple[float, float], view: View):
+        self._src, self.k, self.at, self._view = src, k, at, view
+
+    def pt(self, x: float, y: float, z: float) -> tuple[float, float]:
+        u, v = self._view.pt(x, y, z)
+        return ((u - self._src[0]) * self.k + self.at[0],
+                (v - self._src[1]) * self.k + self.at[1])
+
+
 class Sheet:
     """One A3 drawing sheet. Offsets/sizes in annotation methods are PAPER mm.
 
@@ -216,6 +277,8 @@ class Sheet:
             "hatch": [], "frame": [], "text": []}
         self._parts_rows: list[tuple] = []
         self._skipped_marks = 0
+        self._dim_checks: list[tuple[str, tuple, tuple]] = []
+        self._details: list[tuple[tuple, float, float]] = []  # (at, r, k)
 
     def add_view(self, view: View) -> None:
         self.layers["visible"].extend(view.visible)
@@ -228,6 +291,8 @@ class Sheet:
 
         Always pass an explicit `label` — auto labels append units.
         """
+        if label is not None:
+            self._dim_checks.append((label, p1, p2))
         offset = abs(offset_paper_mm) * self.P
         if _DRAFTING:
             self.layers["dims"].append(
@@ -241,23 +306,38 @@ class Sheet:
     def hole_note(self, at: tuple[float, float], d_model: float,
                   count: int | None = None,
                   offset_paper: tuple[float, float] = (12.0, 10.0),
-                  through: bool = False, suffix: str = "") -> None:
+                  through: bool = False, depth=None,
+                  cbore_dia=None, cbore_depth=None,
+                  csink_dia=None, csink_angle: float | None = None,
+                  suffix: str = "") -> None:
         """Leader from a hole at `at` (view.pt of its center) to a
-        '4x ⌀8'-style callout. `d_model` in model mm."""
+        '4x ⌀8'-style callout; depth/counterbore/countersink included when
+        given. `d_model` in model mm."""
         elbow = (at[0] + offset_paper[0] * self.P,
                  at[1] + offset_paper[1] * self.P)
         if _DRAFTING:
+            def _s(v):  # strings bypass draft.decimal_precision rounding
+                return f"{v:g}" if isinstance(v, (int, float)) else v
             callout = HoleCallout(f"{d_model:g}", count=count,
-                                  through=through, suffix=suffix or None,
-                                  draft=self.draft,
+                                  through=through, depth=_s(depth),
+                                  cbore_dia=_s(cbore_dia),
+                                  cbore_depth=_s(cbore_depth),
+                                  csink_dia=_s(csink_dia),
+                                  csink_angle=csink_angle,
+                                  suffix=suffix or None, draft=self.draft,
                                   line_width=0.15 * self.P)
             self.layers["dims"].append(
                 Leader(at, elbow, "", self.draft, callout=callout,
                        line_width=0.15 * self.P))
         else:
             text = f"{count}x " if count else ""
+            extra = "".join(f" {t}" for t in (
+                f"hl. {depth}" if depth else "",
+                f"zahl. Ø{cbore_dia}×{cbore_depth}" if cbore_dia else "",
+                f"kuž. Ø{csink_dia}/{csink_angle:g}°" if csink_dia else "",
+            ) if t)
             self.layers["dims"].append(_text(
-                f"{text}Ø{d_model:g}{' PRŮCH.' if through else ''}"
+                f"{text}Ø{d_model:g}{' PRŮCH.' if through else ''}{extra}"
                 f"{' ' + suffix if suffix else ''}",
                 3.5 * self.P, elbow))
 
@@ -348,6 +428,107 @@ class Sheet:
                 label, 5 * P,
                 (end[0] - normal[0] * 12 * P, end[1] - normal[1] * 12 * P),
                 align=(Align.CENTER, Align.CENTER)))
+
+    def detail(self, view: View, center_model: tuple[float, float, float],
+               radius_paper: float, scale: int | float | str,
+               label: str = "B", at: tuple[float, float] = (0.0, 0.0)
+               ) -> Detail:
+        """Circular detail (kruhový detail) of `view` at a different scale.
+
+        Clips the view's edges to a circle of `radius_paper` (paper mm)
+        around `center_model`, blows them up by k = sheet_P / detail_P and
+        places them at `at` (sheet coords). Draws the source circle +
+        letter on the parent and the destination ring + caption. Call
+        AFTER the parent view is placed. Dim inside via the returned
+        Detail.pt() with TRUE model-mm labels.
+        """
+        P = self.P
+        p_det, det_label = _parse_scale(scale)
+        k = P / p_det
+        c = view.pt(*center_model)
+        r_src, r_dst = radius_paper * P, radius_paper * P * k
+        clip = (Pos(*c, 0) * Circle(r_src)).face()
+        failed = 0
+        for layer, edges in (("visible", view.visible),
+                             ("hidden", view.hidden)):
+            for e in edges:
+                try:
+                    r = e & clip
+                except Exception:
+                    failed += 1
+                    continue
+                for piece in ([] if r is None else r.edges()):
+                    if piece.length > 0.01 * P:
+                        self.layers[layer].append(
+                            piece.translate((-c[0], -c[1], 0)).scale(k)
+                                 .translate((*at, 0)))
+        if failed:
+            print(f"  WARNING {self.name}: {failed} detail edges failed "
+                  "to clip")
+        # source marker on the parent: thin circle + letter at 45 deg
+        self.layers["marks"].append(
+            Pos(*c, 0) * (Circle(r_src) - Circle(r_src - 0.18 * P)))
+        lp = (r_src + 4 * P) * 0.7071
+        self.layers["text"].append(_text(
+            label, 5 * P, (c[0] + lp, c[1] + lp),
+            align=(Align.CENTER, Align.CENTER)))
+        # destination ring + caption
+        self.layers["marks"].append(
+            Pos(*at, 0) * (Circle(r_dst) - Circle(r_dst - 0.18 * P)))
+        self.note(f"DETAIL {label} ({det_label})",
+                  (at[0], at[1] - r_dst - 6 * P))
+        self._details.append((at, r_dst, k))
+        return Detail(c, k, at, view)
+
+    def auto_holes(self, view: View, part: Part, axis: str | None = None,
+                   note_offset: tuple[float, float] = (12.0, 10.0),
+                   note_step: float = 9.0, axis_tol_deg: float = 1.0
+                   ) -> list[tuple]:
+        """Recognise drilled holes (b123d-recognisers), center-mark those
+        axial to `view` and emit one grouped hole_note per (⌀, depth,
+        cbore, csink) family. Returns [(HoleRecord, count)] — empty when
+        the recogniser is unavailable (annotate manually then).
+        """
+        if not _RECOGNISERS:
+            print(f"  WARNING {self.name}: b123d-recognisers unavailable — "
+                  "uv sync --extra recognise, or annotate holes manually")
+            return []
+        if axis is None:
+            d = Vector(CAMERA[view.kind][0]).normalized()
+        else:
+            d = {"X": Vector(1, 0, 0), "Y": Vector(0, 1, 0),
+                 "Z": Vector(0, 0, 1)}[axis.lstrip("+-").upper()]
+        holes = recognise_holes(part, csinks=recognise_countersinks(part))
+        cos_tol = math.cos(math.radians(axis_tol_deg))
+        keep = [h for h in holes
+                if abs(h.axis[0] * d.X + h.axis[1] * d.Y
+                       + h.axis[2] * d.Z) >= cos_tol]
+        groups: dict[tuple, list] = {}
+        for h in keep:
+            at = view.pt(*h.location)   # axis point -> circle center
+            self.center_mark(at, h.diameter)
+            key = (round(h.diameter, 2), h.bottom == "through",
+                   None if h.bottom == "through" else round(h.depth, 1),
+                   (round(h.cbore.diameter, 2), round(h.cbore.depth, 1))
+                   if h.cbore else None,
+                   (round(h.csink.major_diameter, 2),
+                    round(h.csink.included_angle)) if h.csink else None)
+            groups.setdefault(key, []).append((h, at))
+        out = []
+        for i, members in enumerate(groups.values()):
+            h, at = max(members, key=lambda m: (m[1][1], -m[1][0]))
+            thru = h.bottom == "through"
+            self.hole_note(
+                at, h.diameter, count=len(members), through=thru,
+                depth=None if thru else f"{h.depth:g}",
+                cbore_dia=f"{h.cbore.diameter:g}" if h.cbore else None,
+                cbore_depth=f"{h.cbore.depth:g}" if h.cbore else None,
+                csink_dia=f"{h.csink.major_diameter:g}" if h.csink else None,
+                csink_angle=h.csink.included_angle if h.csink else None,
+                offset_paper=(note_offset[0],
+                              note_offset[1] + i * note_step))
+            out.append((h, len(members)))
+        return out
 
     def balloon(self, n: int | str, at: tuple[float, float],
                 tip: tuple[float, float] | None = None,
@@ -508,8 +689,98 @@ class Sheet:
             self.layers["frame"].append(
                 Edge.make_line((cx, y, 0), (cx, top, 0)))
 
+    def _lint_dims(self) -> list[str]:
+        """Dim-truth check: every checkable label must equal the measured
+        anchor distance (model mm). Catches wrong anchors, stale labels and
+        dims accidentally spanning two views."""
+        findings = []
+        for label, p1, p2 in self._dim_checks:
+            want = _parse_dim_label(label)
+            if want is None:
+                continue
+            measured = math.hypot(p2[0] - p1[0], p2[1] - p1[1])
+            where = ""
+            for at, r_dst, k in self._details:
+                if (math.hypot(p1[0] - at[0], p1[1] - at[1]) <= r_dst
+                        and math.hypot(p2[0] - at[0], p2[1] - at[1])
+                        <= r_dst):
+                    measured /= k
+                    where = f" in DETAIL (k={k:g})"
+                    break
+            tol = 0.2 + 0.005 * measured
+            if abs(measured - want) > tol:
+                findings.append(
+                    f"dim '{label}' measures {measured:.1f}{where} "
+                    f"(Δ{abs(measured - want):.2f} > ±{tol:.2f})")
+        return findings
+
+    def _lint_collisions(self) -> list[str]:
+        """Text must stay clear: label×label overlap, foreign annotation
+        strokes through labels, visible part edges through labels. Uses the
+        helpers' label metadata — raw sketches (balloons, section letters)
+        are not covered."""
+        if not _DRAFTING:
+            print(f"  note {self.name}: collision lint skipped "
+                  "(build123d_drafting missing)")
+            return []
+        P = self.P
+        annos = [s for layer in ("dims", "marks", "text")
+                 for s in self.layers[layer]]
+        labeled = [(s, s.label_bbox) for s in annos
+                   if getattr(s, "label_bbox", None)]
+        findings = []
+        for i, (sa, ba) in enumerate(labeled):          # A: label x label
+            for sb, bb_ in labeled[i + 1:]:
+                w = min(ba[2], bb_[2]) - max(ba[0], bb_[0])
+                h = min(ba[3], bb_[3]) - max(ba[1], bb_[1])
+                if w <= 0 or h <= 0:
+                    continue
+                area = w * h / (P * P)
+                smaller = min(
+                    (ba[2] - ba[0]) * (ba[3] - ba[1]),
+                    (bb_[2] - bb_[0]) * (bb_[3] - bb_[1])) / (P * P)
+                if area > max(0.5, 0.15 * smaller):
+                    findings.append(
+                        f"label '{_label_of(sa)}' overlaps label "
+                        f"'{_label_of(sb)}' by {area:.1f} mm² — nudge "
+                        "offset_paper/side")
+        for sa, ba in labeled:              # B: foreign strokes vs label
+            for sb in annos:
+                if sb is sa:
+                    continue
+                if any(_clip_len(seg, ba) > 1.0 * P
+                       for seg in getattr(sb, "segments", ()) or ()):
+                    findings.append(
+                        f"line crosses label '{_label_of(sa)}' — move the "
+                        "dim or leader elbow")
+                    break
+        pad = 0.5 * P
+        for sa, ba in labeled:              # C: part edges vs label
+            bx = (ba[0] - pad, ba[1] - pad, ba[2] + pad, ba[3] + pad)
+            for e in self.layers["visible"]:
+                eb = e.bounding_box()
+                if (eb.max.X < bx[0] or eb.min.X > bx[2]
+                        or eb.max.Y < bx[1] or eb.min.Y > bx[3]):
+                    continue
+                inside = sum(
+                    1 for t in range(33)
+                    if (lambda v: bx[0] <= v.X <= bx[2]
+                        and bx[1] <= v.Y <= bx[3])(e @ (t / 32)))
+                if inside / 33 * e.length > 1.0 * P:
+                    findings.append(
+                        f"part edge crosses label '{_label_of(sa)}' — move "
+                        "the dim off the outline")
+                    break
+        return findings
+
     def write(self, dxf: bool = False) -> None:
         P = self.P
+        findings = self._lint_dims() + self._lint_collisions()
+        for i, finding in enumerate(findings):
+            if i == 10:
+                print(f"  WARNING {self.name}: (+{len(findings) - 10} more)")
+                break
+            print(f"  WARNING {self.name}: {finding}")
         if self._skipped_marks:
             print(f"  WARNING {self.name}: {self._skipped_marks} center "
                   "marks/centerlines skipped (build123d_drafting missing)")
@@ -741,13 +1012,15 @@ def sheet_bracket() -> None:
     s.dim(vt.pt(model.bracket_leg_a, 0, 0),
           vt.pt(model.bracket_leg_a, model.bracket_width, 0), "right", 10,
           f"{model.bracket_width:.0f}")
-    # holes on the top view: center marks + one leader callout
+    # holes on the top view: recognised automatically; manual fallback
+    # keeps the demo annotated when the `recognise` extra is absent
     mid = model.bracket_width / 2
-    for x, _ in model.hole_positions_a:
-        s.center_mark(vt.pt(x, mid, 0), model.hole_diameter)
-    s.hole_note(vt.pt(model.hole_positions_a[0][0], mid, 0),
-                model.hole_diameter, count=len(model.hole_positions_a),
-                through=True, offset_paper=(-12.0, 26.0))
+    if not s.auto_holes(vt, part, note_offset=(14.0, -14.0)):
+        for x, _ in model.hole_positions_a:
+            s.center_mark(vt.pt(x, mid, 0), model.hole_diameter)
+        s.hole_note(vt.pt(model.hole_positions_a[0][0], mid, 0),
+                    model.hole_diameter, count=len(model.hole_positions_a),
+                    through=True, offset_paper=(-12.0, 26.0))
     # section ŘEZ A–A at y = width/2 (through the holes), viewed from -Y:
     # indicator on the top view, hatched section view right of the front view
     y_cut = model.bracket_width / 2
@@ -761,6 +1034,14 @@ def sheet_bracket() -> None:
         s.hatch(sheet_polygon(face, vsec), "metal")
     eb = View._edges_bbox(vsec.visible)
     s.note("ŘEZ A–A", ((eb[0] + eb[1]) / 2, eb[2] - 12))
+    # circular 2:1 detail of the left hole, placed right of the top view
+    hole = (model.hole_positions_a[0][0], mid, model.thickness)
+    tb = View._edges_bbox(vt.visible)
+    det = s.detail(vt, hole, radius_paper=11.0, scale="2:1", label="B",
+                   at=(tb[1] + 55, (tb[2] + tb[3]) / 2))
+    s.dim(det.pt(hole[0] - model.hole_diameter / 2, mid, 0),
+          det.pt(hole[0] + model.hole_diameter / 2, mid, 0), "above", 14,
+          f"Ø{model.hole_diameter:g}")
     s.write(dxf=True)
 
 
@@ -777,6 +1058,61 @@ def sheet_overview() -> None:
     s.write()
 
 
+def lint_selftest() -> None:
+    """Deliberately broken annotations must trip the lints, clean ones must
+    stay silent. Exit non-zero on mismatch (CI runs this)."""
+    if not _DRAFTING:
+        print("lint-selftest skipped (build123d_drafting missing)")
+        return
+    part = model.PARTS["bracket"].builder()
+    s = Sheet("selftest", "ST-01", "SELFTEST", 1, "test")
+    v = View(part, "front")
+    s.add_view(v)
+    a, b = v.pt(0, 0, 0), v.pt(model.bracket_leg_a, 0, 0)
+    s.dim(a, b, "below", 10, "99")          # wrong -> 1 truth finding
+    s.dim(a, b, "below", 18, "(60)")        # reference -> skipped
+    s.dim(a, b, "below", 26, "2× 30")       # count -> skipped
+    truth = s._lint_dims()
+    ok = True
+    if len(truth) != 1:
+        print(f"SELFTEST FAIL: expected 1 dim-truth finding, got {truth}")
+        ok = False
+    # duplicate dim at the same offset -> label x label overlap
+    s.dim(a, b, "below", 10, f"{model.bracket_leg_a:.0f}")
+    # a note dropped on the part outline -> part-edge finding
+    s.note("NA HRANĚ", v.pt(model.bracket_leg_a / 2, 0, model.thickness))
+    # a centerline through the '99' label -> foreign-segment finding
+    lb = next(x.label_bbox for x in s.layers["dims"]
+              if getattr(x, "label", None) == "99")
+    cx = (lb[0] + lb[2]) / 2
+    s.centerline((cx, lb[1] - 20), (cx, lb[3] + 20))
+    col = s._lint_collisions()
+    for needle in ("overlaps label", "line crosses label",
+                   "part edge crosses label"):
+        if not any(needle in f for f in col):
+            print(f"SELFTEST FAIL: no '{needle}' finding in {col}")
+            ok = False
+    # a detail dim with a true model-mm label must stay silent
+    s2 = Sheet("selftest2", "ST-02", "SELFTEST2", 1, "test")
+    v2 = View(part, "top")
+    s2.add_view(v2)
+    mid = model.bracket_width / 2
+    hole = (model.hole_positions_a[0][0], mid, 0)
+    det = s2.detail(v2, hole, 11.0, "2:1", at=(200.0, 0.0))
+    s2.dim(det.pt(hole[0] - 4, mid, 0), det.pt(hole[0] + 4, mid, 0),
+           "above", 10, "8")
+    extra = s2._lint_dims()
+    if extra:
+        print(f"SELFTEST FAIL: detail dim false positive: {extra}")
+        ok = False
+    print("lint-selftest OK" if ok else "lint-selftest FAILED")
+    if not ok:
+        raise SystemExit(1)
+
+
 if __name__ == "__main__":
-    sheet_bracket()
-    sheet_overview()
+    if len(sys.argv) > 1 and sys.argv[1] == "lint-selftest":
+        lint_selftest()
+    else:
+        sheet_bracket()
+        sheet_overview()

@@ -92,10 +92,43 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   construction. The frame centering **reserves the table height** — tall
   content shrinks the graphics area, and the A3-overflow warning says so:
   respond with a larger scale_den or fewer rows, don't nudge the table.
+- **Auto hole annotation:** `auto_holes(view, part)` (needs
+  `uv sync --extra recognise` → b123d-recognisers) recognises drilled
+  holes, center-marks those axial to the view and emits one grouped
+  callout per (⌀, depth, cbore, csink) family — returns `[]` when the
+  recogniser is missing, so demos/projects keep a manual fallback branch.
+  `hole_note` passes `depth`/`cbore_*`/`csink_*` through to the callout.
+- **Detail views (kruhový detail):** `det = sheet.detail(view,
+  center_model, radius_paper, "2:1", label="B", at=...)` — clips the
+  placed parent view to a circle, blows it up by k = P/P_detail at `at`,
+  draws source circle + letter and destination ring + caption. Dim inside
+  via `det.pt(x, y, z)` with TRUE model-mm labels (the lint knows k).
+  Call only after the parent view is placed.
 - **Missing helpers degrade, not crash:** without `build123d_drafting`
   installed, dims fall back to `ExtensionLine`, callouts to plain text,
   center marks are skipped — each with a printed WARNING. `make doctor`
-  shows `b3d-drafting` status.
+  shows `b3d-drafting` and `recognisers` status.
+
+## Machine lint (runs at every write())
+
+Two passes print `WARNING <sheet>: ...` lines — treat any warning as a
+gate failure, fix and re-render:
+
+- **Dim truth:** every checkable `dim()` label must equal the measured
+  anchor distance (tolerance 0.2 mm + 0.5 %). Catches wrong anchors,
+  stale labels and dims accidentally spanning two views. Deliberately
+  uncheckable labels are skipped by convention: `(60)` parenthesised
+  reference dims, `~`/`≈` approximations, counts with `×`, angles with
+  `°`; `Ø`/`⌀`/`R` prefixes are stripped and CHECKED. Dims inside a
+  detail are divided by its k first.
+- **Collisions:** labels must stay clear — label×label overlap
+  (> 0.5 mm² / 15 % of the smaller), foreign annotation strokes through a
+  label (> 1 mm chord), visible part edges through a label (> 1 mm).
+  Powered by the helpers' label metadata; balloons and section letters
+  are plain sketches and are not covered — check those on the PNG.
+- `uv run drawings.py lint-selftest` verifies both passes on deliberately
+  broken annotations (CI runs it); zero warnings on the demo is the
+  shipped baseline.
 - Frame centering: `fy0 = cy − (PAPER_H − 2·MARGIN + TB_H)/2 · P` — do
   NOT add TB_H·P again (classic bug: content overlaps the title block).
 - Construct drafting objects standalone (Algebra mode) — building an
