@@ -30,7 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      PROJ: ${{ runner.temp }}/proj
+      # runner.* is not a valid context in job-level env — use the workspace
+      PROJ: ${{ github.workspace }}/proj
     steps:
       - uses: actions/checkout@v4
 
