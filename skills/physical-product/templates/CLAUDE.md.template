@@ -21,6 +21,8 @@ make parts              # STEP+STL per part into out/parts/
 make drawings           # dimensioned SVGs (+ PNG via the pattern rule)
 make viz                # Blender renders (log-grepped for crashes)
 make bom                # kusovník into out/bom.md
+make check              # assembly gate: mass/COG, interference, clearance
+make cutlist            # nářezový plán (out/cutlist.{md,svg}; -png variant)
 make fea                # analysis (degrades to analytic-only without ccx)
 make doctor             # tool availability
 ```
@@ -34,6 +36,8 @@ variables; blender is on PATH.
   `PARTS` registry (builder + material) → per-part exports + BOM. Never hardcode
   a dimension inside a builder.
 - `drawings.py` — first-angle dimensioned views from `model.PARTS`.
+- `cutlist.py` — STOCK declaration → FFD/shelf packing → nářezový plán;
+  stock/purchasing knowledge lives here, never in model.py.
 - `blender_viz.py` — headless Cycles; per-part materials; bbox-driven scene.
 - `fea.py` — analytic gate, then gmsh+pygccx+CalculiX.
 - Verify visuals by rendering PNG and Reading it; Blender exit code is

@@ -46,8 +46,8 @@ contains electronics. Details and interchange rules: [references/stack-selection
 ## 3 · Scaffold & bootstrap
 
 New project: copy `templates/` files into the repo (pyproject.toml, Makefile,
-model.py, drawings.py, merge_pdfs.py, blender_viz.py, fea.py, datauri.py,
-buildsheet.html, CLAUDE.md.template → CLAUDE.md), **rename `[project].name`
+model.py, drawings.py, cutlist.py, merge_pdfs.py, blender_viz.py, fea.py,
+datauri.py, buildsheet.html, CLAUDE.md.template → CLAUDE.md), **rename `[project].name`
 in pyproject.toml to the product slug** (merge_pdfs.py derives
 `<name>_komplet.pdf` from it — the default leaves `product_komplet.pdf`),
 fill the `{{PACK_VERSION}}` stamp in CLAUDE.md with the installed pack
@@ -56,7 +56,8 @@ see MIGRATIONS.md in the pack), run `uv sync`, then `make font` (ISO 3098
 lettering for drawings; skip offline — Arial fallback) and `make doctor`
 to see which tools exist. Canonical outputs: `out/parts/*.{step,stl}`, `out/drawings/` (SVG +
 PNG checks + per-sheet PDF + merged `vykresy_A3.pdf`), `out/viz_*.png`,
-`out/fea/`, `out/bom.md`, `out/<product>_komplet.pdf`; textures in `assets/`. Environment specifics and the degrade matrix
+`out/fea/`, `out/bom.md`, `out/cutlist.{md,svg,png}`,
+`out/<product>_komplet.pdf`; textures in `assets/`. Environment specifics and the degrade matrix
 when tools are missing: [references/toolchain.md](references/toolchain.md).
 
 ## 4 · Stage pipeline
@@ -116,7 +117,9 @@ silently, never mention it.
    render; user approves the hero shot.
 4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
    cross-checked against `Shape.volume × density`; include fasteners, adhesives,
-   finish materials with Czech names.
+   finish materials with Czech names. Then `make cutlist` — declare the stock in
+   `cutlist.py` STOCK (sizes from the workshop profile) and get the nářezový
+   plán: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
 5. **Assembly + finishing plan** — numbered Czech steps; include the surface-finish
    schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
    steps so interior surfaces get finished while still accessible.

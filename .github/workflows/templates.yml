@@ -57,23 +57,26 @@ jobs:
         working-directory: ${{ env.PROJ }}
         run: make font
 
-      - name: Model pipeline (export, bom, check, drawings)
+      - name: Model pipeline (export, bom, check, cutlist, drawings)
         working-directory: ${{ env.PROJ }}
         run: |
           uv run model.py export
           uv run model.py bom
           uv run model.py check
+          uv run cutlist.py > /dev/null
           uv run drawings.py
 
       - name: Assert expected outputs
         working-directory: ${{ env.PROJ }}
         run: |
           for f in out/parts/bracket.step out/parts/bracket.stl out/bom.md \
+                   out/cutlist.md out/cutlist.svg \
                    out/drawings/bracket.svg out/drawings/bracket.dxf \
                    out/drawings/overview.svg out/drawings/manifest.json; do
             test -f "$f" || { echo "MISSING $f"; exit 1; }
           done
           grep -q "Celková hmotnost" out/bom.md
+          grep -q "Nákupní souhrn" out/cutlist.md
           uv run python -c "import json; json.load(open('out/drawings/manifest.json'))"
 
       - name: PNG smoke via preinstalled Chrome

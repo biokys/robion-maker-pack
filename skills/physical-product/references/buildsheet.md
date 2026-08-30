@@ -22,8 +22,10 @@ republishing to the same URL across iterations.
    "kóty v mm".
 5. **Kusovník** — per-material tables, columns `Poz. | Díl | Rozměr (mm) | Ks |
    Hmotnost | Pozn.`; then `Spojovací a dokončovací materiál` (fasteners, glue,
-   finish, felt pads) with quantities and purpose; note rows for purchasing hints
-   (stock lengths incl. prořez).
+   finish, felt pads) with quantities and purpose. Purchasing rows come from
+   `cutlist.purchase_rows()` (materiál, polotovar, ks, využití, zbytek — never
+   retype them), and the section gets a figure embedding `out/cutlist.png`
+   (`datauri.data_uri(..., png=True)`, line art) with a one-line figcaption.
 6. **Postup montáže** — numbered steps; order so interior surfaces are finished
    while accessible; call out screw sizes and pre-drilling; wood-movement
    provisions (oversized holes) explained.

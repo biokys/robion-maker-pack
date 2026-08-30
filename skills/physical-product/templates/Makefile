@@ -6,7 +6,7 @@ CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KICAD_CLI ?= /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
 OUT := out
 
-all: parts check drawings bom
+all: parts check drawings bom cutlist
 
 parts:
 	$(UV) run model.py export
@@ -18,6 +18,19 @@ bom:
 # fails fast before the expensive drawing stage
 check:
 	$(UV) run model.py check
+
+# nářezový plán: purchasing tables + cut diagrams from STOCK in cutlist.py
+cutlist:
+	$(UV) run cutlist.py >/dev/null
+
+$(OUT)/cutlist.png: $(OUT)/cutlist.svg $(OUT)/cutlist.html
+	"$(CHROME)" --headless --screenshot=$@ \
+		--window-size=$$(sed -n 's/.*data-window-size="\([0-9,]*\)".*/\1/p' \
+			$(OUT)/cutlist.html) \
+		--default-background-color=FFFFFFFF --hide-scrollbars \
+		"file://$(CURDIR)/$(OUT)/cutlist.html"
+
+cutlist-png: cutlist $(OUT)/cutlist.png
 
 drawings: parts
 	$(UV) run drawings.py
@@ -101,4 +114,4 @@ doctor:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: all parts bom check drawings drawings-png drawings-pdf pdf viz fea font doctor clean
+.PHONY: all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font doctor clean

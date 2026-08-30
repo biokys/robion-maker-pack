@@ -9,6 +9,18 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.15.0
+
+- New `cutlist.py` template — nářezový plán: STOCK declaration (Bar/Sheet
+  with kerf/trim/rotation, overrides, Extra pieces, NO_STOCK), FFD + shelf
+  packing, `out/cutlist.{md,svg}` + purchasing summary and
+  `purchase_rows()` for the buildsheet; Makefile `cutlist`/`cutlist-png`
+  targets, `all` includes cutlist (empty STOCK exits clean).
+
+**Migrate:** copy cutlist.py, declare STOCK from the workshop profile,
+re-copy the Makefile cutlist targets; feed the buildsheet purchasing rows
+from `cutlist.purchase_rows()`.
+
 ## v0.14.0
 
 - drawings.py machine lint at every `write()`: dim-truth (label vs
