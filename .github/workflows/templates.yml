@@ -1,6 +1,8 @@
 # Smoke-tests the product templates end to end: scaffold a project the way
-# the skill does, then run the real pipeline (model -> check -> drawings ->
-# PNG/PDF) plus the negative gates (fea refusal, drafting-helpers degrade).
+# the skill does (common + stack), then run the real pipeline per stack.
+# Solids: model -> check -> drawings -> PNG/PDF plus the negative gates
+# (fea refusal, drafting-helpers degrade). Patterns2d: pattern -> check ->
+# bom -> A4 tiling -> PDF.
 #
 # Deliberately NO uv.lock: every run resolves fresh, so this doubles as a
 # canary for upstream breakage (a new build123d or drafting-helpers release)
@@ -26,7 +28,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  pipeline:
+  solids:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
@@ -39,7 +41,7 @@ jobs:
         with:
           python-version: "3.12"
           enable-cache: true
-          cache-dependency-glob: "skills/physical-product/templates/pyproject.toml"
+          cache-dependency-glob: "skills/physical-product/templates/solids/pyproject.toml"
 
       - name: System deps for OCP (libGL)
         run: sudo apt-get update -q && sudo apt-get install -y -q libgl1
@@ -47,7 +49,8 @@ jobs:
       - name: Scaffold project from templates (as the skill does)
         run: |
           mkdir -p "$PROJ"
-          cp -R skills/physical-product/templates/. "$PROJ/"
+          cp -R skills/physical-product/templates/common/. "$PROJ/"
+          cp -R skills/physical-product/templates/solids/. "$PROJ/"
 
       - name: uv sync (with the recognise extra — exercises auto_holes)
         working-directory: ${{ env.PROJ }}
@@ -114,3 +117,61 @@ jobs:
           uv run --no-sync drawings.py | tee degrade.log
           grep -q "WARNING: build123d_drafting unavailable" degrade.log
           test -f out/drawings/bracket.svg
+
+  patterns2d:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PROJ: ${{ github.workspace }}/patproj
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: "skills/physical-product/templates/patterns2d/pyproject.toml"
+
+      - name: Scaffold project from templates (as the skill does)
+        run: |
+          mkdir -p "$PROJ"
+          cp -R skills/physical-product/templates/common/. "$PROJ/"
+          cp -R skills/physical-product/templates/patterns2d/. "$PROJ/"
+
+      - name: uv sync
+        working-directory: ${{ env.PROJ }}
+        run: uv sync
+
+      - name: Pattern pipeline (check, export, bom, tiling)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv run pattern.py check
+          uv run pattern.py export
+          uv run pattern.py bom
+          uv run tile_a4.py
+
+      - name: Assert expected outputs
+        working-directory: ${{ env.PROJ }}
+        run: |
+          for f in out/pieces/predni_dil.svg out/layout.svg out/layout.html \
+                   out/bom.md out/print/strih_A4.html; do
+            test -f "$f" || { echo "MISSING $f"; exit 1; }
+          done
+          grep -q "Nákup" out/bom.md
+          grep -q "KONTROLNÍ ČTVEREC" out/print/strih_A4.html
+
+      - name: PDF smoke via preinstalled Chrome
+        working-directory: ${{ env.PROJ }}
+        run: |
+          make pdf CHROME=google-chrome
+          find out/print -name 'strih_A4.pdf' -size +50k | grep -q . \
+            || { echo "strih_A4.pdf missing or suspiciously small"; exit 1; }
+
+      - name: Check gate must refuse a piece wider than the fabric
+        working-directory: ${{ env.PROJ }}
+        run: |
+          if ROBION_PARAMS='{"fabric_width": 400}' uv run pattern.py check; then
+            echo "check gate FAILED TO FAIL — oversized piece accepted"
+            exit 1
+          fi
+          echo "check gate refused as expected"

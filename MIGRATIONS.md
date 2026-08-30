@@ -9,6 +9,20 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.16.0
+
+- Pack restructured into core/stacks/verticals: references moved to
+  `references/{core,stacks,verticals}/`, templates split into
+  `templates/common/` + `templates/solids/` (contents unchanged) and the new
+  `templates/patterns2d/` stack (pattern.py, tile_a4.py — parametric 2D
+  cutting patterns, marker layout, 1:1 A4 tiling). Seven vertical playbooks
+  in `references/verticals/` (woodworking, metalwork, 3d-print, laser,
+  cnc-router, electronics, sewing) + `_template.md` for new ones. Scaffold
+  rule changed: copy `templates/common/` + `templates/<stack>/`.
+
+**Migrate:** nothing — running projects are unaffected (template files were
+moved, not changed; projects always held flat copies).
+
 ## v0.15.0
 
 - New `cutlist.py` template — nářezový plán: STOCK declaration (Bar/Sheet

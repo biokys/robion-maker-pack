@@ -2,7 +2,7 @@
 
 Drawings go to a fabricator — correctness of convention matters as much as
 numbers. Battle-tested on a welded-frame drawing and a full 10-sheet
-panelized-coop set; `templates/drawings.py` encodes everything below.
+panelized-coop set; `templates/solids/drawings.py` encodes everything below.
 
 ## Sheet standard (user-required — do not regress)
 
@@ -45,7 +45,7 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   positions from a datum edge (chained dims for patterns), stock
   cross-section. Never dimension the same feature twice.
 
-## The framework (templates/drawings.py) — how it works
+## The framework (templates/solids/drawings.py) — how it works
 
 - **`View(part, kind, shift=)`** projects with `project_to_viewport` from
   a camera 300× part size away, then fits an affine map (per-axis scale +
@@ -144,7 +144,7 @@ gate failure, fix and re-render:
 
 No native section support needed; four steps, all in the framework
 (`Sheet.hatch`, `Sheet.section_indicator`, `section_faces`,
-`sheet_polygon` in templates/drawings.py):
+`sheet_polygon` in templates/solids/drawings.py):
 
 1. **Cut & project:** `kept = solid − half-space-box` per part (skip
    empties, and skip parts between viewer and plane entirely);

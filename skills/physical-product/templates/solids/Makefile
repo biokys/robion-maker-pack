@@ -60,7 +60,7 @@ drawings-pdf: drawings
 
 # One complete PDF: A4 build sheet + all A3 drawing sheets. The build-sheet
 # HTML carries its own @media print rules (A4 pages, forced light palette)
-# — see templates/buildsheet.html and the skill's buildsheet.md.
+# — see templates/common/buildsheet.html and the skill's buildsheet.md.
 pdf: drawings-pdf
 	"$(CHROME)" --headless --no-pdf-header-footer \
 		--print-to-pdf=$(OUT)/vyrobni_list.pdf \

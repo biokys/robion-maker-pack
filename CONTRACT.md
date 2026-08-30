@@ -21,7 +21,7 @@ Shape discovery, in order:
    object with a callable `.builder` attribute returning one build123d `Shape`, or
    a bare callable. One builder per part; builders must not depend on each other's
    side effects. Parts should carry a material record (see
-   `skills/physical-product/templates/model.py`) — the app may use material data
+   `skills/physical-product/templates/solids/model.py`) — the app may use material data
    for viewport coloring in the future.
 2. Fallback, only when `PARTS` is absent or yields nothing: module-level `Shape`
    values and finished `Builder` objects.
@@ -37,7 +37,8 @@ values:
   variable: one JSON object, e.g. `{"wall": 2.4, "holes": 4}`. A script opts into
   live tuning by reading it and overriding its module-level parameters **before**
   derived values are computed. The template's `_apply_robion_params()` (in
-  `templates/model.py` since pack 0.2.0) is the reference implementation: it
+  `templates/solids/model.py` since pack 0.2.0; `templates/patterns2d/pattern.py`
+  implements the same contract) is the reference implementation: it
   overrides only existing scalar parameters, preserves each parameter's type,
   warns on stderr about unknown keys, and is a no-op without the variable.
 - **OpenSCAD** — the values arrive as `-D key=value` definitions (arrays are
@@ -75,6 +76,6 @@ Rules that hold across every stage:
 - The workshop profile — `~/.robion/workshop.yaml`, a persistent description of
   the user's machines, tools and materials. A **content-level convention since
   pack 0.3.0** (schema and rules:
-  `skills/physical-product/references/workshop-profile.md`); contract v2 will
+  `skills/physical-product/references/core/workshop-profile.md`); contract v2 will
   make it app-binding (the app may read it — e.g. the printer bed for the
   viewport outline).

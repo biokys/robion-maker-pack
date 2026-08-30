@@ -1,0 +1,11 @@
+# Pattern-making environment. Everything runs via `uv run <script>` —
+# never system python. Bootstrap: `uv sync`.
+[project]
+name = "product"  # EDIT-ME: product slug — tile_a4.py shows it on the
+                  # pattern's info page
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "shapely>=2.0",   # seam-allowance offsets + outline validity
+    "pillow>=10",     # datauri.py (build-sheet images)
+]

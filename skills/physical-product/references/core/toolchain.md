@@ -2,7 +2,7 @@
 
 ## Python environment (uv, per project)
 
-Copy `templates/pyproject.toml`, then `uv sync`. Everything runs through `uv run`
+Copy the stack's `templates/<stack>/pyproject.toml`, then `uv sync`. Everything runs through `uv run`
 (`uv run model.py export`, `uv run drawings.py`, …) — never system python. The
 `gmsh` PyPI wheel bundles the full gmsh library, so meshing needs **no** system
 install. If `uv sync` fails on a wheel (build123d/OCP tracks specific CPython

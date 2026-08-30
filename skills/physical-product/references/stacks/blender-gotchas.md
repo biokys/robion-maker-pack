@@ -1,7 +1,7 @@
 # Blender headless rendering — hard-won gotchas
 
 All learned the painful way on a real product viz (Blender 5.x, Cycles, macOS).
-The `templates/blender_viz.py` encodes these; keep them when modifying it.
+The `templates/solids/blender_viz.py` encodes these; keep them when modifying it.
 
 ## Process & API traps
 

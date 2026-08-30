@@ -1,0 +1,42 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Project
+
+{{ONE_LINE_PRODUCT_DESCRIPTION}}. Built with the `physical-product` skill
+(patterns2d stack): parametric 2D cutting pattern, marker layout, fabric BOM,
+1:1 A4-tiled print sheets.
+Pack: robion-maker-pack v{{PACK_VERSION}} — template change log & migration
+steps live in MIGRATIONS.md in the pack repo.
+This is a product-engineering project, not a software project — no tests or
+linters; deliverables are the pattern pieces, the marker, the BOM and the
+Czech build sheet. All dimensions are millimetres. Design decisions and the
+human-readable kusovník live in `README.md` (Czech — keep it Czech).
+
+## Commands
+
+```sh
+uv sync                 # once
+make pattern            # piece SVGs + marker into out/
+make check              # validity gate: outlines, notches, fabric width
+make bom                # fabric + notions table into out/bom.md
+make tile               # A4 tiling (out/print/strih_A4.html)
+make pdf                # printable 1:1 pattern PDF (needs Chrome)
+make layout-png         # marker PNG — Read it before showing the user
+make doctor             # tool availability
+```
+
+## Architecture
+
+- `pattern.py` — parameters (single source of truth) → derived values +
+  asserts → `PIECES` registry (builder returns the stitch line; the template
+  applies seam allowance, unfolds on-fold pieces, packs the marker). Never
+  hardcode a dimension inside a builder.
+- `tile_a4.py` — windows the packed pieces into overlapping A4 pages with
+  registration crosses; page 1 carries the 100 mm control square.
+- Verify visuals by rendering PNG (`make layout-png`) and Reading it.
+
+## Gotchas learned here
+
+<!-- append project-specific gotchas as they are discovered -->

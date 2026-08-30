@@ -26,7 +26,7 @@ leaning load 300 N horizontal) and record in "Předpoklady".
 ## B · FEA pipeline (when toolchain present and stakes warrant it)
 
 Stack: **STEP (from build123d) → gmsh (pip wheel, Python API) → CalculiX `ccx` via
-pygccx → results table**. `templates/fea.py` is the skeleton — it *refuses to run*
+pygccx → results table**. `templates/solids/fea.py` is the skeleton — it *refuses to run*
 until the analytic-estimate header fields are filled in.
 
 ### Units — mm-N-s system (CRITICAL, silent wrongness otherwise)

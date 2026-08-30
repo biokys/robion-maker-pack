@@ -2,7 +2,7 @@
 
 The final deliverable: one Czech artifact page a user can print or hand to a
 fabricator, mirroring the project README.md. Compose from
-`templates/buildsheet.html`. **Load the `artifact-design` skill before composing
+`templates/common/buildsheet.html`. **Load the `artifact-design` skill before composing
 the page** (required for artifacts). The aesthetic is the Robion brand
 (robion.app): JetBrains Mono, hairlines instead of borders, dark cockpit palette
 with a paper-light print counterpart, and the violet→cyan gradient as the one
@@ -56,7 +56,7 @@ montáží na místě" when heavy).
 
 ## Print variant → one complete PDF
 
-The print rules **ship in the template** (`templates/buildsheet.html`,
+The print rules **ship in the template** (`templates/common/buildsheet.html`,
 `@media print` block) — the generator script imports the parametric model
 (single source of truth) and writes ONE file, `out/vyrobni_list.html`,
 which serves both the artifact page and printing. The shipped block

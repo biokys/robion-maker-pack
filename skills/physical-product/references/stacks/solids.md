@@ -1,0 +1,115 @@
+# Solids stack — build123d (default), OpenSCAD (fallback)
+
+The default stack for anything rigid: parametric solids in Python on the OCCT
+BREP kernel, one geometry source feeding every downstream artifact.
+
+## build123d (default)
+
+- Real solids: fillets/chamfers by edge selection, sweeps, lofts, threads
+  (`bd_warehouse`), assemblies with joints.
+- **STEP export** — the interchange format for everything downstream: FEA meshing
+  (gmsh reads STEP), fabrication, KiCad enclosure fit-checks, other CAD.
+- In-code dimensioned drawings (`drafting` classes + `ExportSVG`/`ExportDXF`,
+  hidden lines from `project_to_viewport`). See [drafting-conventions.md](drafting-conventions.md).
+- Exact `Shape.volume` → trustworthy BOM masses.
+- Plain Python: BOM as data structures, unit-testable geometry, no echo-parsing.
+
+Structure rule: **one builder function per part**, registered in a `PARTS` dict with
+a material record (see `templates/solids/model.py`). Viz, drawings and FEA all consume
+per-part exports — never one merged body.
+
+Run via `uv run` in a per-project environment (`templates/solids/pyproject.toml`); never
+system python. Optional live viewer: `ocp-vscode` — a dev convenience only, the
+pipeline must never depend on it.
+
+## OpenSCAD (fallback)
+
+Use only when: the part is a trivial prismatic solid AND no drawings/FEA are needed,
+or the project already uses it, or the user asks. Limitations that disqualify it for
+full products: mesh-only output (no STEP), no hidden-line projections, no dimensions,
+poor FEA input. If forced down this path, mirror the build123d template's structure
+in OpenSCAD terms: a `VIEW` dispatch variable selecting part/assembly renders,
+`echo()`-emitted BOM lines parsed from stdout, and per-part STL exports for Blender.
+
+## Conventions that hold across the stack
+
+- Units: **millimetres** everywhere (CAD, drawings, Blender scale 0.001, FEA uses
+  the mm-N-s system — see [fea-recipe.md](fea-recipe.md)).
+- STEP is the hand-off format between stages; STL only where meshes are required
+  (Blender, 3D print).
+- Deterministic outputs: everything regenerable via `make`; no manual editing of
+  generated files.
+
+## Scaffold specifics
+
+Templates: `templates/common/` + `templates/solids/` (pyproject.toml, Makefile,
+model.py, drawings.py, cutlist.py, merge_pdfs.py, blender_viz.py, fea.py,
+datauri.py, buildsheet.html, CLAUDE.md.template → CLAUDE.md). After `uv sync`,
+run `make font` (ISO 3098 lettering for drawings; skip offline — Arial
+fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
+`out/drawings/` (SVG + PNG checks + per-sheet PDF + merged `vykresy_A3.pdf`),
+`out/viz_*.png`, `out/fea/`, `out/bom.md`, `out/cutlist.{md,svg,png}`,
+`out/<product>_komplet.pdf`; textures in `assets/`.
+
+## Stage pipeline (solids)
+
+1. **Model** — parameters at the top of `model.py` are the single source of truth;
+   derived values + asserts right below; every part is a builder function registered
+   in `PARTS` with a material record. Export per-part STEP+STL (viz, drawings and FEA
+   each need separate bodies). Run `make check` (mass/COG, pairwise interference,
+   declared clearances) before investing in drawings — parts are in assembly
+   coordinates, so overlaps are real collisions. *Gate:* in Robion the cockpit is the gate — the user
+   tunes the sliders on the live viewport and approves; elsewhere show quick renders
+   (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
+   drawings/viz.
+2. **Drawings** — use the proven Sheet/View framework in `templates/solids/drawings.py`:
+   fixed A3 landscape sheets with border frame and Czech title block (razítko —
+   číslo výkresu, měřítko, materiál, kusy, datum), TRUE per-sheet scale (1:10
+   panels / 1:5 details / 1:1 small parts), ISO first-angle views laid out
+   automatically (`add_views`), italic technical-blue dims anchored on model
+   parameters via `view.pt()` (affine-calibrated to the projection).
+   Annotations come from `build123d-drafting-helpers` (pinned in pyproject):
+   named-side dims, hole callouts ("4× ⌀8"), center marks, section
+   indicators; assembly sheets get balloons + a kusovník table
+   (`parts_table(parts_rows())`). Section views (řezy) with per-material
+   hatching are supported — add one when interior heights or layered build-ups
+   need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser;
+   for actual CNC routing use exact face-wire DXFs per
+   [../verticals/cnc-router.md](../verticals/cnc-router.md), not projected views.
+   Conventions, the section recipe and the SVG→PNG/PDF pipeline:
+   [drafting-conventions.md](drafting-conventions.md).
+   *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
+   outside outlines, legibility — before showing the user. Then
+   `make drawings-pdf` → printable true-scale `out/drawings/vykresy_A3.pdf`.
+3. **Viz** — headless Blender/Cycles via the `blender_viz.py` template (per-part
+   materials, PBR textures, bbox-driven camera/lights). Known traps:
+   [blender-gotchas.md](blender-gotchas.md). *Gate:* Read the
+   render; user approves the hero shot.
+4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
+   cross-checked against `Shape.volume × density`; include fasteners, adhesives,
+   finish materials with Czech names. Then `make cutlist` — declare the stock in
+   `cutlist.py` STOCK (sizes from the workshop profile) and get the nářezový
+   plán: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
+5. **Assembly + finishing plan** — numbered Czech steps; include the surface-finish
+   schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
+   steps so interior surfaces get finished while still accessible.
+6. **Analysis** — ALWAYS produce analytic estimates first (governing-member stress,
+   deflection, first natural frequency, safety factor); FEA static + modal via
+   pygccx/gmsh/CalculiX only to verify: [fea-recipe.md](fea-recipe.md).
+   *Gate:* sanity checks pass before any number reaches the user.
+7. **PCB (optional)** — KiCad authoring + `kicad-cli` exports, board STEP into the
+   CAD assembly for fit-check: [pcb.md](pcb.md).
+8. **Build sheet** — assemble the Czech výrobní list artifact from
+   `templates/common/buildsheet.html` per [../core/buildsheet.md](../core/buildsheet.md);
+   load the `artifact-design` skill before composing the page; mirror the content in
+   the project README.md. The template's `@media print` block makes the same
+   `out/vyrobni_list.html` printable — `make pdf` → one complete PDF (A4 build
+   sheet + all A3 drawing sheets), per the print-variant section of buildsheet.md.
+
+## Stack-specific traps
+
+- Blender headless exits 0 even when the script crashes — the Makefile greps the
+  log for Traceback; never trust the exit code.
+- Projected drawing views carry a mild perspective residual — CAM geometry must
+  come from face wires, never projected views
+  ([../verticals/cnc-router.md](../verticals/cnc-router.md)).

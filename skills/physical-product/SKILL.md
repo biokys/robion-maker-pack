@@ -1,29 +1,41 @@
 ---
 name: physical-product
-description: "Design a complete physical product end-to-end: parametric CAD model (build123d), dimensioned production drawings, photoreal Blender renders, BOM/kusovník, assembly & finishing plan, strength/modal analysis (FEA), optional KiCad PCB, and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, konstrukci), výrobní výkres, kusovník, pevnostní výpočet, vlastní frekvence, design a bracket/enclosure/table/fixture, parametric 3D model, build sheet, BOM, technical drawing, FEA."
+description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut parts, CNC-routed parts, electronics with a PCB, sewn goods: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru), výrobní výkres, kusovník, nářezový plán, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, parametric 3D model, build sheet, BOM, technical drawing, FEA."
 ---
 
 # Physical Product
 
-Guide the design of a complete physical product from idea to a manufacturing-ready
-package. The finished deliverable set: parametric 3D model, dimensioned drawings,
-photoreal renders, BOM, assembly + surface-finishing plan, analysis (analytic +
-optional FEA/modal), optional PCB, and a build-sheet artifact page.
+Guide the design of a complete physical product from idea to a
+manufacturing-ready package. Every project, whatever the vertical, walks the
+same spine: **a parametric source of truth → derived artifacts (visuals,
+drawings/patterns, BOM, plans) → verification → gates → a build sheet the user
+makes the thing from.** Changing one parameter must reflow everything.
 
-**Language rule:** all user-facing deliverables (build sheet, README, drawings text,
-BOM, dialogue) in the user's language — the templates in this pack show Czech. Code,
-comments, commit messages and file names in English.
+The skill is layered — load only what the project needs:
+
+- **This file** — the spine: intake, routing, stages, gates, habits.
+- **`references/verticals/`** — playbooks: WHAT is being made (wood, metal,
+  print, laser, CNC, electronics, sewing). Read after routing; they refine
+  stages, never replace the spine.
+- **`references/stacks/`** — recipes: HOW artifacts get produced (solids =
+  build123d, patterns2d = 2D cutting patterns, pcb = KiCad).
+- **`references/core/`** — shared conventions (workshop profile, toolchain &
+  degrade, build sheet).
+
+**Language rule:** all user-facing deliverables (build sheet, README, drawings
+text, BOM, dialogue) in the user's language — the templates in this pack show
+Czech. Code, comments, commit messages and file names in English.
 
 ## 1 · Intake
 
-**Workshop profile first:** read `~/.robion/workshop.yaml` before asking anything —
-it answers machines, tools and materials once for all projects. Missing file ⇒ run
-the one-time workshop interview and create it:
-[references/workshop-profile.md](references/workshop-profile.md).
+**Workshop profile first:** read `~/.robion/workshop.yaml` before asking
+anything — it answers machines, tools and materials once for all projects.
+Missing file ⇒ run the one-time workshop interview and create it:
+[references/core/workshop-profile.md](references/core/workshop-profile.md).
 
-Then ask what the profile can't know (batched, in the user's language) — but never
-stall: if the user can't answer, assume a sensible value and record it under
-"Předpoklady":
+Then ask what the profile can't know (batched, in the user's language) — but
+never stall: if the user can't answer, assume a sensible value and record it
+under "Předpoklady":
 
 - Function and load case: what does it carry/do, worst realistic load, static or
   dynamic (vibration source nearby?).
@@ -36,136 +48,122 @@ stall: if the user can't answer, assume a sensible value and record it under
 - Electronics inside? → PCB stage applies.
 - Depth wanted: quick concept vs full package with FEA.
 
-## 2 · Stack decision
+## 2 · Vertical routing
 
-Default **build123d** (Python/OCCT: BREP, fillets, STEP export, in-code dimensioned
-drawings, exact volumes for BOM, clean FEA meshing). Use OpenSCAD only for a trivial
-single prismatic part or when the user asks for it. KiCad enters iff the product
-contains electronics. Details and interchange rules: [references/stack-selection.md](references/stack-selection.md).
+Decide what kind of thing is being made and read the matching playbook(s)
+BEFORE modeling. Real products often cross verticals (an enclosure = print +
+electronics; a gate = metal frame + wood infill) — read every playbook that
+applies and compose; the spine stays single.
 
-## 3 · Scaffold & bootstrap
+| The product is… | Playbook |
+|---|---|
+| furniture, shelving, joinery — solid wood / sheet goods | [verticals/woodworking.md](references/verticals/woodworking.md) |
+| a welded or bolted metal frame — gate, fence, rack, stand, bracket | [verticals/metalwork.md](references/verticals/metalwork.md) |
+| a 3D-printed part or enclosure | [verticals/3d-print.md](references/verticals/3d-print.md) |
+| flat parts laser-cut from plywood/acrylic/steel | [verticals/laser.md](references/verticals/laser.md) |
+| flat parts machined on a CNC router | [verticals/cnc-router.md](references/verticals/cnc-router.md) |
+| contains a PCB / electronics | [verticals/electronics.md](references/verticals/electronics.md) |
+| sewn from fabric, canvas or leather — bag, apron, cover, simple garment | [verticals/sewing.md](references/verticals/sewing.md) |
 
-New project: copy `templates/` files into the repo (pyproject.toml, Makefile,
-model.py, drawings.py, cutlist.py, merge_pdfs.py, blender_viz.py, fea.py,
-datauri.py, buildsheet.html, CLAUDE.md.template → CLAUDE.md), **rename `[project].name`
-in pyproject.toml to the product slug** (merge_pdfs.py derives
-`<name>_komplet.pdf` from it — the default leaves `product_komplet.pdf`),
-fill the `{{PACK_VERSION}}` stamp in CLAUDE.md with the installed pack
-version (it tells future sessions which template vintage the project has —
-see MIGRATIONS.md in the pack), run `uv sync`, then `make font` (ISO 3098
-lettering for drawings; skip offline — Arial fallback) and `make doctor`
-to see which tools exist. Canonical outputs: `out/parts/*.{step,stl}`, `out/drawings/` (SVG +
-PNG checks + per-sheet PDF + merged `vykresy_A3.pdf`), `out/viz_*.png`,
-`out/fea/`, `out/bom.md`, `out/cutlist.{md,svg,png}`,
-`out/<product>_komplet.pdf`; textures in `assets/`. Environment specifics and the degrade matrix
-when tools are missing: [references/toolchain.md](references/toolchain.md).
+No row matches ⇒ run the spine bare — it is complete by itself. If the project
+taught vertical-specific lessons, propose a new playbook at retrospective time
+([verticals/_template.md](references/verticals/_template.md) defines the anatomy).
 
-## 4 · Stage pipeline
+## 3 · Stack decision
 
-Run stages in order; each has a gate. Skipping a stage is fine when the user says so
-— note it in the build sheet.
+The stack is chosen by the product's source-of-truth geometry, not by the
+vertical:
 
-**Robion cockpit — build it unprompted.** When the `set_controls` MCP tool exists,
-the cockpit is part of stage 1, not an optional extra (read `controls_help` first):
+- **solids** (default) — build123d parametric solids; OpenSCAD only as a
+  narrow fallback: [stacks/solids.md](references/stacks/solids.md).
+- **patterns2d** — flat pieces cut from flexible sheet goods (fabric, leather,
+  foam): [stacks/patterns2d.md](references/stacks/patterns2d.md).
+- **pcb** — KiCad, iff the product contains electronics; coexists with the
+  solids stack (board STEP → enclosure fit): [stacks/pcb.md](references/stacks/pcb.md).
 
-- `param: true` sliders **named exactly after the parameters in `model.py`** —
-  the viewport and every run-button then receive them as `ROBION_PARAMS`
-  automatically.
-- `viewport: {path: 'model.py'}` — the live 3D; sliders re-render it in ~0.4 s.
-- A photoreal button: `{kind:'run', command:'make viz',
-  output:'out/viz_hero.png', autoClose: true}` — the finished terminal closes
-  itself and the viewport switches to the render.
-- `image` tiles for `out/viz_*.png` and drawings — they refresh on their own
+## 4 · Scaffold & bootstrap
+
+New project: copy `templates/common/` plus the chosen stack's
+`templates/<stack>/` files flat into the repo root, **rename `[project].name`
+in pyproject.toml to the product slug**, fill the `{{PACK_VERSION}}` stamp in
+CLAUDE.md with the installed pack version (it tells future sessions which
+template vintage the project has — see MIGRATIONS.md in the pack), run
+`uv sync`, then `make doctor` to see which tools exist. Stack-specific
+bootstrap steps (fonts, extras) and the canonical `out/` layout are listed in
+the stack recipe. Environment specifics and the degrade matrix when tools are
+missing: [references/core/toolchain.md](references/core/toolchain.md).
+
+## 5 · Stage pipeline
+
+Run stages in order; each has a gate. Skipping a stage is fine when the user
+says so — note it in the build sheet. Concrete commands live in the stack
+recipe ([solids](references/stacks/solids.md),
+[patterns2d](references/stacks/patterns2d.md)); the vertical playbook refines
+what each stage must cover.
+
+| # | Stage | Deliverable | Gate |
+|---|---|---|---|
+| 1 | **Model** | parametric source of truth (`model.py` / `pattern.py`) | user approves the live geometry |
+| 2 | **See it** | live viewport / rendered previews | user approves proportions |
+| 3 | **Drawings / pattern sheets** | dimensioned drawings or 1:1 pattern pages | every PNG Read and checked before the user sees it |
+| 4 | **BOM + cut plan** | kusovník, nářezový plán / marker layout | masses & consumption cross-checked |
+| 5 | **Make plan** | numbered Czech assembly/sewing/welding steps + finishing schedule | ordered so it's actually executable |
+| 6 | **Analysis** (when load-bearing) | analytic estimates first, FEA to verify | sanity checks pass before numbers reach the user |
+| 7 | **Build sheet** | Czech výrobní list per [core/buildsheet.md](references/core/buildsheet.md) | user approves; mirror into README |
+
+**Robion cockpit — build it unprompted.** When the `set_controls` MCP tool
+exists, the cockpit is part of stage 1, not an optional extra (read
+`controls_help` first):
+
+- `param: true` sliders **named exactly after the parameters in the model
+  script** — the viewport and every run-button then receive them as
+  `ROBION_PARAMS` automatically.
+- Solids: `viewport: {path: 'model.py'}` — the live 3D; sliders re-render it in
+  ~0.4 s. Patterns2d: `image` tiles of `out/layout.svg` and the piece SVGs —
+  they refresh whenever a run-button regenerates them.
+- A photoreal button (solids): `{kind:'run', command:'make viz',
+  output:'out/viz_hero.png', autoClose: true}`.
+- `image` tiles for renders, drawings, cut plans — they refresh on their own
   whenever the files are regenerated.
 - A `set` preset button restoring the defaults.
 
 Keep the cockpit current as stages advance (BOM stage: a shopping `checklist`;
-plans: image tiles of the sheets). No `set_controls` tool (a bare terminal) ⇒ skip
-silently, never mention it.
+plans: image tiles of the sheets). No `set_controls` tool (a bare terminal) ⇒
+skip silently, never mention it.
 
-1. **Model** — parameters at the top of `model.py` are the single source of truth;
-   derived values + asserts right below; every part is a builder function registered
-   in `PARTS` with a material record. Export per-part STEP+STL (viz, drawings and FEA
-   each need separate bodies). Run `make check` (mass/COG, pairwise interference,
-   declared clearances) before investing in drawings — parts are in assembly
-   coordinates, so overlaps are real collisions. *Gate:* in Robion the cockpit is the gate — the user
-   tunes the sliders on the live viewport and approves; elsewhere show quick renders
-   (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
-   drawings/viz.
-2. **Drawings** — use the proven Sheet/View framework in `templates/drawings.py`:
-   fixed A3 landscape sheets with border frame and Czech title block (razítko —
-   číslo výkresu, měřítko, materiál, kusy, datum), TRUE per-sheet scale (1:10
-   panels / 1:5 details / 1:1 small parts), ISO first-angle views laid out
-   automatically (`add_views`), italic technical-blue dims anchored on model
-   parameters via `view.pt()` (affine-calibrated to the projection).
-   Annotations come from `build123d-drafting-helpers` (pinned in pyproject):
-   named-side dims, hole callouts ("4× ⌀8"), center marks, section
-   indicators; assembly sheets get balloons + a kusovník table
-   (`parts_table(parts_rows())`). Section views (řezy) with per-material
-   hatching are supported — add one when interior heights or layered build-ups
-   need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser;
-   for actual CNC routing use exact face-wire DXFs per
-   [references/cnc-router.md](references/cnc-router.md), not projected views.
-   Conventions, the section recipe and the SVG→PNG/PDF pipeline:
-   [references/drafting-conventions.md](references/drafting-conventions.md).
-   *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
-   outside outlines, legibility — before showing the user. Then
-   `make drawings-pdf` → printable true-scale `out/drawings/vykresy_A3.pdf`.
-3. **Viz** — headless Blender/Cycles via `blender_viz.py` template (per-part
-   materials, PBR textures, bbox-driven camera/lights). Known traps:
-   [references/blender-gotchas.md](references/blender-gotchas.md). *Gate:* Read the
-   render; user approves the hero shot.
-4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
-   cross-checked against `Shape.volume × density`; include fasteners, adhesives,
-   finish materials with Czech names. Then `make cutlist` — declare the stock in
-   `cutlist.py` STOCK (sizes from the workshop profile) and get the nářezový
-   plán: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
-5. **Assembly + finishing plan** — numbered Czech steps; include the surface-finish
-   schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
-   steps so interior surfaces get finished while still accessible.
-6. **Analysis** — ALWAYS produce analytic estimates first (governing-member stress,
-   deflection, first natural frequency, safety factor); FEA static + modal via
-   pygccx/gmsh/CalculiX only to verify: [references/fea-recipe.md](references/fea-recipe.md).
-   *Gate:* sanity checks pass before any number reaches the user.
-7. **PCB (optional)** — KiCad authoring + `kicad-cli` exports, board STEP into the
-   CAD assembly for fit-check: [references/kicad-pipeline.md](references/kicad-pipeline.md).
-8. **Build sheet** — assemble the Czech výrobní list artifact from
-   `templates/buildsheet.html` per [references/buildsheet.md](references/buildsheet.md);
-   load the `artifact-design` skill before composing the page; mirror the content in
-   the project README.md. The template's `@media print` block makes the same
-   `out/vyrobni_list.html` printable — `make pdf` → one complete PDF (A4 build
-   sheet + all A3 drawing sheets), per the print-variant section of buildsheet.md.
-
-## 5 · Verification habits (non-negotiable)
+## 6 · Verification habits (non-negotiable)
 
 - Parameters single source of truth; derived values computed, never retyped; asserts
   guard impossible geometry. Changing one parameter must reflow everything.
-- Every visual output (drawing, render) is rendered to PNG and **looked at** with the
-  Read tool before the user sees it.
-- Blender headless exits 0 even when the script crashes — the Makefile greps the log
-  for Traceback; never trust the exit code.
-- BOM mass = parametric computation, cross-checked vs `Shape.volume`.
-- FEA numbers pass the sanity checklist (reactions, rigid-body modes, hand-estimate
-  agreement) before being reported.
+- Every visual output (drawing, pattern sheet, render) is rendered to PNG and
+  **looked at** with the Read tool before the user sees it.
+- BOM masses and material consumption come from the parametric computation,
+  cross-checked against an independent measure (`Shape.volume`, layout area).
+- Analysis numbers pass the sanity checklist (reactions, rigid-body modes,
+  hand-estimate agreement) before being reported.
+- Stack-specific traps (Blender exit codes, projection residuals) are listed in
+  the stack recipes — read them before the relevant stage.
 
-## 6 · Iteration protocol
+## 7 · Iteration protocol
 
 User feedback → change parameters (never hardcode inside builders) → `make` → show.
 Keep the dialogue in Czech, short iterations, one nástřel at a time. Record design
 decisions in the project README; record newly discovered tool gotchas in the project
 CLAUDE.md ("Gotchas learned here").
 
-## 7 · Degrade & uncertainty
+## 8 · Degrade & uncertainty
 
 Missing tool ⇒ skip that stage gracefully and say so in the build sheet (exact Czech
-sentences in [references/toolchain.md](references/toolchain.md)). Never install
+sentences in [references/core/toolchain.md](references/core/toolchain.md)). Never install
 system packages (brew) without asking. The build sheet always ends with a
 "Předpoklady a nejistoty" section listing every assumption made.
 
-## 8 · Retrospective (end of project)
+## 9 · Retrospective (end of project)
 
 After the user approves the build sheet, write `RETRO.md` into the project:
 what worked, what ground (ordered by severity), and every gotcha already
 recorded in the project CLAUDE.md. Then offer to turn the findings into pack
-patches — the pack's templates improve only through this loop (MIGRATIONS.md
-in the pack repo tracks what changed between versions for running projects).
+patches — templates, stack recipes, and vertical playbooks improve only
+through this loop (MIGRATIONS.md in the pack repo tracks what changed between
+versions for running projects). Vertical lessons with no playbook yet ⇒
+propose one from [verticals/_template.md](references/verticals/_template.md).

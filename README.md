@@ -1,10 +1,10 @@
 # Robion Maker Pack
 
 Claude Code skills that take a physical product from idea to a
-manufacturing-ready package: parametric CAD (build123d), dimensioned production
-drawings, photoreal Blender renders, a bill of materials, an assembly & finishing
-plan, strength/modal analysis (FEA), an optional KiCad PCB, and a printable build
-sheet.
+manufacturing-ready package: parametric CAD (build123d) or a parametric cutting
+pattern, dimensioned production drawings, photoreal Blender renders, a bill of
+materials, cut plans, an assembly & finishing plan, strength/modal analysis
+(FEA), an optional KiCad PCB, and a printable build sheet.
 
 The pack is the process content behind [Robion](https://robion.app) — a macOS
 cockpit for Claude Code agents — but it is standard Claude Code content and works
@@ -22,13 +22,27 @@ natural requests ("design me a bracket / shelf / enclosure…").
 
 ## What's inside
 
-| Skill | What it does |
-|---|---|
-| `physical-product` | The end-to-end playbook: intake → parametric model → drawings → renders → BOM → assembly & finishing plan → analysis → optional PCB → build sheet. Ships a full project scaffold (`templates/`) and stage-by-stage recipes (`references/`). |
+One skill, `physical-product`, layered so that every project loads only what
+it needs:
 
-Vertical playbooks (`maker-3d-print`, `maker-woodworking`, `maker-laser`,
-`maker-cnc`, `maker-electronics`) land here wave by wave — see the roadmap on
-[robion.app](https://robion.app).
+| Layer | Where | What it is |
+|---|---|---|
+| **Spine** | `SKILL.md` | Intake, vertical routing, the stage pipeline with gates, verification habits. Every project walks it. |
+| **Verticals** | `references/verticals/` | Playbooks for WHAT is being made: woodworking, metalwork, 3d-print, laser, cnc-router, electronics, sewing. Pure content — the anatomy is fixed by `_template.md`. |
+| **Stacks** | `references/stacks/` | Recipes for HOW artifacts are produced: `solids` (build123d), `patterns2d` (2D cutting patterns), `pcb` (KiCad). |
+| **Core** | `references/core/` | Shared conventions: the workshop profile, toolchain & degrade rules, the build sheet. |
+| **Templates** | `templates/` | Project scaffold: `common/` + one stack directory, copied flat into a new project. |
+
+How it scales — the three growth rules:
+
+1. **A new vertical is content only** — one playbook in `references/verticals/`
+   (per `_template.md`) plus supplier/material knowledge. It never touches
+   other verticals, the app, or the templates.
+2. **A new stack is added when a product's source-of-truth geometry is a new
+   kind** (solids → 2D patterns was the first split): one recipe in
+   `references/stacks/` + one `templates/<stack>/` directory + a CI job.
+3. **Spine changes are rare and versioned** — they bump the pack and, when
+   app-visible, the contract ([CONTRACT.md](CONTRACT.md)).
 
 ## What you need
 
