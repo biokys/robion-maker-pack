@@ -316,6 +316,8 @@ def plan_all() -> tuple[list[StockPlan], list[str]]:
 # Markdown
 # --------------------------------------------------------------------------
 def _mm(x: float) -> str:
+    """L10N: thousands separator. A non-breaking space suits most of
+    Europe; switch to a comma where the locale groups digits that way."""
     s = f"{x:,.1f}".rstrip("0").rstrip(".") if x % 1 else f"{x:,.0f}"
     return s.replace(",", " ")
 

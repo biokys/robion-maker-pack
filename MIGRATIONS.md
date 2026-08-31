@@ -30,9 +30,6 @@ the user's workshop profile, and a localization step at scaffold time.
 - Every reference and playbook rewritten in English, engineering content
   unchanged. `## Materials & suppliers (CZ)` became `## Materials & stock`:
   stock forms, standard sizes and grades kept, market vendors dropped.
-- New CI workflow `language.yml` fails the build if localized text returns
-  (letter check + a diacritic-free word list — the second catches what the
-  first cannot).
 
 Template changes (all of them mechanical, none behavioural):
 

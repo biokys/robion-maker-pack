@@ -994,7 +994,7 @@ def sheet_polygon(face, view: View):
 def sheet_bracket() -> None:
     """Part sheet: auto-laid-out views, named-side dims, hole callout +
     center marks, and a section A-A with its indicator."""
-    s = Sheet("bracket", "BR-01", "ÚHELNÍK", 1,
+    s = Sheet("bracket", "BR-01", "ANGLE BRACKET", 1,
               f"steel S235, sheet {model.thickness:g} mm", count=2)
     part = model.PARTS["bracket"].builder()
     # first angle: top view lands BELOW the front view automatically
