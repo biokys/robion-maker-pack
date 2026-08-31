@@ -131,10 +131,12 @@ exists, the cockpit is part of stage 1, not an optional extra (read
   script** — the viewport and every run-button then receive them as
   `ROBION_PARAMS` automatically.
 - Solids: `viewport: {path: 'model.py'}` — the live 3D; sliders re-render it in
-  ~0.4 s. Patterns2d: `image` tiles of `out/layout.svg` and the piece SVGs —
-  they refresh whenever a run-button regenerates them.
-- A photoreal button (solids): `{kind:'run', command:'make viz',
-  output:'out/viz_hero.png', autoClose: true}`.
+  ~0.4 s. Patterns2d: no live viewport — `image` tiles of `out/layout.png` and
+  `out/pieces/*.png` plus a `{kind:'run', command:'make previews'}` button
+  that re-renders them after slider changes.
+- A hero button: `{kind:'run', command:'make viz', output:'out/viz_hero.png',
+  autoClose: true}` — Blender photoreal on solids, a flat parametric
+  illustration (viz.py) on patterns2d.
 - `image` tiles for renders, drawings, cut plans — they refresh on their own
   whenever the files are regenerated.
 - A `set` preset button restoring the defaults.

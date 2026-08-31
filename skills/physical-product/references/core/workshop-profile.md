@@ -50,6 +50,11 @@ machines:
     materials: [PLA, PETG]
   laser: null
   cnc: null
+  sewing:
+    name: Veritas Rubina 1290
+    features: [zigzag, knoflíková dírka]
+    needles: [univerzální 80, jeans 100]
+  overlock: null
 
 tools:
   - okružní pila s vodicí lištou
@@ -60,8 +65,13 @@ tools:
 materials_on_hand:
   - { name: "spárovka dub 18 mm", size_mm: [2000, 600, 18], qty: 2 }
   - { name: "ocelový plech 3 mm", size_mm: [500, 500, 3], qty: 1 }
+  # fabrics: 2D size [length, width] — the width drives the marker
+  - { name: "kanvas 340 g/m², písková", size_mm: [3000, 1400], qty: 1 }
 
 fasteners_on_hand: [vruty 4×40, kolíky 8 mm, PU lepidlo]
+
+# galanterie — the sewing analog of fasteners
+notions_on_hand: [nitě polyester, zdrhovadlo 40 cm, popruh PP 25 mm]
 
 workshop:
   space: "garáž, pracovní stůl 2 m"
@@ -79,14 +89,17 @@ notes: |
 Batch these, in the user's language; accept "nevím / nemám" freely:
 
 1. Machines: 3D printer (which, bed, nozzle, materials)? Laser (bed, power)?
-   CNC (envelope)? Anything else that runs G-code?
+   CNC (envelope)? Sewing machine (which, zigzag/buttonhole, needles) and
+   overlock? Anything else that runs G-code?
 2. Tools: what's actually in the workshop — saws, router, drill press, sanders,
    clamps; what is explicitly missing or off-limits (`no_go`).
-3. Materials & fasteners on hand worth using up (stock sizes matter most).
+3. Materials & fasteners on hand worth using up (stock sizes matter most —
+   for fabrics the usable width); notions/galanterie stash for sewn goods.
 4. Space & finishing options; skill level and appetite (quick builds vs fine
    joinery).
 
 How the profile drives decisions: joints are chosen from `tools` (no domino →
 dowels or pocket screws), stock sizes seed the parameters block, `no_go` blocks
 whole approaches, printer/laser/cnc presence decides which "make it" stage the
-project even offers.
+project even offers, and overlock presence picks the seam finishes (overlock
+vs zigzag vs French seam) in a sewing plan.

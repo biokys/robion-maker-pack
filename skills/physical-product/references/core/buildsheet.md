@@ -12,6 +12,10 @@ republishing to the same URL across iterations.
 
 ## Section order (proven structure)
 
+Section names below are the solids defaults — headings, the print-companion
+note and the footer source line are slots filled per vertical (table in the
+next section).
+
 1. **Razítko (title block header)** — product name, subtitle, key fields grid:
    půdorys/rozměry, výška, materiál, hmotnost, datum, verze.
 2. **Hero render** + supporting shots (tunnel/detail/exploded), each with a
@@ -41,6 +45,25 @@ republishing to the same URL across iterations.
     Robion credit line linking https://robion.app (already in the template; keep
     it).
 
+## Per-vertical slots (section headings, print note, footer)
+
+The skeleton's headings are `{{SEKCE_*}}` slots so a generator fills them like
+any other slot — never string-replace rendered Czech headings after the fact
+(fragile, and it broke on the first sewn product). Values:
+
+| Slot | solids (default) | sewing / patterns2d |
+|---|---|---|
+| `{{SEKCE_VYKRESY}}` | Výkresy | Střihové díly |
+| `{{SEKCE_POSTUP}}` | Postup montáže | Postup šití |
+| `{{SEKCE_FINALIZACE}}` | Finalizace povrchu | Údržba a impregnace |
+| `{{SEKCE_ANALYZA}}` | Analýza | Kontrolní brány |
+| `{{TISK_POZNAMKA}}` | Výrobní výkresy A3 následují za tímto dokumentem v plné velikosti (měřítko dle razítka jednotlivých listů). | Střih se tiskne zvlášť ze souboru `strih_A4.pdf` v měřítku 1:1 — před stříháním změřte kontrolní čtverec 100 × 100 mm. |
+| `{{FOOTER_ZDROJE}}` | Zdroj: `model.py` · výkresy: `make drawings` · vizualizace: `make viz` · kusovník: `make bom` | Zdroj: `pattern.py` · střih 1:1: `make pdf` · ilustrace: `make viz` · kusovník: `make bom` |
+
+Other verticals compose their own values in the same spirit (the leather
+playbook would say Postup šití a lepení, a weldment says Postup svařování);
+keep Koncept, Kusovník and Předpoklady a nejistoty fixed — they are universal.
+
 ## Czech terminology (keep it idiomatic)
 
 spárovka (edge-glued panel) · jäkl (square steel tube) · komaxit (powder coat) ·
@@ -65,11 +88,21 @@ blocks and win by source order, since headless Chrome may report a dark
 scheme), `@page { size: 210mm 297mm; margin: 11mm }`, `section {
 break-before: page }` (except the first), `break-inside: avoid` on
 figures/tables/steps/stamp, and the `screen-only`/`print-only` class pair
-that swaps the inline drawing figures for a note that the A3 sheets
-follow full-size — keep those classes when filling the Výkresy section.
-`make pdf` prints the file and merges with the drawing sheets via
-`merge_pdfs.py --komplet` → `out/<product>_komplet.pdf`.
-Verify by Reading pages of the PDF (page count, A4+A3 sizes, light theme).
+that swaps the inline drawing figures for the `{{TISK_POZNAMKA}}` print
+note — keep those classes when filling the drawings/pattern section.
+
+Per stack:
+
+- **solids** — `make pdf` prints the file and merges with the drawing
+  sheets via `merge_pdfs.py --komplet` → `out/<product>_komplet.pdf`.
+- **patterns2d** — `make pdf` prints the PATTERN tiling (`strih_A4.pdf`),
+  not the build sheet; the build sheet prints via `make buildsheet-pdf` →
+  `out/vyrobni_list.pdf`. The print companion of a sewn product is the 1:1
+  pattern, not A3 drawings — ship the two PDFs side by side, never merge
+  them (a merged document invites "fit to page", which destroys the 1:1
+  scale the control square guards).
+
+Verify by Reading pages of the PDF (page count, sizes, light theme).
 
 ## Page mechanics
 

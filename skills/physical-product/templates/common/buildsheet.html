@@ -5,8 +5,12 @@
      JetBrains Mono everywhere, hairlines not borders, the violet→cyan gradient
      as the ONE saturated accent, 3px rail strips on section headings. Dark is
      the brand; light is its paper counterpart. Print rules ship in the @media
-     print block below — ONE file serves both the artifact page and
-     `make pdf`; do not derive a separate .print.html variant. -->
+     print block below — ONE file serves both the artifact page and the PDF
+     print; do not derive a separate .print.html variant.
+     Section headings, the print-companion note and the footer source line are
+     per-vertical SLOTS ({{SEKCE_*}}, {{TISK_POZNAMKA}}, {{FOOTER_ZDROJE}}) —
+     fill them from the table in references/core/buildsheet.md (solids
+     defaults / sewing values); never string-replace rendered headings. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root { --bg:#f4f6f8; --panel:#ffffff; --ink:#242b34; --bright:#111820;
@@ -109,11 +113,10 @@
     <div class="figure-grid"><!-- {{EXTRA_FIGURES}} --></div>
   </section>
 
-  <section><h2>Výkresy</h2>
+  <section><h2>{{SEKCE_VYKRESY}}</h2>
     <p class="lede">Všechny kóty v milimetrech. Zdrojem pravdy je parametrický model.</p>
     <div class="figure-grid screen-only"><!-- {{VYKRESY_FIGURES}} --></div>
-    <p class="print-only">Výrobní výkresy A3 následují za tímto dokumentem
-      v plné velikosti (měřítko dle razítka jednotlivých listů).</p>
+    <p class="print-only">{{TISK_POZNAMKA}}</p>
   </section>
 
   <section><h2>Kusovník</h2>
@@ -130,15 +133,15 @@
     </table></div>
   </section>
 
-  <section><h2>Postup montáže</h2>
+  <section><h2>{{SEKCE_POSTUP}}</h2>
     <ol class="steps"><!-- {{MONTAZ_STEPS}} --></ol>
   </section>
 
-  <section><h2>Finalizace povrchu</h2>
+  <section><h2>{{SEKCE_FINALIZACE}}</h2>
     <ol class="steps"><!-- {{FINALIZACE_STEPS}} --></ol>
   </section>
 
-  <section><h2>Analýza</h2>
+  <section><h2>{{SEKCE_ANALYZA}}</h2>
     <!-- analytic estimates table, FEA/modal results if run -->
     <!-- {{ANALYZA}} -->
   </section>
@@ -148,8 +151,7 @@
   </section>
 
   <footer>
-    <p>Zdroj: <code>model.py</code> · výkresy: <code>make drawings</code> ·
-      vizualizace: <code>make viz</code> · kusovník: <code>make bom</code></p>
+    <p>{{FOOTER_ZDROJE}}</p>
     <p>Navrženo s agenty v <a class="wordmark" href="https://robion.app">ROB<span>ION</span></a>
       · <a href="https://robion.app">robion.app</a></p>
   </footer>

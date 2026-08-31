@@ -19,11 +19,13 @@ human-readable kusovník live in `README.md` (Czech — keep it Czech).
 ```sh
 uv sync                 # once
 make pattern            # piece SVGs + marker into out/
-make check              # validity gate: outlines, notches, fabric width
+make check              # validity gate: outlines, notches, marks, fabric width
 make bom                # fabric + notions table into out/bom.md
 make tile               # A4 tiling (out/print/strih_A4.html)
 make pdf                # printable 1:1 pattern PDF (needs Chrome)
-make layout-png         # marker PNG — Read it before showing the user
+make previews           # marker + per-piece PNGs — Read before showing
+make viz                # hero illustration (out/viz_hero.png)
+make buildsheet-pdf     # výrobní list PDF (`pdf` is the PATTERN here)
 make doctor             # tool availability
 ```
 
@@ -32,10 +34,15 @@ make doctor             # tool availability
 - `pattern.py` — parameters (single source of truth) → derived values +
   asserts → `PIECES` registry (builder returns the stitch line; the template
   applies seam allowance, unfolds on-fold pieces, packs the marker). Never
-  hardcode a dimension inside a builder.
+  hardcode a dimension inside a builder. Internal markings (stitching
+  channels, fold lines, placements) go into `PieceSpec.marks`/`mark_labels`
+  — notches are invisible on allowance=0 pieces.
 - `tile_a4.py` — windows the packed pieces into overlapping A4 pages with
   registration crosses; page 1 carries the 100 mm control square.
-- Verify visuals by rendering PNG (`make layout-png`) and Reading it.
+- `viz.py` — flat parametric hero illustration derived from pattern.py.
+- Verify visuals by rendering PNG (`make previews`) and Reading every one.
+  Never screenshot a mm-sized SVG directly (Chrome ≈ 3.78 px/mm) — always
+  go through the pixel `.html` wrappers the scripts write.
 
 ## Gotchas learned here
 

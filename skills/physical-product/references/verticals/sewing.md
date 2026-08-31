@@ -15,7 +15,9 @@ measurements alone.
 - Fabric reality: what's on hand or planned — material, **usable width**
   (typical 140–150 cm; leather = hides, no width), directional print or nap
   ("směr vzoru")? Washable → note pre-shrinking ("srazit předem") in the plan.
-- Machine: domestic machine, overlock available? (drives seam finish choices).
+- Machine: domestic machine, overlock available? (drives seam finish
+  choices) — lives in the workshop profile (`machines.sewing`,
+  `machines.overlock`, `notions_on_hand`); ask only what it doesn't answer.
 - For garments: measurements (mm, over the actual person), desired ease, and
   the fit-gate agreement above.
 - Hardware/notions: zips (exact length matters), buckles, webbing, interfacing
@@ -32,10 +34,13 @@ Stack: **patterns2d** ([../stacks/patterns2d.md](../stacks/patterns2d.md)) —
   leather: 0 for edges that get glued/burnished). Symmetric pieces built as
   halves on the fold axis and auto-unfolded by the template. Notches at every
   seam-matching point — two pieces sewn together carry notches at the same
-  arc positions.
-- **See it** — the marker (`out/layout.svg`) and per-piece SVGs in the cockpit
-  as image tiles; sliders re-run `pattern.py` via `ROBION_PARAMS` exactly like
-  a solids model.
+  arc positions; on `allowance=0` edges notches are invisible — use
+  `PieceSpec.marks` instead. Internal markings (stitching channels, fold
+  lines, placement of pockets/appliqués) always go into `marks` +
+  `mark_labels` so they print on the 1:1 sheets.
+- **See it** — the marker and per-piece PNGs in the cockpit as image tiles
+  plus the `make viz` hero illustration; there is no live viewport — sliders
+  set `ROBION_PARAMS`, and a `make previews` run-button re-renders the tiles.
 - **Pattern sheets** — 1:1 print via `make pdf` (A4 tiling with a 100 mm
   control square — the plan's step 1 is measuring it after printing). Big
   pieces for plotter-less users are the point of the tiling.

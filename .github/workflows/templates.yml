@@ -2,7 +2,7 @@
 # the skill does (common + stack), then run the real pipeline per stack.
 # Solids: model -> check -> drawings -> PNG/PDF plus the negative gates
 # (fea refusal, drafting-helpers degrade). Patterns2d: pattern -> check ->
-# bom -> A4 tiling -> PDF.
+# bom -> A4 tiling -> PDF, plus previews/hero PNGs via Chrome.
 #
 # Deliberately NO uv.lock: every run resolves fresh, so this doubles as a
 # canary for upstream breakage (a new build123d or drafting-helpers release)
@@ -142,23 +142,29 @@ jobs:
         working-directory: ${{ env.PROJ }}
         run: uv sync
 
-      - name: Pattern pipeline (check, export, bom, tiling)
+      - name: Pattern pipeline (check, export, bom, tiling, viz)
         working-directory: ${{ env.PROJ }}
         run: |
           uv run pattern.py check
           uv run pattern.py export
           uv run pattern.py bom
           uv run tile_a4.py
+          uv run viz.py
 
       - name: Assert expected outputs
         working-directory: ${{ env.PROJ }}
         run: |
-          for f in out/pieces/predni_dil.svg out/layout.svg out/layout.html \
-                   out/bom.md out/print/strih_A4.html; do
+          for f in out/pieces/predni_dil.svg out/pieces/predni_dil.html \
+                   out/layout.svg out/layout.html out/viz_hero.svg \
+                   out/viz_hero.html out/bom.md out/print/strih_A4.html; do
             test -f "$f" || { echo "MISSING $f"; exit 1; }
           done
           grep -q "Nákup" out/bom.md
+          grep -Eq '[0-9],[0-9]{2} m' out/bom.md   # Czech decimal comma
           grep -q "KONTROLNÍ ČTVEREC" out/print/strih_A4.html
+          # internal marks must reach the piece SVG and the 1:1 tiling
+          grep -q 'class="mark"' out/pieces/predni_dil.svg
+          grep -q 'class="mark"' out/print/strih_A4.html
 
       - name: PDF smoke via preinstalled Chrome
         working-directory: ${{ env.PROJ }}
@@ -166,6 +172,16 @@ jobs:
           make pdf CHROME=google-chrome
           find out/print -name 'strih_A4.pdf' -size +50k | grep -q . \
             || { echo "strih_A4.pdf missing or suspiciously small"; exit 1; }
+
+      - name: Previews + hero smoke (cockpit tiles, Read gate)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          make previews viz CHROME=google-chrome
+          test -f out/layout.png
+          test -f out/viz_hero.png
+          for f in out/pieces/*.svg; do
+            test -f "${f%.svg}.png" || { echo "MISSING PNG for $f"; exit 1; }
+          done
 
       - name: Check gate must refuse a piece wider than the fabric
         working-directory: ${{ env.PROJ }}

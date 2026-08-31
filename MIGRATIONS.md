@@ -9,6 +9,42 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.18.0
+
+Retrospective fixes from the first real patterns2d product (roll-up tool
+pouch):
+
+- pattern.py: internal piece markings — `PieceSpec.marks` (dashed internal
+  segments: stitching channels, fold lines, placement outlines) +
+  `mark_labels` (Czech captions), drawn by `piece_markup` so they reach the
+  marker AND the 1:1 print; `check()` verifies marks stay inside the piece
+  and refuses `notches` on an `allowance=0` piece (the tick degenerates to
+  an invisible point there — a bound/hemless edge is the normal sewn case).
+  The demo apron marks the pocket placement.
+- pattern.py `export()` writes a pixel `.html` wrapper next to every piece
+  SVG (Chrome renders mm-sized SVG at ~3.78 px/mm — direct screenshots
+  crop); Makefile: new `pieces-png`, aggregate `previews` (= the cockpit
+  image tiles + the Read gate) and `buildsheet-pdf` (`pdf` stays the
+  PATTERN print).
+- New `viz.py` template — flat parametric hero illustration derived from
+  pattern.py (`make viz` → `out/viz_hero.png`); the patterns2d analog of
+  blender_viz.py.
+- Czech decimal comma in user-facing numbers (bom.md, the marker
+  annotation).
+- templates/common/buildsheet.html: per-vertical headings are slots now —
+  `{{SEKCE_VYKRESY}}`, `{{SEKCE_POSTUP}}`, `{{SEKCE_FINALIZACE}}`,
+  `{{SEKCE_ANALYZA}}`, plus `{{TISK_POZNAMKA}}` (print companion note) and
+  `{{FOOTER_ZDROJE}}` (footer source line); values per vertical in
+  references/core/buildsheet.md.
+
+**Migrate (patterns2d projects):** re-copy pattern.py's PieceSpec/BuiltPiece/
+`_build`/`piece_markup`/`check` blocks (keep your PARAMETERS and builders),
+move any hand-drawn internal markings into `marks`/`mark_labels`, re-copy the
+Makefile, copy viz.py and replace its `scene()` with your product.
+**Migrate (all projects):** when regenerating the build sheet from the new
+skeleton, fill the six new slots per the table in core/buildsheet.md; the old
+skeleton keeps working unchanged.
+
 ## v0.17.0
 
 No template changes (content only): seven new vertical playbooks —

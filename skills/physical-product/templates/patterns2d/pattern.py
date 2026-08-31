@@ -11,6 +11,11 @@ Conventions (do not break):
 - Seam allowance is applied programmatically (shapely mitre buffer of the
   stitch line -> the cutting line). allowance=0 means the builder returned
   the cutting line itself (leather edges, bound edges).
+- Internal markings: `notches` are ticks from the stitch line to the cut
+  line — on allowance=0 pieces they degenerate to a point and are INVISIBLE;
+  use `marks` (dashed internal lines: stitching channels, fold lines,
+  placement outlines) + `mark_labels` there and for anything inside a piece.
+  Marks print on the 1:1 sheets; check() verifies they stay inside the piece.
 - The marker packs piece BOUNDING BOXES (shelf FFD, deterministic) — an upper
   bound for purchasing, not professional marker making. grain="lengthwise"
   pieces never rotate; grain="any" may rotate 90°.
@@ -18,9 +23,10 @@ Conventions (do not break):
   right after the PARAMETERS block, so derived values and asserts see them).
 
 CLI (via uv):
-    uv run pattern.py export   # out/pieces/*.svg + out/layout.{svg,html}
+    uv run pattern.py export   # out/pieces/*.{svg,html} + out/layout.{svg,html}
     uv run pattern.py bom      # Czech fabric+notions table into out/bom.md
-    uv run pattern.py check    # validity gate: closed, simple, fits fabric
+    uv run pattern.py check    # validity gate: closed, simple, marks inside,
+                               # fits fabric
     uv run pattern.py show     # list pieces and cut sizes
 """
 
@@ -82,6 +88,7 @@ apron_chest_width = 300.0   # finished width of the bib (top section)
 bib_height = 300.0          # height of the bib above the waist point
 pocket_width = 400.0
 pocket_height = 220.0
+pocket_top_y = 420.0        # top edge of the pocket, measured from the hem up
 strap_finished_width = 40.0  # straps are sewn as tubes and turned
 neck_strap_length = 600.0
 waist_strap_length = 900.0
@@ -99,6 +106,8 @@ waist_y = apron_length - bib_height              # side-curve start height
 hem_drop = hem_allowance - seam_allowance        # extra depth so the uniform
 # buffer yields a hem_allowance-deep cutting edge at the bottom
 strap_cut_width = 2 * strap_finished_width + 2 * seam_allowance
+pocket_left = -pocket_width / 2                  # pocket placement on the body
+pocket_bottom = pocket_top_y - pocket_height
 NOTIONS: list[tuple[str, str]] = [  # (item, qty/size) — Czech, shown in BOM
     ("nit polyester", "1 cívka"),
 ]
@@ -107,6 +116,9 @@ assert apron_chest_width < apron_hip_width, "bib must be narrower than hips"
 assert 0 < bib_height < apron_length, "bib height must fit inside the length"
 assert hem_allowance >= seam_allowance, "hem cannot be shallower than a seam"
 assert fabric_width > apron_hip_width + 2 * seam_allowance, "fabric too narrow"
+assert pocket_width + 100 <= apron_hip_width, "pocket must fit the body width"
+assert 0 < pocket_bottom and pocket_top_y <= waist_y, \
+    "pocket must sit between the hem and the waist"
 
 
 # --------------------------------------------------------------------------
@@ -144,7 +156,13 @@ class PieceSpec:
     on_fold: bool = False            # builder returns the half on x=0
     grain: str = "lengthwise"        # "lengthwise" (no rotation) | "any"
     allowance: float | None = None   # None -> seam_allowance; 0 -> cut line
-    notches: tuple[tuple[float, float], ...] = ()  # points ON the stitch line
+    notches: tuple[tuple[float, float], ...] = ()  # points ON the stitch line;
+    # invisible when allowance=0 (the tick degenerates) -> use marks instead
+    marks: tuple[tuple[tuple[float, float], tuple[float, float]], ...] = ()
+    # internal dashed segments ((x1,y1),(x2,y2)) in stitch coords: stitching
+    # channels, fold lines, placement outlines — printed on the 1:1 sheets
+    mark_labels: tuple[tuple[tuple[float, float], str], ...] = ()
+    # ((x, y), text) Czech captions anchored inside the piece
     notes: str = ""                  # Czech, shown in the BOM piece table
 
 
@@ -186,6 +204,14 @@ PIECES: dict[str, PieceSpec] = {
     "predni_dil": PieceSpec(
         front, label="Přední díl", on_fold=True,
         notches=((apron_hip_width / 2, waist_y),),
+        # pocket placement: sides + bottom (the top edge stays open)
+        marks=(
+            ((pocket_left, pocket_bottom), (-pocket_left, pocket_bottom)),
+            ((pocket_left, pocket_top_y), (pocket_left, pocket_bottom)),
+            ((-pocket_left, pocket_top_y), (-pocket_left, pocket_bottom)),
+        ),
+        mark_labels=(((0.0, pocket_bottom + pocket_height / 2),
+                      "umístění kapsy"),),
         notes=f"spodní lem {hem_allowance:.0f} mm (v přídavku)"),
     "kapsa": PieceSpec(
         pocket, label="Kapsa",
@@ -209,6 +235,8 @@ class BuiltPiece:
     stitch: Polygon          # normalized: cutting bbox starts at (0, 0)
     cutting: Polygon
     notches: tuple[tuple[float, float], ...]
+    marks: tuple[tuple[tuple[float, float], tuple[float, float]], ...]
+    mark_labels: tuple[tuple[tuple[float, float], str], ...]
     fold_x: float | None     # x of the fold axis after normalization
 
     @property
@@ -240,9 +268,14 @@ def _build(key: str, spec: PieceSpec) -> BuiltPiece:
     def shift(poly: Polygon) -> Polygon:
         return Polygon([(x - minx, y - miny) for x, y in poly.exterior.coords])
     notches = tuple((x - minx, y - miny) for x, y in spec.notches)
+    marks = tuple(((x1 - minx, y1 - miny), (x2 - minx, y2 - miny))
+                  for (x1, y1), (x2, y2) in spec.marks)
+    mark_labels = tuple(((x - minx, y - miny), text)
+                        for (x, y), text in spec.mark_labels)
     if fold_x is not None:
         fold_x -= minx
-    return BuiltPiece(key, spec, shift(stitch), shift(cutting), notches, fold_x)
+    return BuiltPiece(key, spec, shift(stitch), shift(cutting), notches,
+                      marks, mark_labels, fold_x)
 
 
 def built_pieces() -> list[BuiltPiece]:
@@ -315,9 +348,15 @@ STYLE = (
     '.fold{stroke:#555;stroke-width:0.35;stroke-dasharray:10 3 2 3}'
     '.grain{stroke:#1a1a1a;stroke-width:0.5}'
     '.notch{stroke:#1a1a1a;stroke-width:0.7}'
+    '.mark{fill:none;stroke:#1a1a1a;stroke-width:0.35;stroke-dasharray:6 2.5}'
     'text{font-family:Helvetica,Arial,sans-serif;fill:#1a1a1a}'
     '</style>'
 )
+
+
+def _cz(value: float, digits: int = 2) -> str:
+    """Czech decimal comma for user-facing text (SVG labels, bom.md)."""
+    return f"{value:.{digits}f}".replace(".", ",")
 
 
 def _path(poly: Polygon, ox: float, oy: float, ph: float, cls: str) -> str:
@@ -349,6 +388,16 @@ def piece_markup(p: BuiltPiece, ox: float, oy: float, *,
             f'<line class="notch" x1="{ox + edge.x:.2f}" '
             f'y1="{oy + ph - edge.y:.2f}" x2="{ox + nx:.2f}" '
             f'y2="{oy + ph - ny:.2f}"/>')
+    # internal marks + captions are pattern content, not annotation — they
+    # always draw (and therefore reach the 1:1 print sheets)
+    for (x1, y1), (x2, y2) in p.marks:
+        parts.append(
+            f'<line class="mark" x1="{ox + x1:.2f}" y1="{oy + ph - y1:.2f}" '
+            f'x2="{ox + x2:.2f}" y2="{oy + ph - y2:.2f}"/>')
+    for (mx, my), text in p.mark_labels:
+        parts.append(
+            f'<text x="{ox + mx:.2f}" y="{oy + ph - my:.2f}" font-size="8" '
+            f'text-anchor="middle">{html.escape(text)}</text>')
     cx, cy = p.cutting.representative_point().coords[0]
     if labels:
         fold_note = ", rozloženo (osa vyznačena)" if p.fold_x is not None else ""
@@ -388,9 +437,18 @@ def export() -> None:
     pieces_dir.mkdir(parents=True, exist_ok=True)
     for p in built_pieces():
         margin = 5.0
+        w, h = p.width + 2 * margin, p.height + 2 * margin
         body = piece_markup(p, margin, margin)
-        (pieces_dir / f"{p.key}.svg").write_text(
-            _svg(p.width + 2 * margin, p.height + 2 * margin, body))
+        (pieces_dir / f"{p.key}.svg").write_text(_svg(w, h, body))
+        # pixel wrapper per piece — Chrome renders a mm-sized SVG at
+        # ~3.78 px/mm, so screenshots must go through a pixel-sized <img>
+        # (`make pieces-png`); same trick as layout.html below
+        win_w = max(150, math.ceil(900 * w / max(w, h)))
+        win_h = math.ceil(win_w * h / w)
+        (pieces_dir / f"{p.key}.html").write_text(
+            f'<!doctype html><html data-window-size="{win_w},{win_h}">'
+            f'<body style="margin:0;background:#fff">'
+            f'<img src="{p.key}.svg" style="width:{win_w}px"></body></html>\n')
         print(f"  piece {p.key}.svg ({p.width:.0f} × {p.height:.0f} mm)")
     placements, consumed = pack(built_pieces(), fabric_width)
     margin = 20.0
@@ -405,7 +463,7 @@ def export() -> None:
     body.append(
         f'<text x="{margin}" y="{margin - 6:.2f}" font-size="12">'
         f'{html.escape(fabric_name)} — šíře {fabric_width:.0f} mm, spotřeba '
-        f'{consumed / 1000:.2f} m, využití {eff:.0f} % (odhad po obdélnících)'
+        f'{_cz(consumed / 1000)} m, využití {eff:.0f} % (odhad po obdélnících)'
         f'</text>')
     svg = _svg(fabric_width + 2 * margin, consumed + 2 * margin,
                "".join(body))
@@ -431,7 +489,7 @@ def bom() -> None:
         f"{fabric_buy_margin * 100:.0f} %) |",
         "|---|---|---|---|",
         f"| {fabric_name} | {fabric_width / 10:.0f} cm | "
-        f"{consumed / 1000:.2f} m | **{buy / 1000:.2f} m** |", "",
+        f"{_cz(consumed / 1000)} m | **{_cz(buy / 1000)} m** |", "",
         "Spotřeba je horní odhad (skládání po obdélnících, bez rotací proti "
         "směru osnovy).", "",
         "## Galanterie", "",
@@ -463,6 +521,18 @@ def check() -> None:
             if p.stitch.exterior.distance(Point(nx, ny)) > 1.0:
                 problems.append(f"{p.key}: notch ({nx:.0f}, {ny:.0f}) is not "
                                 "on the stitch line")
+        if p.notches and p.allowance == 0:
+            problems.append(f"{p.key}: notches are invisible on an "
+                            "allowance=0 piece — use marks instead")
+        for (x1, y1), (x2, y2) in p.marks:
+            for mx, my in ((x1, y1), (x2, y2)):
+                if p.stitch.distance(Point(mx, my)) > 1.0:
+                    problems.append(f"{p.key}: mark point ({mx:.0f}, "
+                                    f"{my:.0f}) lies outside the piece")
+        for (mx, my), text in p.mark_labels:
+            if p.stitch.distance(Point(mx, my)) > 1.0:
+                problems.append(f"{p.key}: mark label {text!r} is anchored "
+                                "outside the piece")
         if p.spec.grain == "lengthwise" and p.width > fabric_width:
             problems.append(f"{p.key}: wider than the fabric and not rotatable")
     try:
