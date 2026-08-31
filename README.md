@@ -64,8 +64,9 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
 
 ## Notes
 
-- Deliverables are written in the user's language; the current templates
-  (title blocks, build sheet, BOM fields) show Czech.
+- Deliverables (build sheet, drawings, BOM, assembly steps) are written in
+  the user's language. The templates ship English strings tagged `L10N`;
+  `make l10n` lists everything to translate at scaffold time.
 - The skills remember your workshop (machines, tools, materials on hand) in
   `~/.robion/workshop.yaml` — created once by a short interview, read at every
   project intake, yours to hand-edit.

@@ -174,7 +174,7 @@ No native section support needed; four steps, all in the framework
 Pick the plane to cut through the most informative features (openings,
 sandwich stacks, internal fittings) while avoiding lengthwise slices of
 beams lying in the plane (shift the plane a few cm instead). Title-block
-note: keep it short ("rovina x = 700, pohled zleva") — long notes overflow
+note: keep it short ("plane x = 700, viewed from the left") — long notes overflow
 into the SCALE cell. Dimension interior heights the elevations can't
 show (clear height, fitting heights above floor, sill heights).
 
