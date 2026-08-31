@@ -9,9 +9,10 @@ parametric build123d model, dimensioned drawings, Blender renders, BOM, analysis
 Pack: robion-maker-pack v{{PACK_VERSION}} — template change log & migration
 steps live in MIGRATIONS.md in the pack repo.
 This is a product-engineering project, not a software project — no tests or
-linters; deliverables are drawings, renders, the BOM and the Czech build sheet.
+linters; deliverables are drawings, renders, the BOM and the build sheet
+(written in the language agreed with the user).
 All dimensions are millimetres. Design decisions and the human-readable
-kusovník live in `README.md` (Czech — keep it Czech).
+BOM live in `README.md`, written in the language the deliverables use.
 
 ## Commands
 
@@ -20,9 +21,9 @@ uv sync                 # once; add --extra fea for analysis
 make parts              # STEP+STL per part into out/parts/
 make drawings           # dimensioned SVGs (+ PNG via the pattern rule)
 make viz                # Blender renders (log-grepped for crashes)
-make bom                # kusovník into out/bom.md
+make bom                # bill of materials into out/bom.md
 make check              # assembly gate: mass/COG, interference, clearance
-make cutlist            # nářezový plán (out/cutlist.{md,svg}; -png variant)
+make cutlist            # cutting plan (out/cutlist.{md,svg}; -png variant)
 make fea                # analysis (degrades to analytic-only without ccx)
 make doctor             # tool availability
 ```
@@ -36,7 +37,7 @@ variables; blender is on PATH.
   `PARTS` registry (builder + material) → per-part exports + BOM. Never hardcode
   a dimension inside a builder.
 - `drawings.py` — first-angle dimensioned views from `model.PARTS`.
-- `cutlist.py` — STOCK declaration → FFD/shelf packing → nářezový plán;
+- `cutlist.py` — STOCK declaration → FFD/shelf packing → cutting plan;
   stock/purchasing knowledge lives here, never in model.py.
 - `blender_viz.py` — headless Cycles; per-part materials; bbox-driven scene.
 - `fea.py` — analytic gate, then gmsh+pygccx+CalculiX.

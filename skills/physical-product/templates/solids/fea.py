@@ -34,7 +34,7 @@ STEP_FILE = Path(__file__).parent / "out" / "parts" / "bracket.step"
 # Fill by COMPUTING from model.py — `import model` and derive; NEVER retype
 # a number that exists there (a parameter change must reflow the analytics):
 #   mass_kg, cog = model.mass_properties()
-#   STABILITY = Stability(load_case="200 N vodorovně v úchopu",
+#   STABILITY = Stability(load_case="200 N horizontal at the grip",
 #       mass_kg=mass_kg, cog_height_mm=cog.Z,
 #       base_half_width_mm=model.base_width / 2, ...)
 # --------------------------------------------------------------------------
@@ -50,7 +50,7 @@ class Analytic:
 
 @dataclass(frozen=True)
 class Stability:
-    load_case: str | None = None          # e.g. "vodorovná síla v úchopu 1.2 m"
+    load_case: str | None = None          # e.g. "horizontal force at 1.2 m"
     mass_kg: float | None = None                # from model.py bom, exact
     cog_height_mm: float | None = None          # weighted Shape.center() z
     base_half_width_mm: float | None = None     # b: COG -> nearest tipping edge
@@ -95,33 +95,33 @@ def analytic_report() -> str:
         _require_complete(ANALYTIC, "ANALYTIC")
         sf = ANALYTIC.allowable_stress_mpa / ANALYTIC.governing_stress_mpa
         parts.append(
-            "## Analytický odhad\n\n"
-            f"- Zatěžovací stav: {ANALYTIC.load_case}\n"
-            f"- Napětí v kritickém průřezu: "
+            "## Analytic estimate\n\n"
+            f"- Load case: {ANALYTIC.load_case}\n"
+            f"- Stress at the critical section: "
             f"{ANALYTIC.governing_stress_mpa:.1f} MPa "
-            f"(dovolené {ANALYTIC.allowable_stress_mpa:.0f} MPa, "
-            f"bezpečnost {sf:.1f})\n"
-            f"- Průhyb: {ANALYTIC.deflection_mm:.2f} mm\n"
-            f"- 1. vlastní frekvence (odhad): "
+            f"(allowable {ANALYTIC.allowable_stress_mpa:.0f} MPa, "
+            f"safety factor {sf:.1f})\n"
+            f"- Deflection: {ANALYTIC.deflection_mm:.2f} mm\n"
+            f"- First natural frequency (estimate): "
             f"{ANALYTIC.f1_estimate_hz:.1f} Hz "
-            f"(buzení ~{ANALYTIC.excitation_hz:.1f} Hz)\n")
+            f"(excitation ~{ANALYTIC.excitation_hz:.1f} Hz)\n")
     if STABILITY is not None:
         _require_complete(STABILITY, "STABILITY")
         parts.append(
-            "## Stabilita proti překlopení\n\n"
-            f"- Zatěžovací stav: {STABILITY.load_case}\n"
-            f"- Hmotnost {STABILITY.mass_kg:.1f} kg, těžiště "
+            "## Tip-over stability\n\n"
+            f"- Load case: {STABILITY.load_case}\n"
+            f"- Mass {STABILITY.mass_kg:.1f} kg, centre of gravity "
             f"{STABILITY.cog_height_mm:.0f} mm nad podlahou\n"
-            f"- Rameno ke klopné hraně b = "
+            f"- Lever arm to the tipping edge b = "
             f"{STABILITY.base_half_width_mm:.0f} mm\n"
-            f"- Klopná síla ve výšce {STABILITY.force_height_mm:.0f} mm: "
-            f"{STABILITY.tip_force_n:.0f} N; úhel překlopení "
+            f"- Tipping force at {STABILITY.force_height_mm:.0f} mm: "
+            f"{STABILITY.tip_force_n:.0f} N; tip-over angle "
             f"{STABILITY.tip_angle_deg:.1f}°\n")
     return "\n".join(parts)
 
 
 def run_fea() -> str:
-    """STEP -> gmsh mesh -> pygccx static + *FREQUENCY -> Czech results table.
+    """STEP -> gmsh mesh -> pygccx static + *FREQUENCY -> results table.
 
     Skeleton only: gmsh physical-group selection and pygccx API calls carry
     EDIT-ME markers; consult pygccx examples for the current API
@@ -130,8 +130,9 @@ def run_fea() -> str:
     import gmsh  # provided by the uv 'fea' extra (wheel bundles the library)
 
     if shutil.which("ccx") is None:
-        return ("## FEA\n\nPevnostní a modální analýza je pouze analytický "
-                "odhad — FEA solver (CalculiX) není nainstalován; instalace: "
+        return ("## FEA\n\nStrength and modal analysis is an analytic "
+                "estimate only — the FEA solver (CalculiX) is not installed; "
+                "install with: "
                 "`brew install costerwi/calculix/calculix-ccx`.\n")
 
     OUT.mkdir(parents=True, exist_ok=True)

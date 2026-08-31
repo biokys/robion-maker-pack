@@ -16,7 +16,7 @@ the marker layout, fabric consumption, and 1:1 A4-tiled print sheets.
   `mark_labels`, `notes`. Builders never depend on each other's side effects.
 - Internal markings: sewn products always need them (stitching channels,
   fold lines, placement of applied pieces) — `marks` (dashed internal
-  segments) + `mark_labels` (Czech captions), drawn by `piece_markup` so
+  segments) + `mark_labels` (localized captions), drawn by `piece_markup` so
   they reach the marker AND the 1:1 print. `notches` are ticks from the
   stitch line to the cut line — on `allowance=0` pieces (bound/hemless
   edges) they degenerate to an invisible point; `check()` refuses that
@@ -41,8 +41,8 @@ out/
 ├── layout.svg (+ .html) # the marker: pieces packed onto fabric width,
 │                        # consumed length + efficiency
 ├── viz_hero.svg (+.html)# hero: flat parametric illustration (viz.py)
-├── bom.md               # fabric consumption + notions (Czech)
-└── print/strih_A4.html  # A4-tiled 1:1 pattern (make pdf → strih_A4.pdf)
+├── bom.md               # fabric consumption + notions
+└── print/pattern_A4.html  # A4-tiled 1:1 pattern (make pdf → pattern_A4.pdf)
 ```
 
 ## Commands
@@ -53,12 +53,12 @@ uv run pattern.py bom      # out/bom.md (+ stdout)
 uv run pattern.py check    # validity gate: closed, simple, marks inside,
                            # fits fabric width
 uv run pattern.py show     # list pieces and sizes
-uv run tile_a4.py          # out/print/strih_A4.html (A4 tiling, 1:1)
-make pdf                   # Chrome-print the tiling → strih_A4.pdf
+uv run tile_a4.py          # out/print/pattern_A4.html (A4 tiling, 1:1)
+make pdf                   # Chrome-print the tiling → pattern_A4.pdf
 make previews              # marker + per-piece PNGs — the Read gate AND the
                            # cockpit image tiles (their run-button command)
 make viz                   # hero illustration → out/viz_hero.png
-make buildsheet-pdf        # výrobní list PDF (`pdf` is the PATTERN here)
+make buildsheet-pdf        # build sheet PDF (`pdf` is the PATTERN here)
 ```
 
 ## Rules
@@ -81,10 +81,11 @@ make buildsheet-pdf        # výrobní list PDF (`pdf` is the PATTERN here)
 - There is no live viewport in the cockpit: sliders only set `ROBION_PARAMS`
   — pair the image tiles with a `make previews` run-button that re-renders
   them (and `make viz` for the hero).
-- Czech text in Python strings: type the proper closing quote „takhle“ —
-  a straight `"` inside a `"…"` literal ends it (it burned a session once).
-- Degrade: no Chrome ⇒ ship the SVGs and say the PDF step was skipped (Czech
-  sentence per [../core/toolchain.md](../core/toolchain.md) conventions).
+- Localized text in Python strings: when a language uses typographic
+  quotes, type the proper closing character — a straight `"` inside a
+  `"…"` literal ends the literal (it burned a session once).
+- Degrade: no Chrome ⇒ ship the SVGs and say the PDF step was skipped (the
+  sentence to localize is in [../core/toolchain.md](../core/toolchain.md)).
 
 ## Scaffold specifics
 

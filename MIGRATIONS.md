@@ -9,19 +9,72 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.20.0
+
+**The pack is now language-neutral English.** It used to be written for a
+single market: templates emitted one language's strings, playbooks named
+that market's suppliers, and output files carried its file names. Nothing
+about the engineering was market-specific — only the wrapping was — so all
+of it moved out of the pack and into two places that legitimately know it:
+the user's workshop profile, and a localization step at scaffold time.
+
+- SKILL.md Language rule rewritten: the pack is English; deliverables are
+  written in the user's language, determined from how they write (or
+  `language:` in the workshop profile). Market facts (suppliers, stock
+  sizes actually sold, standards, currency) come from the profile or from
+  asking — they are not translation and must never be invented. Triggers
+  and routing rows are English and match requests in any language.
+- Workshop profile gained `language`, `country`, `currency` and
+  `suppliers`; the schema example is English, with the structure/content
+  split spelled out (a real profile is written in its owner's words).
+- Every reference and playbook rewritten in English, engineering content
+  unchanged. `## Materials & suppliers (CZ)` became `## Materials & stock`:
+  stock forms, standard sizes and grades kept, market vendors dropped.
+- New CI workflow `language.yml` fails the build if localized text returns
+  (letter check + a diacritic-free word list — the second catches what the
+  first cannot).
+
+Template changes (all of them mechanical, none behavioural):
+
+- **User-facing strings are English and tagged `L10N:`**; new `make l10n`
+  lists every one, plus the buildsheet slots. Translate them right after
+  scaffolding, before the first `make` — SKILL.md §4 now says so.
+- **Renamed identifiers:** `PartSpec.czech_name` → `local_name`;
+  `merge_pdfs.komplet_name()` → `complete_name()` (`--komplet` →
+  `--complete`, `KOMPLET_NAME` → `COMPLETE_NAME`); patterns2d `PIECES`
+  demo keys → `front_panel` / `pocket` / `strap_neck` / `strap_waist`;
+  `pattern._cz()` → `_num()`.
+- **Renamed outputs:** `out/vyrobni_list.*` → `out/build_sheet.*`,
+  `out/print/strih_A4.*` → `pattern_A4.*`, `out/drawings/vykresy_A3.pdf` →
+  `drawings_A3.pdf`, `<product>_komplet.pdf` → `_complete.pdf`.
+- **Renamed buildsheet slots:** `{{SEKCE_VYKRESY}}` → `{{SECTION_DRAWINGS}}`,
+  `{{SEKCE_POSTUP}}` → `{{SECTION_ASSEMBLY}}`, `{{SEKCE_FINALIZACE}}` →
+  `{{SECTION_FINISHING}}`, `{{SEKCE_ANALYZA}}` → `{{SECTION_ANALYSIS}}`,
+  `{{TISK_POZNAMKA}}` → `{{PRINT_NOTE}}`, `{{FOOTER_ZDROJE}}` →
+  `{{FOOTER_SOURCES}}`, plus the content slots ({{NAZEV_VYROBKU}} →
+  {{PRODUCT_NAME}} and so on — `make l10n` prints the full list).
+
+**Migrate:** nothing is required — a running project keeps its own language
+and its own file names, and the old template vintage still works. When you
+DO pull this in: rename `czech_name` → `local_name` in model.py and
+cutlist.py together, re-copy the Makefile for `l10n`, and if you re-copy
+buildsheet.html, rename the slots in your generator to match. Translate the
+newly-English template strings back into your project's language — that is
+what `make l10n` is for.
+
 ## v0.19.0
 
 New vertical playbook `references/verticals/aluminum-profiles.md` (frames
 bolted from T-slot extrusions: systems/slot compatibility, joint matrix,
 slide-in-nut assembly order, effective-density mass from catalog kg/m,
-tilted-shelf pattern, racking/bracing, CZ suppliers) — informed by the
+tilted-shelf pattern, racking/bracing, suppliers) — informed by the
 first real profile build; SKILL.md routing row + triggers, metalwork
 playbook scoped to steel with a cross-link. From the same retrospective:
 stacks/solids.md OpenSCAD-fallback rules (echo-eval loop, CSG
 non-2-manifold/coplanar traps, camera semantics, and the mesh-probe
 verify script replacing `make check` on that path), `git init` added to
-the scaffold step, and core/buildsheet.md notes (rendered výrobní list is
-a build artifact — regenerate, never hand-patch).
+the scaffold step, and core/buildsheet.md notes (the rendered build sheet
+is a build artifact — regenerate, never hand-patch).
 
 Template change: `templates/common/buildsheet.html` — `ol.steps li`
 switched from flex to block with an absolutely positioned number. In a
@@ -40,7 +93,7 @@ pouch):
 
 - pattern.py: internal piece markings — `PieceSpec.marks` (dashed internal
   segments: stitching channels, fold lines, placement outlines) +
-  `mark_labels` (Czech captions), drawn by `piece_markup` so they reach the
+  `mark_labels` (localized captions), drawn by `piece_markup` so they reach the
   marker AND the 1:1 print; `check()` verifies marks stay inside the piece
   and refuses `notches` on an `allowance=0` piece (the tick degenerates to
   an invisible point there — a bound/hemless edge is the normal sewn case).
@@ -53,12 +106,10 @@ pouch):
 - New `viz.py` template — flat parametric hero illustration derived from
   pattern.py (`make viz` → `out/viz_hero.png`); the patterns2d analog of
   blender_viz.py.
-- Czech decimal comma in user-facing numbers (bom.md, the marker
-  annotation).
-- templates/common/buildsheet.html: per-vertical headings are slots now —
-  `{{SEKCE_VYKRESY}}`, `{{SEKCE_POSTUP}}`, `{{SEKCE_FINALIZACE}}`,
-  `{{SEKCE_ANALYZA}}`, plus `{{TISK_POZNAMKA}}` (print companion note) and
-  `{{FOOTER_ZDROJE}}` (footer source line); values per vertical in
+- Decimal comma in user-facing numbers (bom.md, the marker annotation).
+- templates/common/buildsheet.html: per-vertical headings are slots now
+  (named `{{SEKCE_*}}` / `{{TISK_POZNAMKA}}` / `{{FOOTER_ZDROJE}}` in this
+  version — renamed in v0.20.0); values per vertical in
   references/core/buildsheet.md.
 
 **Migrate (patterns2d projects):** re-copy pattern.py's PieceSpec/BuiltPiece/

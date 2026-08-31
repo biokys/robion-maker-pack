@@ -2,11 +2,11 @@
 
 ## When this applies
 
-Wallets ("peněženka"), belts, pouches, knife sheaths, bags, straps, tool
-rolls — anything cut from leather and assembled by saddle stitching, riveting
-or gluing. Combines with sewing (fabric lining) and metalwork (buckles made,
-not bought — rare). Out of scope: molded/wet-formed leather and garment
-leatherwork — run the spine bare and say so.
+Wallets, belts, pouches, knife sheaths, bags, straps, tool rolls — anything
+cut from leather and assembled by saddle stitching, riveting or gluing.
+Combines with sewing (fabric lining) and metalwork (buckles made, not bought
+— rare). Out of scope: molded/wet-formed leather and garment leatherwork —
+run the spine bare and say so.
 
 ## Intake additions
 
@@ -27,16 +27,17 @@ Stack: **patterns2d**.
   stitch-to-edge distance (typ. 3–4 mm, match the groover) — the cutting line
   lands exactly where the edge should be. Edges that are glued/burnished
   only: `allowance=0` and the builder returns the cut line. Fold lines
-  (wallet spines) drawn like fold axes; mark skiving zones ("ztenčit") in
-  piece notes. Stitch-hole spacing is the iron's, not the pattern's — the
-  pattern carries the stitch LINE, the make plan says which iron.
+  (wallet spines) drawn like fold axes; mark skiving zones (where the
+  leather is thinned) in piece notes. Stitch-hole spacing is the iron's, not
+  the pattern's — the pattern carries the stitch LINE, the make plan says
+  which iron.
 - **Marker** — hides aren't rolls: treat `fabric_width` as a nominal working
   width and present the layout as a cutting GUIDE, not gospel; the plan tells
   the user to place load-bearing pieces (straps, belts) along the backbone
   and keep bellies for stiffened or hidden parts.
 - **Print** — leather patterns are cut around templates: the plan's first
   step after the control square is gluing the printed pattern to cardboard
-  ("tvrdá šablona") and cutting around it with an awl trace.
+  (a hard template) and cutting around it with an awl trace.
 - **BOM** — leather area with a waste factor (cut generously, 20–30 % on
   hides), thread (waxed polyester/linen, length ≈ 4× seam length per the
   saddle-stitch rule of thumb), hardware with sizes (buckle bar width =
@@ -48,12 +49,15 @@ Stack: **patterns2d**.
 - **Analysis** — none; the gate is a test piece for new thickness/hardware
   combos.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Useň (hovězina) by weight/thickness; waxed thread, edge paint. Suppliers a
-BOM may name: Stoklasa (hardware — přezky, nýty, druky, D-kroužky),
-specialized leather suppliers ("prodejci usní" — leave the concrete shop to
-the user's profile, don't invent one). Leave prices per project.
+Cowhide by tannage (vegetable or chrome) and thickness in mm, sold as whole
+hides, sides or shoulders — area priced per square foot or square decimetre.
+Waxed polyester or linen thread, edge paint or gum tragacanth, contact
+cement. Hardware by size: buckles (bar width = strap width), rivets, snaps,
+D-rings. Name a tannery, leather merchant or haberdashery from the user's own
+market — the workshop profile may name preferred suppliers; never invent a
+supplier or a price. Leave prices per project.
 
 ## Last mile
 

@@ -23,7 +23,7 @@ Typical macOS binary:
 "$KICAD_CLI" pcb export step board/board.kicad_pcb -o out/pcb/board.step
 # render for the build sheet
 "$KICAD_CLI" pcb render board/board.kicad_pcb -o out/pcb/board.png
-# BOM (merge into the product kusovník)
+# BOM (merge into the product BOM)
 "$KICAD_CLI" sch export bom board/board.kicad_sch -o out/pcb/bom.csv
 ```
 
@@ -40,6 +40,6 @@ Typical macOS binary:
 
 ## Build sheet integration
 
-PCB section gets: board render, ERC/DRC status ("bez porušení" / list), gerber
-location, PCB BOM merged into the kusovník as its own table (Poz., reference,
+PCB section gets: board render, ERC/DRC status (clean / list of violations),
+gerber location, PCB BOM merged into the BOM as its own table (Pos., reference,
 hodnota, pouzdro, ks).

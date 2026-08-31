@@ -5,7 +5,7 @@
 # (3.12 -> 3.11) and re-run `uv sync`.
 [project]
 name = "product"  # EDIT-ME: product slug — merge_pdfs.py names the final
-                  # PDF <name>_komplet.pdf after it
+                  # PDF <name>_complete.pdf after it
 version = "0.1.0"
 requires-python = ">=3.11,<3.13"
 dependencies = [

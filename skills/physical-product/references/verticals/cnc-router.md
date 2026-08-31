@@ -10,8 +10,8 @@ pre-compensate the DXF.
 
 Flat plates: constant thickness (bbox smallest dim == material thickness)
 with all features — outline, holes, pockets — machinable from one side.
-Bent or turned parts need their rozvin/section drawn explicitly; a 3D
-relief is out of scope for this recipe.
+Bent or turned parts need their flat pattern or section drawn explicitly;
+a 3D relief is out of scope for this recipe.
 
 ## The right DXF source — face wires, NOT projected views
 
@@ -30,21 +30,21 @@ import model
 
 exp = ExportDXF(unit=Unit.MM)
 exp.add_layer("cut")
-part = model.PARTS["deska"].builder()
+part = model.PARTS["plate"].builder()
 # the machined face: largest face perpendicular to the tool axis (here Z)
 face = max(part.faces().filter_by(Plane.XY), key=lambda f: f.area)
 exp.add_shape(face, layer="cut")     # outer wire + hole wires, exact 1:1
-exp.write("out/cam/deska.dxf")
+exp.write("out/cam/plate.dxf")
 ```
 
 - One DXF per part, model mm, 1:1 — CAM imports it directly.
 - Interior wires (holes, pockets' openings) come along with the face;
-  pocket DEPTHS are not in the DXF — state them in the drawing / kusovník
-  note and set them in CAM.
+  pocket DEPTHS are not in the DXF — state them in the drawing / BOM note
+  and set them in CAM.
 - Verify by re-importing (`import_dxf`) or opening in the CAM program and
   checking one known dimension before cutting anything.
 
-## CAM-side checklist (goes into the build sheet's Postup)
+## CAM-side checklist (goes into the build sheet's procedure section)
 
 1. Tool-diameter compensation ON (profile outside / holes inside).
 2. Tabs on outer profiles; skip tabs on holes smaller than the tab.
@@ -54,8 +54,8 @@ exp.write("out/cam/deska.dxf")
 
 ## Build sheet integration
 
-CNC parts get a kusovník note (`frézovat dle out/cam/<part>.dxf`), and the
-footer lists the cam DXF paths beside the drawing sources.
+CNC parts get a BOM note (`mill per out/cam/<part>.dxf`), and the footer
+lists the cam DXF paths beside the drawing sources.
 
 ## Future
 

@@ -2,7 +2,7 @@
 
 ## When this applies
 
-Flat parts cut from plywood, MDF, acrylic ("plexi") or thin materials on the
+Flat parts cut from plywood, MDF, acrylic or thin materials on the
 profile's laser: boxes, panels, signage, mechanical flat parts, engraved
 fronts. Combines routinely with 3d-print (printed corners on laser-cut panels)
 and electronics (front panels). Out of scope: metals unless the profile's
@@ -24,8 +24,8 @@ Stack: **solids** — model the assembled product as real 3D solids (so fit,
 interference and BOM stay honest), then derive 2D.
 
 - **Model** — constant-thickness parts only (same flat-plate rule as
-  [cnc-router.md](cnc-router.md)). Box corners: finger joints ("zubování")
-  with finger width ≥ material thickness; slot WIDTH = material thickness
+  [cnc-router.md](cnc-router.md)). Box corners: finger joints with finger
+  width ≥ material thickness; slot WIDTH = material thickness
   exactly — kerf compensation happens in the CAM (LightBurn offset) or as one
   model parameter `kerf_comp` default 0, never both. Acrylic snap fits: don't
   — acrylic cracks; use screws or glue.
@@ -43,13 +43,15 @@ interference and BOM stay honest), then derive 2D.
   contours last** (the part stays referenced as long as possible), masking for
   visible faces.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Překližka (topol/bříza 3–6 mm), MDF 3 mm, plexisklo/PMMA (cast lépe než
-extrudované pro gravír). Suppliers a BOM may name: local dřevocentrum for
-plywood, plastic sheet suppliers (e.g. Zenit) for PMMA. NEVER put PVC or
-polycarbonate in a laser BOM — PVC releases chlorine (machine-killing,
-toxic), PC burns; if the user asks for them, refuse the material and say why.
+Plywood (poplar or birch, 3–6 mm), MDF 3 mm, acrylic/PMMA sheet — cast
+acrylic engraves better than extruded. Name a timber merchant for plywood and
+a plastics sheet supplier for PMMA from the user's own market — the workshop
+profile may name preferred suppliers; never invent a supplier or a price, and
+leave prices per project. NEVER put PVC or polycarbonate in a laser BOM — PVC
+releases chlorine (machine-killing, toxic), PC burns; if the user asks for
+them, refuse the material and say why.
 
 ## Last mile
 

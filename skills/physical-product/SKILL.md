@@ -1,6 +1,6 @@
 ---
 name: physical-product
-description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut and sheet-metal parts, CNC-routed parts, electronics with a PCB, sewn and leather goods, van build-outs, fitness gear, animal housing, upholstered pieces, aquarium stands: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán, rozvin), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru, peněženku, vestavbu do dodávky, hrazdu, plyo box, úl, kurník, králíkárnu, budku, čalouněnou lavici, stolek pod akvárium, krabičku z plechu), výrobní výkres, kusovník, nářezový plán, rozvin plechu, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, polička z hliníkových profilů, T-slot/V-slot konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, leather wallet, parametric 3D model, build sheet, BOM, technical drawing, FEA."
+description: "Design a complete physical product end-to-end — furniture and joinery, welded steel frames, aluminium T-slot structures, 3D prints, laser-cut and sheet-metal parts, CNC-routed parts, electronics with a PCB, sewn and leather goods, van build-outs, fitness gear, animal housing, upholstered pieces, aquarium stands: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM, cut plans (bar/sheet nesting, bend development), assembly & finishing plan, strength/modal analysis (FEA), and a published build sheet in the user's own language. Triggers on requests IN ANY LANGUAGE to design, build or make: a table, shelf, bracket, enclosure, box, gate, fence, rack, frame, stand, fixture, sewing pattern, bag, apron, wallet, camper conversion, pull-up bar, plyo box, beehive, chicken coop, rabbit hutch, nest box, upholstered bench, aquarium stand, sheet-metal case; also: production drawing, BOM, cutting plan, bend development, strength calculation, natural frequency, welded structure, T-slot/V-slot structure, parametric 3D model, build sheet, technical drawing, FEA."
 ---
 
 # Physical Product
@@ -22,9 +22,25 @@ The skill is layered — load only what the project needs:
 - **`references/core/`** — shared conventions (workshop profile, toolchain &
   degrade, build sheet).
 
-**Language rule:** all user-facing deliverables (build sheet, README, drawings
-text, BOM, dialogue) in the user's language — the templates in this pack show
-Czech. Code, comments, commit messages and file names in English.
+**Language rule.** This pack is English and language-neutral by design; the
+product it produces is not. Work out the user's language from how they write
+to you (`language:` in the workshop profile overrides it), then:
+
+- **Deliverables in the user's language** — build sheet, README, drawing text
+  and title blocks, BOM and cut-plan tables, assembly steps, safety warnings,
+  dialogue. Use the vocabulary a workshop in that language actually speaks,
+  not a word-by-word translation of the English term: trade names for stock,
+  joints and operations differ from dictionary equivalents, and a literal
+  translation reads foreign to the person holding the drawing.
+- **Everything else in English** — code, comments, identifiers, commit
+  messages, file names, and this pack itself.
+- **Localize once, at scaffold time.** Templates ship English user-facing
+  strings tagged `L10N:`; `make l10n` lists every one. Translate them right
+  after copying the templates, before the first `make` — a half-translated
+  build sheet is worse than an English one.
+- **Market facts are not translation.** Suppliers, stock sizes actually sold,
+  standards and currency belong to the user's market, not to the pack: take
+  them from the workshop profile or ask. Never invent a supplier or a price.
 
 ## 1 · Intake
 
@@ -35,7 +51,7 @@ Missing file ⇒ run the one-time workshop interview and create it:
 
 Then ask what the profile can't know (batched, in the user's language) — but
 never stall: if the user can't answer, assume a sensible value and record it
-under "Předpoklady":
+in the build sheet's assumptions section:
 
 - Function and load case: what does it carry/do, worst realistic load, static or
   dynamic (vibration source nearby?).
@@ -59,19 +75,19 @@ applies and compose; the spine stays single.
 |---|---|
 | furniture, shelving, joinery — solid wood / sheet goods | [verticals/woodworking.md](references/verticals/woodworking.md) |
 | a welded or bolted steel frame — gate, fence, rack, stand, bracket | [verticals/metalwork.md](references/verticals/metalwork.md) |
-| a frame bolted from aluminium T-slot extrusions — polička, stojan, rám stroje | [verticals/aluminum-profiles.md](references/verticals/aluminum-profiles.md) |
+| a frame bolted from aluminium T-slot extrusions — shelving, stand, machine frame | [verticals/aluminum-profiles.md](references/verticals/aluminum-profiles.md) |
 | a 3D-printed part or enclosure | [verticals/3d-print.md](references/verticals/3d-print.md) |
 | flat parts laser-cut from plywood/acrylic/steel | [verticals/laser.md](references/verticals/laser.md) |
 | flat parts machined on a CNC router | [verticals/cnc-router.md](references/verticals/cnc-router.md) |
 | contains a PCB / electronics | [verticals/electronics.md](references/verticals/electronics.md) |
 | sewn from fabric or canvas — bag, apron, cover, simple garment | [verticals/sewing.md](references/verticals/sewing.md) |
 | cut & stitched from leather — wallet, belt, pouch, bag | [verticals/leather-goods.md](references/verticals/leather-goods.md) |
-| furniture built into a vehicle — vestavba, camper module | [verticals/van-conversion.md](references/verticals/van-conversion.md) |
-| training gear carrying a moving human — hrazda, plyo box, stojan | [verticals/fitness-equipment.md](references/verticals/fitness-equipment.md) |
-| housing for animals — úl, kurník, králíkárna, budka | [verticals/animal-housing.md](references/verticals/animal-housing.md) |
-| padded & covered furniture — čalouněná lavice, sedáky, pelíšek | [verticals/upholstery.md](references/verticals/upholstery.md) |
+| furniture built into a vehicle — camper module, van build-out | [verticals/van-conversion.md](references/verticals/van-conversion.md) |
+| training gear carrying a moving human — pull-up bar, plyo box, rack | [verticals/fitness-equipment.md](references/verticals/fitness-equipment.md) |
+| housing for animals — beehive, chicken coop, rabbit hutch, nest box | [verticals/animal-housing.md](references/verticals/animal-housing.md) |
+| padded & covered furniture — upholstered bench, seat pads, pet bed | [verticals/upholstery.md](references/verticals/upholstery.md) |
 | a stand, cabinet or hood for an aquarium/terrarium | [verticals/aquarium-terrarium.md](references/verticals/aquarium-terrarium.md) |
-| thin-sheet parts with straight bends — krabička z plechu, kryt, držák | [verticals/sheet-metal.md](references/verticals/sheet-metal.md) |
+| thin-sheet parts with straight bends — sheet-metal case, cover, bracket | [verticals/sheet-metal.md](references/verticals/sheet-metal.md) |
 
 No row matches ⇒ run the spine bare — it is complete by itself. If the project
 taught vertical-specific lessons, propose a new playbook at retrospective time
@@ -95,7 +111,9 @@ New project: `git init` first (design iterations, retro and template
 migrations all lean on the history — a project without it can't answer
 "what changed"), then copy `templates/common/` plus the chosen stack's
 `templates/<stack>/` files flat into the repo root, **rename `[project].name`
-in pyproject.toml to the product slug**, fill the `{{PACK_VERSION}}` stamp in
+in pyproject.toml to the product slug**, **run `make l10n` and translate every
+listed string into the user's language** (the templates ship English — see the
+Language rule), fill the `{{PACK_VERSION}}` stamp in
 CLAUDE.md with the installed pack version (it tells future sessions which
 template vintage the project has — see MIGRATIONS.md in the pack), run
 `uv sync`, then `make doctor` to see which tools exist. A project combining
@@ -121,10 +139,10 @@ what each stage must cover.
 | 1 | **Model** | parametric source of truth (`model.py` / `pattern.py`) | user approves the live geometry |
 | 2 | **See it** | live viewport / rendered previews | user approves proportions |
 | 3 | **Drawings / pattern sheets** | dimensioned drawings or 1:1 pattern pages | every PNG Read and checked before the user sees it |
-| 4 | **BOM + cut plan** | kusovník, nářezový plán / marker layout | masses & consumption cross-checked |
-| 5 | **Make plan** | numbered Czech assembly/sewing/welding steps + finishing schedule | ordered so it's actually executable |
+| 4 | **BOM + cut plan** | bill of materials, cutting plan / marker layout | masses & consumption cross-checked |
+| 5 | **Make plan** | numbered assembly/sewing/welding steps + finishing schedule | ordered so it's actually executable |
 | 6 | **Analysis** (when load-bearing) | analytic estimates first, FEA to verify | sanity checks pass before numbers reach the user |
-| 7 | **Build sheet** | Czech výrobní list per [core/buildsheet.md](references/core/buildsheet.md) | user approves; mirror into README |
+| 7 | **Build sheet** | build sheet per [core/buildsheet.md](references/core/buildsheet.md) | user approves; mirror into README |
 
 **Robion cockpit — build it unprompted.** When the `set_controls` MCP tool
 exists, the cockpit is part of stage 1, not an optional extra (read
@@ -164,16 +182,17 @@ skip silently, never mention it.
 ## 7 · Iteration protocol
 
 User feedback → change parameters (never hardcode inside builders) → `make` → show.
-Keep the dialogue in Czech, short iterations, one nástřel at a time. Record design
-decisions in the project README; record newly discovered tool gotchas in the project
-CLAUDE.md ("Gotchas learned here").
+Keep the dialogue in the user's language, short iterations, one proposal at a time.
+Record design decisions in the project README; record newly discovered tool gotchas
+in the project CLAUDE.md ("Gotchas learned here").
 
 ## 8 · Degrade & uncertainty
 
-Missing tool ⇒ skip that stage gracefully and say so in the build sheet (exact Czech
-sentences in [references/core/toolchain.md](references/core/toolchain.md)). Never install
-system packages (brew) without asking. The build sheet always ends with a
-"Předpoklady a nejistoty" section listing every assumption made.
+Missing tool ⇒ skip that stage gracefully and say so in the build sheet (the
+sentence to localize per tool is in
+[references/core/toolchain.md](references/core/toolchain.md)). Never install
+system packages (brew) without asking. The build sheet always ends with an
+assumptions & uncertainties section listing every assumption made.
 
 ## 9 · Retrospective (end of project)
 

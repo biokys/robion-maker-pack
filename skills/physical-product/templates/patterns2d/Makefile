@@ -15,24 +15,24 @@ bom:
 check:
 	$(UV) run pattern.py check
 
-# A4 tiling at true 1:1 (out/print/strih_A4.html)
+# A4 tiling at true 1:1 (out/print/pattern_A4.html)
 tile: pattern
 	$(UV) run tile_a4.py
 
 # printable pattern: Chrome prints the tiling at exact scale
-# (NB: `pdf` is the PATTERN here — the výrobní list has buildsheet-pdf)
+# (NB: `pdf` is the PATTERN here — the build sheet has buildsheet-pdf)
 pdf: tile
 	"$(CHROME)" --headless --no-pdf-header-footer \
-		--print-to-pdf=$(OUT)/print/strih_A4.pdf \
-		"file://$(CURDIR)/$(OUT)/print/strih_A4.html" 2>/dev/null
-	@echo "  pdf $(OUT)/print/strih_A4.pdf"
+		--print-to-pdf=$(OUT)/print/pattern_A4.pdf \
+		"file://$(CURDIR)/$(OUT)/print/pattern_A4.html" 2>/dev/null
+	@echo "  pdf $(OUT)/print/pattern_A4.pdf"
 
-# build sheet PDF (out/vyrobni_list.html carries its own @media print rules)
+# build sheet PDF (out/build_sheet.html carries its own @media print rules)
 buildsheet-pdf:
 	"$(CHROME)" --headless --no-pdf-header-footer \
-		--print-to-pdf=$(OUT)/vyrobni_list.pdf \
-		"file://$(CURDIR)/$(OUT)/vyrobni_list.html" 2>/dev/null
-	@echo "  pdf $(OUT)/vyrobni_list.pdf"
+		--print-to-pdf=$(OUT)/build_sheet.pdf \
+		"file://$(CURDIR)/$(OUT)/build_sheet.html" 2>/dev/null
+	@echo "  pdf $(OUT)/build_sheet.pdf"
 
 # marker PNG for the Read-before-showing gate
 $(OUT)/layout.png: $(OUT)/layout.svg $(OUT)/layout.html
@@ -67,6 +67,16 @@ viz:
 		"file://$(CURDIR)/$(OUT)/viz_hero.html" 2>/dev/null
 	@echo "  png $(OUT)/viz_hero.png"
 
+# Localization checklist: every user-facing string the pipeline emits.
+# Run right after scaffolding and translate each hit into the user's
+# language (see the skill's Language rule) — code and comments stay English.
+l10n:
+	@echo "user-facing strings to translate (L10N markers + template slots):"
+	@grep -rn "L10N" *.py *.html 2>/dev/null || true
+	@echo "--- buildsheet slots (fill with translated text) ---"
+	@grep -o "{{[A-Z_]*}}" buildsheet.html 2>/dev/null | sort -u || true
+	@echo "--- also translate: PieceSpec label/notes/mark_labels, NOTIONS, fabric_name ---"
+
 doctor:
 	@echo "tool availability:"
 	@$(UV) --version >/dev/null 2>&1 && echo "  uv        OK" || echo "  uv        MISSING"
@@ -77,4 +87,4 @@ clean:
 	rm -rf $(OUT)
 
 .PHONY: all pattern bom check tile pdf buildsheet-pdf layout-png pieces-png \
-	previews viz doctor clean
+	previews viz l10n doctor clean

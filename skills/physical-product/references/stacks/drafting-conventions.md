@@ -7,13 +7,13 @@ panelized-coop set; `templates/solids/drawings.py` encodes everything below.
 ## Sheet standard (user-required — do not regress)
 
 Every sheet is a fixed **A3 landscape** page with a border frame and a
-**title block (razítko) bottom-right** containing: drawing number
-(e.g. KUR-01), part title, MĚŘÍTKO, MATERIÁL, KUSŮ, DATUM, "KÓTY V MM ·
+**title block bottom-right** containing: drawing number
+(e.g. BRK-01), part title, SCALE, MATERIAL, QTY, DATE, "DIMENSIONS IN MM ·
 ISO-E" and the project line. Use a **true scale** per sheet — 1:10 large
 panels, 1:5 details, 1:1 small parts — chosen so content fits the A3
 graphics area (the framework warns when it doesn't).
 
-Lettering: **osifont** — the open ISO 3098 technical font (upright, Czech
+Lettering: **osifont** — the open ISO 3098 technical font (upright, full
 diacritics AND the ⌀ glyph) — fetched once per project by `make font`;
 `drawings.py` picks it up automatically (`FONT_PATH`). Without it the
 sheets fall back to OS Arial italic, which **lacks ⌀ (U+2300)** — then
@@ -33,7 +33,7 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
 
 ## View placement — first-angle (ISO-E, European)
 
-- Front view (nárys) is the master view: pick the face that shows the most
+- The front view is the master view: pick the face that shows the most
   features; draw panels viewed from the side the fabricator claddes first.
 - **Top view goes BELOW the front view** (first-angle!), side view to the
   right; a **bottom view goes ABOVE** (kind "bottom" exists — for parts
@@ -71,7 +71,7 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   leader + "4× ⌀8 THRU" callout with real ⌀ glyphs; `center_mark(at,
   d_model)` and `centerline(p1, p2)` — ISO chain marks for every hole in
   its axis view; `note(text, at, leader_from=)` — free note or arrowed
-  leader note (use for "ŘEZ A–A" titles). Layer routing:
+  leader note (use for "SECTION A-A" titles). Layer routing:
   Dimension/Leader/HoleCallout → `dims` (blue), Centerline/CenterMark/
   section traces/balloons → `marks` (black), Note → `text`.
 - **`add_views(part, kinds, gap_paper)`** computes first-angle placement
@@ -86,9 +86,9 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   references to the pre-move edges).
 - **Assembly sheets:** `balloon(n, at, tip=)` draws an ISO 6433 position
   balloon with a dotted leader; `parts_table(parts_rows())` renders the
-  kusovník grid above the title block (header at the bottom, positions
+  BOM grid above the title block (header at the bottom, positions
   ascending). `parts_rows()` comes from `model.bom_rows()` (part-family
-  groups collapsed), so balloon numbers match the kusovník by
+  groups collapsed), so balloon numbers match the BOM by
   construction. The frame centering **reserves the table height** — tall
   content shrinks the graphics area, and the A3-overflow warning says so:
   respond with a larger scale_den or fewer rows, don't nudge the table.
@@ -98,7 +98,7 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   callout per (⌀, depth, cbore, csink) family — returns `[]` when the
   recogniser is missing, so demos/projects keep a manual fallback branch.
   `hole_note` passes `depth`/`cbore_*`/`csink_*` through to the callout.
-- **Detail views (kruhový detail):** `det = sheet.detail(view,
+- **Detail views (circular):** `det = sheet.detail(view,
   center_model, radius_paper, "2:1", label="B", at=...)` — clips the
   placed parent view to a circle, blows it up by k = P/P_detail at `at`,
   draws source circle + letter and destination ring + caption. Dim inside
@@ -137,10 +137,10 @@ gate failure, fix and re-render:
   `align=(Align.MIN,)*3` so `view.pt()` model coordinates run 0..length and
   dimension anchors hit corners; a centered box silently puts `pt(0,0)`
   mid-part (dims land inside, layouts shift by half a part).
-- Vector `Text()` sketches work for the title block (Czech diacritics
+- Vector `Text()` sketches work for the title block (diacritics
   included); put them on a filled layer.
 
-## Section views (řezy) — proven recipe
+## Section views — proven recipe
 
 No native section support needed; four steps, all in the framework
 (`Sheet.hatch`, `Sheet.section_indicator`, `section_faces`,
@@ -169,13 +169,13 @@ No native section support needed; four steps, all in the framework
    `sheet.section_indicator(parent_view, axis, coord, "A", direction=±1)`
    draws the ISO 128-44 cutting-plane trace (chain line, thick end
    strokes, sight arrows along `direction`, view letters); title the
-   section view "ŘEZ A–A" via `sheet.note()` centered under it.
+   section view "SECTION A-A" via `sheet.note()` centered under it.
 
 Pick the plane to cut through the most informative features (openings,
 sandwich stacks, internal fittings) while avoiding lengthwise slices of
 beams lying in the plane (shift the plane a few cm instead). Title-block
 note: keep it short ("rovina x = 700, pohled zleva") — long notes overflow
-into the MĚŘÍTKO cell. Dimension interior heights the elevations can't
+into the SCALE cell. Dimension interior heights the elevations can't
 show (clear height, fitting heights above floor, sill heights).
 
 ## Outputs & conversion pipeline
@@ -192,7 +192,7 @@ optional ones):
    image sized to the SVG's native units **in mm** ⇒
    `chrome --headless --print-to-pdf` produces a vector A3 PDF at exactly
    1:P. `make drawings-pdf` prints all sheets and merges them via
-   `merge_pdfs.py` into `out/drawings/vykresy_A3.pdf`.
+   `merge_pdfs.py` into `out/drawings/drawings_A3.pdf`.
 4. `manifest.json` — sheet list sorted by drawing number, maintained by
    `write()`; `merge_pdfs.py` takes the merge order from it (its
    `SHEET_ORDER` list is only a fallback when no manifest exists).

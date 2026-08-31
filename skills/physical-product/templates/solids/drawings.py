@@ -1,7 +1,7 @@
 """Dimensioned production drawings (build123d) — proven sheet framework.
 
 Sheet standard (see the skill's drafting-conventions.md):
-- Fixed A3 landscape sheet with a border frame and a title block (razítko)
+- Fixed A3 landscape sheet with a border frame and a title block
   bottom-right: drawing number, title, scale, material, count, date, units.
 - TRUE scale per sheet (1:10 large panels, 1:5 details, 1:1 small parts) —
   ExportSVG(scale=1/P) makes SVG units equal paper mm, which also enables
@@ -60,7 +60,7 @@ OUT = Path(__file__).parent / "out" / "drawings"
 
 DATE: str | None = None          # None -> today; set "2026-08-24" to freeze
 PROJECT = "EDIT-ME PROJECT"      # uppercase project line in the title block
-# ISO 3098 technical lettering (osifont, GPL+font-exception, Czech diacritics
+# ISO 3098 technical lettering (osifont, GPL+font-exception, full diacritics
 # and the ⌀ glyph included) — fetched by `make assets/osifont/osifont.ttf`;
 # missing file falls back to OS Arial italic (then write Ø, not ⌀, in labels).
 _OSIFONT = Path(__file__).parent / "assets" / "osifont" / "osifont.ttf"
@@ -159,7 +159,7 @@ def _text(txt: str, size: float, at: tuple[float, float],
 
 
 def _parse_scale(scale) -> tuple[float, str]:
-    """5, 0.5, "1:5" or "2:1" -> (P = model mm per paper mm, razítko label)."""
+    """5, 0.5, "1:5" or "2:1" -> (P = model mm per paper mm, title-block label)."""
     if isinstance(scale, str):
         num, _, den = scale.partition(":")
         p = float(den) / float(num)
@@ -334,10 +334,10 @@ class Sheet:
             extra = "".join(f" {t}" for t in (
                 f"hl. {depth}" if depth else "",
                 f"zahl. Ø{cbore_dia}×{cbore_depth}" if cbore_dia else "",
-                f"kuž. Ø{csink_dia}/{csink_angle:g}°" if csink_dia else "",
+                f"csink Ø{csink_dia}/{csink_angle:g}°" if csink_dia else "",
             ) if t)
             self.layers["dims"].append(_text(
-                f"{text}Ø{d_model:g}{' PRŮCH.' if through else ''}{extra}"
+                f"{text}Ø{d_model:g}{' THRU' if through else ''}{extra}"
                 f"{' ' + suffix if suffix else ''}",
                 3.5 * self.P, elbow))
 
@@ -377,7 +377,7 @@ class Sheet:
         """ISO 128-44 cutting-plane marks on a parent view for the plane
         <axis> = coord (model mm). Sight arrows point along `direction`
         (+1/-1) perpendicular to the trace. The section itself is a separate
-        view titled 'ŘEZ A–A'.
+        view titled 'SECTION A-A'.
         """
         P, bb = self.P, view.bbox
         ax = axis.upper()
@@ -433,7 +433,7 @@ class Sheet:
                radius_paper: float, scale: int | float | str,
                label: str = "B", at: tuple[float, float] = (0.0, 0.0)
                ) -> Detail:
-        """Circular detail (kruhový detail) of `view` at a different scale.
+        """Circular detail view of `view` at a different scale.
 
         Clips the view's edges to a circle of `radius_paper` (paper mm)
         around `center_model`, blows them up by k = sheet_P / detail_P and
@@ -533,7 +533,7 @@ class Sheet:
     def balloon(self, n: int | str, at: tuple[float, float],
                 tip: tuple[float, float] | None = None,
                 r_paper: float = 4.0) -> None:
-        """ISO 6433 position balloon: circle with kusovník position `n` at
+        """ISO 6433 position balloon: circle with BOM position `n` at
         `at` (sheet coords); optional leader toward `tip` on the part,
         ending in a filled dot."""
         P = self.P
@@ -553,8 +553,8 @@ class Sheet:
                 self.layers["marks"].append(Pos(*tip, 0) * Circle(0.8 * P))
 
     def parts_table(self, rows: list[tuple]) -> None:
-        """Kusovník table above the title block, rendered at write() time.
-        Rows are (poz, název, ks, materiál) — use parts_rows() so balloon
+        """Parts table above the title block, rendered at write() time.
+        Rows are (pos, name, qty, material) — use parts_rows() so balloon
         numbers match model.bom() by construction."""
         self._parts_rows = list(rows)
 
@@ -644,8 +644,9 @@ class Sheet:
                            (x0 + w, y0 + 2 * h / 3, 0)),
         ]
         date = DATE or datetime.date.today().isoformat()
-        rows = [("VÝKRES Č.", self.number), ("MĚŘÍTKO", self.scale_label),
-                ("DATUM / KS", f"{date} / {self.count}")]
+        # L10N: title-block labels are read off the printed sheet
+        rows = [("DRAWING NO.", self.number), ("SCALE", self.scale_label),
+                ("DATE / QTY", f"{date} / {self.count}")]
         for i, (key, value) in enumerate(rows):
             ry = y0 + h - (i + 1) * h / 3
             self.layers["text"].append(
@@ -654,23 +655,24 @@ class Sheet:
                 _text(value, 3.2 * P, (split + 3 * P, ry + 2.2 * P)))
         self.layers["text"] += [
             _text(self.title, 5.0 * P, (x0 + 4 * P, y0 + h - 9 * P)),
-            _text(f"MATERIÁL: {self.material}", 2.6 * P,
+            _text(f"MATERIAL: {self.material}", 2.6 * P,
                   (x0 + 4 * P, y0 + h - 15.5 * P)),
             _text((self.sheet_note + " · " if self.sheet_note else "")
-                  + "KÓTY V MM · ISO-E", 2.6 * P,
+                  + "DIMENSIONS IN MM · ISO-E", 2.6 * P,
                   (x0 + 4 * P, y0 + h - 21.5 * P)),
             _text(PROJECT, 2.8 * P, (x0 + 4 * P, y0 + 2.5 * P)),
         ]
 
     def _parts_table(self, fx1: float, fy0: float) -> None:
-        """Kusovník grid above the title block: header row at the bottom,
+        """Parts grid above the title block: header row at the bottom,
         positions ascending upward (ISO 7573 style)."""
         P = self.P
         x0 = fx1 - TB_W * P
         y = fy0 + TB_H * P                  # top edge of the title block
         rh = 7.0 * P
         cols = [12.0, 100.0, 14.0, 64.0]    # paper mm; sums to TB_W
-        lines = [("POZ.", "NÁZEV", "KS", "MATERIÁL")] + list(self._parts_rows)
+        # L10N: parts-table header row
+        lines = [("POS.", "NAME", "QTY", "MATERIAL")] + list(self._parts_rows)
         for i, row in enumerate(lines):
             ry = y + i * rh
             self.layers["frame"].append(Edge.make_line(
@@ -793,7 +795,7 @@ class Sheet:
         ch = max(b.max.Y for b in boxes) - min(b.min.Y for b in boxes)
         # bottom strip reserved for the title block AND the parts table (the
         # table grows upward from it — without this a tall assembly always
-        # collides with the kusovník)
+        # collides with the parts table)
         reserved = TB_H + (len(self._parts_rows) + 1) * 7.0 \
             if self._parts_rows else TB_H
         if cw > (PAPER_W - 2 * MARGIN) * P or \
@@ -922,10 +924,10 @@ def _update_manifest(sheet: Sheet) -> None:
 
 
 # --------------------------------------------------------------------------
-# Kusovník rows for assembly sheets
+# Parts-table rows for assembly sheets
 # --------------------------------------------------------------------------
 def parts_rows() -> list[tuple[int, str, int, str]]:
-    """Kusovník rows (poz, název, ks, materiál) from model.bom_rows() —
+    """Parts rows (pos, name, qty, material) from model.bom_rows() —
     part-family groups collapsed, balloon numbers match the BOM by
     construction."""
     return [(i, name, count, material)
@@ -933,7 +935,7 @@ def parts_rows() -> list[tuple[int, str, int, str]]:
 
 
 # --------------------------------------------------------------------------
-# Section views (řezy) — recipe, proven on a sandwich-panel product:
+# Section views — recipe, proven on a sandwich-panel product:
 #   1. cutter = half-space box up to the plane <axis> = coord; kept = solid
 #      - cutter per part (skip empties); View(Compound(children=kept), ...)
 #      shows the cut faces plus everything behind the plane.
@@ -941,7 +943,7 @@ def parts_rows() -> list[tuple[int, str, int, str]]:
 #   3. sheet.hatch(sheet_polygon(face, view), "wood"/"xps"/"metal").
 #   4. sheet.section_indicator(parent_view, axis, coord, "A") draws the
 #      cutting-plane trace + sight arrows on the parent view; title the
-#      section view "ŘEZ A–A" via sheet.note().
+#      section view "SECTION A-A" via sheet.note().
 #   Layered assemblies: keep per-layer solids accessible in the model (a
 #   `layer_solids` field) so each layer hatches with its own pattern.
 # --------------------------------------------------------------------------
@@ -991,9 +993,9 @@ def sheet_polygon(face, view: View):
 # --------------------------------------------------------------------------
 def sheet_bracket() -> None:
     """Part sheet: auto-laid-out views, named-side dims, hole callout +
-    center marks, and a section ŘEZ A–A with its indicator."""
+    center marks, and a section A-A with its indicator."""
     s = Sheet("bracket", "BR-01", "ÚHELNÍK", 1,
-              f"ocel S235, plech {model.thickness:g} mm", count=2)
+              f"steel S235, sheet {model.thickness:g} mm", count=2)
     part = model.PARTS["bracket"].builder()
     # first angle: top view lands BELOW the front view automatically
     views = s.add_views(part, ["front", "top"], gap_paper=18.0)
@@ -1021,7 +1023,7 @@ def sheet_bracket() -> None:
         s.hole_note(vt.pt(model.hole_positions_a[0][0], mid, 0),
                     model.hole_diameter, count=len(model.hole_positions_a),
                     through=True, offset_paper=(-12.0, 26.0))
-    # section ŘEZ A–A at y = width/2 (through the holes), viewed from -Y:
+    # section A-A at y = width/2 (through the holes), viewed from -Y:
     # indicator on the top view, hatched section view right of the front view
     y_cut = model.bracket_width / 2
     s.section_indicator(vt, "Y", y_cut, "A", direction=-1)
@@ -1033,7 +1035,7 @@ def sheet_bracket() -> None:
     for face in section_faces(part, "Y", y_cut):
         s.hatch(sheet_polygon(face, vsec), "metal")
     eb = View._edges_bbox(vsec.visible)
-    s.note("ŘEZ A–A", ((eb[0] + eb[1]) / 2, eb[2] - 12))
+    s.note("SECTION A-A", ((eb[0] + eb[1]) / 2, eb[2] - 12))
     # circular 2:1 detail of the left hole, placed right of the top view
     hole = (model.hole_positions_a[0][0], mid, model.thickness)
     tb = View._edges_bbox(vt.visible)
@@ -1046,9 +1048,9 @@ def sheet_bracket() -> None:
 
 
 def sheet_overview() -> None:
-    """Assembly-sheet pattern: balloons + kusovník table above the razítko.
+    """Assembly-sheet pattern: balloons + parts table above the title block.
     Balloon numbers come from parts_rows() = model.bom() order."""
-    s = Sheet("overview", "SES-01", "SESTAVA", 1, "viz kusovník")
+    s = Sheet("overview", "ASM-01", "ASSEMBLY", 1, "see parts table")
     part = model.PARTS["bracket"].builder()
     v = View(part, "front")
     s.add_view(v)
@@ -1080,7 +1082,7 @@ def lint_selftest() -> None:
     # duplicate dim at the same offset -> label x label overlap
     s.dim(a, b, "below", 10, f"{model.bracket_leg_a:.0f}")
     # a note dropped on the part outline -> part-edge finding
-    s.note("NA HRANĚ", v.pt(model.bracket_leg_a / 2, 0, model.thickness))
+    s.note("ON EDGE", v.pt(model.bracket_leg_a / 2, 0, model.thickness))
     # a centerline through the '99' label -> foreign-segment finding
     lb = next(x.label_bbox for x in s.layers["dims"]
               if getattr(x, "label", None) == "99")

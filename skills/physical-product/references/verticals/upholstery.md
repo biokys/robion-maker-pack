@@ -2,12 +2,12 @@
 
 ## When this applies
 
-Benches with padded seats, window-seat cushions, headboards, pet beds
-("pelíšek"), camper cushions, chair re-covers. **The first two-stack
-vertical**: the frame is solids (via [woodworking.md](woodworking.md)), the
-covers are patterns2d (via [sewing.md](sewing.md)). Out of scope: sprung
-traditional upholstery (coil springs, horsehair) — refer to a čalouník and
-say so.
+Benches with padded seats, window-seat cushions, headboards, pet beds,
+camper cushions, chair re-covers. **The first two-stack vertical**: the
+frame is solids (via [woodworking.md](woodworking.md)), the covers are
+patterns2d (via [sewing.md](sewing.md)). Out of scope: sprung traditional
+upholstery (coil springs, horsehair) — refer to a professional upholsterer
+and say so.
 
 ## Two-stack scaffold convention (defined here, applies pack-wide)
 
@@ -17,8 +17,8 @@ pyproject/Makefile (here: solids at root, `covers/` with patterns2d
 templates). One build sheet covers both; the root README links the
 sub-scaffold. Parameters shared between the two live in the root model and
 are RETYPED into the sub-scaffold with a comment naming the source — note
-the duplication in the build sheet's Předpoklady until the pack has a
-cross-stack parameter mechanism.
+the duplication in the build sheet's Assumptions section until the pack has
+a cross-stack parameter mechanism.
 
 ## Intake additions
 
@@ -30,35 +30,38 @@ cross-stack parameter mechanism.
 
 ## Stack & stage refinements
 
-- **Frame (solids/woodworking)** — hardwood (buk) where staples and screws
+- **Frame (solids/woodworking)** — hardwood (beech) where staples and screws
   work repeatedly; radius every edge the fabric wraps (sharp edges cut foam
-  and fabric); base for the seat: plywood board or webbing ("popruhy") —
-  choose by comfort wanted and say why.
+  and fabric); base for the seat: plywood board or elastic webbing — choose
+  by comfort wanted and say why.
 - **Foam** — PUR foam grade by use: seats want higher density (≈ RG35+),
   backs softer (≈ RG25) — density, not just firmness, drives lifetime; typ.
   seat thickness 60–100 mm. Foam is cut oversize ~5 mm per side and
-  compressed by the cover ("potah šít těsný") — a wrap of vatelín rounds
-  the look. Glue foam to the base with foam adhesive.
+  compressed by the cover (sew the cover snug) — a wrap of polyester
+  wadding rounds the look. Glue foam to the base with foam adhesive.
 - **Covers (patterns2d in `covers/`)** — box-cushion pieces (top, bottom,
   boxing strip, zip strip), allowance 10 mm; pattern dims from the FOAM
   block minus the snug-fit compression — make the fit a parameter and gate
   it with a test corner when fabric is expensive. Notches align boxing to
   corners. Stapled covers instead: fabric cut rectangles go in the solids
   BOM with pull allowances (~80–100 mm per side for stapling grip).
-- **BOM** — foam by block dims + grade, fabric from the marker, vatelín,
+- **BOM** — foam by block dims + grade, fabric from the marker, wadding,
   zips (length = boxing opening), staples, foam adhesive.
-- **Make plan** — frame → finish → webbing/board → glue foam → vatelín →
+- **Make plan** — frame → finish → webbing/board → glue foam → wadding →
   cover (sew per covers/ plan, or staple: centers first, then work outward,
   hospital corners); pull evenly, no puckers.
 - **Analysis** — frame per woodworking if it's seating (deflection under
   people); covers none.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-PUR pěna (molitan) by RG grade from foam suppliers ("prodejci PUR pěn" —
-per the user's town), potahové látky (e.g. Látky Mráz or local specialist;
-for daily seats ask for upholstery abrasion class), vatelín, popruhy,
-sponky. Leave prices per project.
+PUR foam by RG grade (≈ RG25 for backs, RG35+ for seats), cut to block size
+by the foam supplier; upholstery fabric with a stated abrasion class
+(Martindale rubs) for daily seats; polyester wadding, elastic or jute
+webbing, staples sized to the gun. Name a foam supplier and an upholstery
+fabric shop from the user's own market — the workshop profile may name
+preferred suppliers; never invent a supplier or a price. Leave prices per
+project.
 
 ## Last mile
 

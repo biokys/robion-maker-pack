@@ -5,8 +5,9 @@
 These numbers always appear in the build sheet, even when FEA runs (they are the
 sanity anchor for it). Work through:
 
-1. **Load cases + boundary conditions** in one sentence each (e.g. "osoba sedne na
-   střed desky: 1000 N staticky, deska podepřená rámy na koncích").
+1. **Load cases + boundary conditions** in one sentence each (e.g. "a person sits
+   on the middle of the top: 1000 N static, top supported by the frames at both
+   ends").
 2. **Governing member stress**: identify the weakest member; σ = M/W with
    W = bh²/6 (rectangle) or table value (tube). Compare to allowable
    (steel S235: f_y = 235 MPa, use ~120 MPa allowable; dry oak bending ~40 MPa
@@ -21,7 +22,7 @@ sanity anchor for it). Work through:
 6. Targets: static SF ≥ 2–3 for furniture; note if user specifies otherwise.
 
 If loads are unknown: assume standard values (person 1000 N, shelf 25 kg/m,
-leaning load 300 N horizontal) and record in "Předpoklady".
+leaning load 300 N horizontal) and record them in the assumptions section.
 
 ## B · FEA pipeline (when toolchain present and stakes warrant it)
 
@@ -52,7 +53,7 @@ until the analytic-estimate header fields are filled in.
 3. pygccx: material (E, ν, density), SPC on the support group, loads (force or
    gravity `*DLOAD GRAV`), steps: `*STATIC` and `*FREQUENCY` (request 6–10 modes).
 4. Read results (.frd via pygccx): max von Mises, max displacement, first ~5
-   natural frequencies → Czech markdown table into `out/fea/`; optional pyvista
+   natural frequencies → markdown results table into `out/fea/`; optional pyvista
    screenshots of mode shapes.
 
 ### Sanity checks — before reporting anything

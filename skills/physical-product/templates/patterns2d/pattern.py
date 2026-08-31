@@ -24,7 +24,7 @@ Conventions (do not break):
 
 CLI (via uv):
     uv run pattern.py export   # out/pieces/*.{svg,html} + out/layout.{svg,html}
-    uv run pattern.py bom      # Czech fabric+notions table into out/bom.md
+    uv run pattern.py bom      # fabric + notions table into out/bom.md
     uv run pattern.py check    # validity gate: closed, simple, marks inside,
                                # fits fabric
     uv run pattern.py show     # list pieces and cut sizes
@@ -79,7 +79,7 @@ def _apply_robion_params() -> None:
 
 
 # --------------------------------------------------------------------------
-# PARAMETERS (single source of truth) — replace the demo apron (zástěra)
+# PARAMETERS (single source of truth) — replace the demo apron
 # with the real product's parameters. Fixed inputs from the user first.
 # --------------------------------------------------------------------------
 apron_length = 850.0        # total length, hem edge to bib top
@@ -95,7 +95,7 @@ waist_strap_length = 900.0
 
 seam_allowance = 10.0       # default allowance applied to stitch lines
 hem_allowance = 25.0        # bottom hem of the apron body
-fabric_name = "kanvas 340 g/m²"
+fabric_name = "canvas 340 g/m²"   # L10N
 fabric_width = 1400.0       # usable width of the fabric
 fabric_buy_margin = 0.10    # purchasing reserve on top of the marker length
 
@@ -108,8 +108,8 @@ hem_drop = hem_allowance - seam_allowance        # extra depth so the uniform
 strap_cut_width = 2 * strap_finished_width + 2 * seam_allowance
 pocket_left = -pocket_width / 2                  # pocket placement on the body
 pocket_bottom = pocket_top_y - pocket_height
-NOTIONS: list[tuple[str, str]] = [  # (item, qty/size) — Czech, shown in BOM
-    ("nit polyester", "1 cívka"),
+NOTIONS: list[tuple[str, str]] = [  # (item, qty/size) — L10N, shown in BOM
+    ("polyester thread", "1 spool"),   # L10N
 ]
 
 assert apron_chest_width < apron_hip_width, "bib must be narrower than hips"
@@ -151,7 +151,7 @@ def unfold(half: list[tuple[float, float]]) -> list[tuple[float, float]]:
 @dataclass(frozen=True)
 class PieceSpec:
     builder: Callable[[], list[tuple[float, float]]]
-    label: str                       # Czech, shown on the piece and in tables
+    label: str                       # L10N, shown on the piece and in tables
     cut: int = 1                     # how many times to cut this piece
     on_fold: bool = False            # builder returns the half on x=0
     grain: str = "lengthwise"        # "lengthwise" (no rotation) | "any"
@@ -162,8 +162,8 @@ class PieceSpec:
     # internal dashed segments ((x1,y1),(x2,y2)) in stitch coords: stitching
     # channels, fold lines, placement outlines — printed on the 1:1 sheets
     mark_labels: tuple[tuple[tuple[float, float], str], ...] = ()
-    # ((x, y), text) Czech captions anchored inside the piece
-    notes: str = ""                  # Czech, shown in the BOM piece table
+    # ((x, y), text) L10N captions anchored inside the piece
+    notes: str = ""                  # L10N, shown in the BOM piece table
 
 
 def front() -> list[tuple[float, float]]:
@@ -201,8 +201,8 @@ def _strap(length: float) -> list[tuple[float, float]]:
 
 
 PIECES: dict[str, PieceSpec] = {
-    "predni_dil": PieceSpec(
-        front, label="Přední díl", on_fold=True,
+    "front_panel": PieceSpec(
+        front, label="Front panel", on_fold=True,
         notches=((apron_hip_width / 2, waist_y),),
         # pocket placement: sides + bottom (the top edge stays open)
         marks=(
@@ -211,17 +211,17 @@ PIECES: dict[str, PieceSpec] = {
             ((-pocket_left, pocket_top_y), (-pocket_left, pocket_bottom)),
         ),
         mark_labels=(((0.0, pocket_bottom + pocket_height / 2),
-                      "umístění kapsy"),),
-        notes=f"spodní lem {hem_allowance:.0f} mm (v přídavku)"),
-    "kapsa": PieceSpec(
-        pocket, label="Kapsa",
-        notes="horní okraj zapravit dvojitým založením"),
-    "sle_krk": PieceSpec(
-        lambda: _strap(neck_strap_length), label="Šle — krk",
-        grain="any", allowance=0.0, notes="šito do trubice a obráceno"),
-    "sle_pas": PieceSpec(
-        lambda: _strap(waist_strap_length), label="Šle — pas", cut=2,
-        grain="any", allowance=0.0, notes="šito do trubice a obráceno"),
+                      "pocket placement"),),
+        notes=f"bottom hem {hem_allowance:.0f} mm (inside the allowance)"),
+    "pocket": PieceSpec(
+        pocket, label="Pocket",
+        notes="finish the top edge with a double fold"),
+    "strap_neck": PieceSpec(
+        lambda: _strap(neck_strap_length), label="Strap — neck",
+        grain="any", allowance=0.0, notes="sewn into a tube and turned"),
+    "strap_waist": PieceSpec(
+        lambda: _strap(waist_strap_length), label="Strap — waist", cut=2,
+        grain="any", allowance=0.0, notes="sewn into a tube and turned"),
 }
 
 
@@ -354,8 +354,10 @@ STYLE = (
 )
 
 
-def _cz(value: float, digits: int = 2) -> str:
-    """Czech decimal comma for user-facing text (SVG labels, bom.md)."""
+def _num(value: float, digits: int = 2) -> str:
+    """L10N: decimal separator for user-facing text (SVG labels, bom.md).
+    A comma suits most of Europe; switch to a plain point where the
+    user's locale writes numbers that way."""
     return f"{value:.{digits}f}".replace(".", ",")
 
 
@@ -400,8 +402,8 @@ def piece_markup(p: BuiltPiece, ox: float, oy: float, *,
             f'text-anchor="middle">{html.escape(text)}</text>')
     cx, cy = p.cutting.representative_point().coords[0]
     if labels:
-        fold_note = ", rozloženo (osa vyznačena)" if p.fold_x is not None else ""
-        sub = f"{p.spec.cut}×, přídavek {p.allowance:.0f} mm{fold_note}"
+        fold_note = ", unfolded (axis marked)" if p.fold_x is not None else ""
+        sub = f"{p.spec.cut}×, allowance {p.allowance:.0f} mm{fold_note}"
         parts.append(
             f'<text x="{ox + cx:.2f}" y="{oy + ph - cy:.2f}" font-size="11" '
             f'text-anchor="middle">{html.escape(p.spec.label)}</text>'
@@ -462,8 +464,8 @@ def export() -> None:
     eff = area / (fabric_width * consumed) * 100 if consumed else 0.0
     body.append(
         f'<text x="{margin}" y="{margin - 6:.2f}" font-size="12">'
-        f'{html.escape(fabric_name)} — šíře {fabric_width:.0f} mm, spotřeba '
-        f'{_cz(consumed / 1000)} m, využití {eff:.0f} % (odhad po obdélnících)'
+        f'{html.escape(fabric_name)} — width {fabric_width:.0f} mm, usage '
+        f'{_num(consumed / 1000)} m, efficiency {eff:.0f} % (bounding-box estimate)'
         f'</text>')
     svg = _svg(fabric_width + 2 * margin, consumed + 2 * margin,
                "".join(body))
@@ -483,22 +485,22 @@ def bom() -> None:
     placements, consumed = pack(built_pieces(), fabric_width)
     buy = consumed * (1 + fabric_buy_margin)
     lines = [
-        "# Kusovník (střih)", "",
-        "## Látka", "",
-        "| Materiál | Šíře | Spotřeba (marker) | Nákup (s rezervou "
+        "# Bill of materials (pattern)", "",
+        "## Fabric", "",
+        "| Material | Width | Marker usage | Buy (with "
         f"{fabric_buy_margin * 100:.0f} %) |",
         "|---|---|---|---|",
         f"| {fabric_name} | {fabric_width / 10:.0f} cm | "
-        f"{_cz(consumed / 1000)} m | **{_cz(buy / 1000)} m** |", "",
-        "Spotřeba je horní odhad (skládání po obdélnících, bez rotací proti "
-        "směru osnovy).", "",
+        f"{_num(consumed / 1000)} m | **{_num(buy / 1000)} m** |", "",
+        "Usage is an upper estimate (bounding-box packing, no rotation "
+        "against the grain).", "",
         "## Galanterie", "",
-        "| Položka | Množství |", "|---|---|",
+        "| Item | Quantity |", "|---|---|",
     ]
     lines += [f"| {n} | {q} |" for n, q in NOTIONS]
     lines += [
-        "", "## Díly", "",
-        "| Díl | Stříhat | Rozměr (vč. přídavků) | Přídavek | Poznámka |",
+        "", "## Pieces", "",
+        "| Piece | Cut | Size (incl. allowance) | Allowance | Note |",
         "|---|---|---|---|---|",
     ]
     for p in built_pieces():

@@ -2,11 +2,11 @@
 
 ## When this applies
 
-Stands ("stolek pod akvárium"), cabinets, covers/hoods with lighting, and
-terrarium/vivarium enclosures. The tank itself is BOUGHT — this playbook
-never designs the glass vessel; that boundary goes in the build sheet.
-Composes with woodworking (cabinet), metalwork (welded stand frames — often
-the better answer above ~200 l), electronics (lighting controllers).
+Stands, cabinets, covers/hoods with lighting, and terrarium/vivarium
+enclosures. The tank itself is BOUGHT — this playbook never designs the glass
+vessel; that boundary goes in the build sheet. Composes with woodworking
+(cabinet), metalwork (welded stand frames — often the better answer above
+~200 l), electronics (lighting controllers).
 
 ## Intake additions
 
@@ -26,10 +26,9 @@ Stack: **solids**; frame per [metalwork.md](metalwork.md) or cabinet per
 - **Model** — the non-negotiable geometry rule: the top supports the tank
   the way the tank requires — rimmed tanks bear on the RIM (perimeter fully
   supported, no point contacts), rimless tanks bear FULL AREA on a flat top
-  plus a foam mat (XPS/PE podložka). Adjustable feet ("stavitelné nohy")
-  for levelling — an out-of-level tank loads glass unevenly. Design doors
-  around filter/bucket access (maintenance is weekly, make it a gate
-  question).
+  plus a foam mat (XPS/PE). Adjustable levelling feet — an out-of-level
+  tank loads glass unevenly. Design doors around filter/bucket access
+  (maintenance is weekly, make it a gate question).
 - **Drawings** — standard; the top-flatness requirement stated as a note.
 - **BOM + cut plan** — moisture-resistant choices: plywood over raw MDF,
   edges sealed, waterproof finish (2K paint / yacht varnish class) — water
@@ -46,11 +45,13 @@ Stack: **solids**; frame per [metalwork.md](metalwork.md) or cabinet per
   top deflection under full load ≲ 0.5 mm — glass hates twisting supports.
   Include the mass total in the build sheet next to the safety factor.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Jäkl frames per metalwork (Ferona), překližka/lamino per woodworking, XPS
-podložka, stavitelné nohy from spojovací technika/hobbymarket. Leave prices
-per project.
+Square steel tube frames per metalwork, plywood or melamine-faced board per
+woodworking, an XPS or PE foam mat under rimless tanks, adjustable levelling
+feet from a fastener supplier. Name vendors from the user's own market — the
+workshop profile may name preferred suppliers; never invent a supplier or a
+price. Leave prices per project.
 
 ## Last mile
 
@@ -62,6 +63,6 @@ tank in its final position (moving a filled tank is not a thing).
 
 The agent never signs off the floor's capacity for very large tanks —
 recommend a structural check and say the threshold reasoning. Warn about:
-water + electricity (drip loops, RCD/proudový chránič recommended), tip
+water + electricity (drip loops, an RCD is recommended), tip
 hazard for tall terrariums (anchor to wall), and that the stand is designed
 for THIS tank's stated load — a bigger tank later needs a re-check.

@@ -19,7 +19,7 @@ bom:
 check:
 	$(UV) run model.py check
 
-# nářezový plán: purchasing tables + cut diagrams from STOCK in cutlist.py
+# cutting plan: purchasing tables + cut diagrams from STOCK in cutlist.py
 cutlist:
 	$(UV) run cutlist.py >/dev/null
 
@@ -49,7 +49,7 @@ drawings-png: drawings
 		$(MAKE) --no-print-directory $${f%.html}.png; done
 
 # Printable vector PDFs: one true-scale A3 sheet each (via the .print.html
-# wrappers), merged into vykresy_A3.pdf in drawing-number order.
+# wrappers), merged into drawings_A3.pdf in drawing-number order.
 drawings-pdf: drawings
 	@for f in $(OUT)/drawings/*.print.html; do \
 		"$(CHROME)" --headless --no-pdf-header-footer \
@@ -63,9 +63,9 @@ drawings-pdf: drawings
 # — see templates/common/buildsheet.html and the skill's buildsheet.md.
 pdf: drawings-pdf
 	"$(CHROME)" --headless --no-pdf-header-footer \
-		--print-to-pdf=$(OUT)/vyrobni_list.pdf \
-		"file://$(CURDIR)/$(OUT)/vyrobni_list.html" 2>/dev/null
-	$(UV) run merge_pdfs.py --komplet
+		--print-to-pdf=$(OUT)/build_sheet.pdf \
+		"file://$(CURDIR)/$(OUT)/build_sheet.html" 2>/dev/null
+	$(UV) run merge_pdfs.py --complete
 
 # Blender exits 0 even when the python script throws — the grep IS the check.
 viz: parts
@@ -98,6 +98,16 @@ assets/osifont/osifont.ttf:
 	curl -fsSL -o $@ \
 		https://github.com/hikikomori82/osifont/raw/master/osifont.ttf
 
+# Localization checklist: every user-facing string the pipeline emits.
+# Run right after scaffolding and translate each hit into the user's
+# language (see the skill's Language rule) — code and comments stay English.
+l10n:
+	@echo "user-facing strings to translate (L10N markers + template slots):"
+	@grep -rn "L10N" *.py *.html 2>/dev/null || true
+	@echo "--- buildsheet slots (fill with translated text) ---"
+	@grep -o "{{[A-Z_]*}}" buildsheet.html 2>/dev/null | sort -u || true
+	@echo "--- also translate: PARTS local_name/note, Material names, STOCK keys ---"
+
 doctor:
 	@echo "tool availability:"
 	@$(UV) --version >/dev/null 2>&1 && echo "  uv        OK" || echo "  uv        MISSING"
@@ -114,4 +124,4 @@ doctor:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font doctor clean
+.PHONY: all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean

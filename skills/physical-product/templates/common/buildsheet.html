@@ -1,5 +1,5 @@
-<title>{{NAZEV_VYROBKU}}</title>
-<!-- Výrobní list skeleton. Before composing: load the artifact-design skill.
+<title>{{PRODUCT_NAME}}</title>
+<!-- Build sheet skeleton. Before composing: load the artifact-design skill.
      Replace {{...}} slots; embed images as data URIs (JPEG q82 <=1200px for
      photoreal, PNG for line art). Aesthetic = the Robion brand (robion.app):
      JetBrains Mono everywhere, hairlines not borders, the violet→cyan gradient
@@ -8,9 +8,12 @@
      print block below — ONE file serves both the artifact page and the PDF
      print; do not derive a separate .print.html variant.
      Section headings, the print-companion note and the footer source line are
-     per-vertical SLOTS ({{SEKCE_*}}, {{TISK_POZNAMKA}}, {{FOOTER_ZDROJE}}) —
+     per-vertical SLOTS ({{SECTION_*}}, {{PRINT_NOTE}}, {{FOOTER_SOURCES}}) —
      fill them from the table in references/core/buildsheet.md (solids
-     defaults / sewing values); never string-replace rendered headings. -->
+     defaults / sewing values); never string-replace rendered headings.
+     L10N: every visible string here (headings, table headers, field labels,
+     the footer line) ships in English — translate them all into the user's
+     language when scaffolding. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root { --bg:#f4f6f8; --panel:#ffffff; --ink:#242b34; --bright:#111820;
@@ -98,64 +101,64 @@
 
 <div class="sheet">
   <header class="stamp">
-    <div class="stamp-top"><h1>{{NAZEV_VYROBKU}}</h1><p>{{PODTITUL}} · v{{VERZE}}</p></div>
+    <div class="stamp-top"><h1>{{PRODUCT_NAME}}</h1><p>{{SUBTITLE}} · v{{VERSION}}</p></div>
     <dl class="stamp-fields">
-      <div><dt>Rozměry</dt><dd>{{ROZMERY}}</dd></div>
-      <div><dt>Materiál</dt><dd>{{MATERIAL}}</dd></div>
-      <div><dt>Hmotnost</dt><dd>{{HMOTNOST}}</dd></div>
-      <div><dt>Datum</dt><dd>{{DATUM}}</dd></div>
+      <div><dt>Dimensions</dt><dd>{{DIMENSIONS}}</dd></div>
+      <div><dt>Material</dt><dd>{{MATERIAL}}</dd></div>
+      <div><dt>Mass</dt><dd>{{MASS}}</dd></div>
+      <div><dt>Date</dt><dd>{{DATE}}</dd></div>
     </dl>
   </header>
 
-  <section><h2>Koncept</h2>
-    <p class="lede">{{KONCEPT_ODSTAVEC}}</p>
+  <section><h2>Concept</h2>
+    <p class="lede">{{CONCEPT_PARAGRAPH}}</p>
     <figure><img src="{{HERO_DATA_URI}}" alt="{{HERO_ALT}}">
-      <figcaption><b>Vizualizace.</b> {{HERO_POPIS}}</figcaption></figure>
+      <figcaption><b>Visualization.</b> {{HERO_CAPTION}}</figcaption></figure>
     <!-- optional extra renders (detail/tunnel/exploded), same figure markup:
          {{EXTRA_FIGURES}} -->
     <div class="figure-grid"><!-- {{EXTRA_FIGURES}} --></div>
   </section>
 
-  <section><h2>{{SEKCE_VYKRESY}}</h2>
-    <p class="lede">Všechny kóty v milimetrech. Zdrojem pravdy je parametrický model.</p>
-    <div class="figure-grid screen-only"><!-- {{VYKRESY_FIGURES}} --></div>
-    <p class="print-only">{{TISK_POZNAMKA}}</p>
+  <section><h2>{{SECTION_DRAWINGS}}</h2>
+    <p class="lede">All dimensions in millimetres. The parametric model is the source of truth.</p>
+    <div class="figure-grid screen-only"><!-- {{DRAWING_FIGURES}} --></div>
+    <p class="print-only">{{PRINT_NOTE}}</p>
   </section>
 
-  <section><h2>Kusovník</h2>
+  <section><h2>Bill of materials</h2>
     <div class="table-wrap"><table>
-      <caption>{{KUSOVNIK_MATERIAL_CAPTION}}</caption>
-      <thead><tr><th>Poz.</th><th>Díl</th><th>Rozměr (mm)</th><th>Ks</th><th>Hmotnost</th><th>Pozn.</th></tr></thead>
-      <tbody><!-- {{KUSOVNIK_ROWS}} --></tbody>
+      <caption>{{BOM_MATERIAL_CAPTION}}</caption>
+      <thead><tr><th>Pos.</th><th>Part</th><th>Size (mm)</th><th>Qty</th><th>Mass</th><th>Note</th></tr></thead>
+      <tbody><!-- {{BOM_ROWS}} --></tbody>
     </table></div>
-    <!-- optional second table — spojovací a dokončovací materiál: -->
+    <!-- optional second table — fasteners & finishing materials: -->
     <div class="table-wrap" style="margin-top:1.25rem"><table>
-      <caption>Spojovací a dokončovací materiál</caption>
-      <thead><tr><th>Položka</th><th>Množství</th><th>Účel</th></tr></thead>
+      <caption>Fasteners &amp; finishing materials</caption>
+      <thead><tr><th>Item</th><th>Quantity</th><th>Purpose</th></tr></thead>
       <tbody><!-- {{FASTENERS_TABLE}} --></tbody>
     </table></div>
   </section>
 
-  <section><h2>{{SEKCE_POSTUP}}</h2>
-    <ol class="steps"><!-- {{MONTAZ_STEPS}} --></ol>
+  <section><h2>{{SECTION_ASSEMBLY}}</h2>
+    <ol class="steps"><!-- {{ASSEMBLY_STEPS}} --></ol>
   </section>
 
-  <section><h2>{{SEKCE_FINALIZACE}}</h2>
-    <ol class="steps"><!-- {{FINALIZACE_STEPS}} --></ol>
+  <section><h2>{{SECTION_FINISHING}}</h2>
+    <ol class="steps"><!-- {{FINISHING_STEPS}} --></ol>
   </section>
 
-  <section><h2>{{SEKCE_ANALYZA}}</h2>
+  <section><h2>{{SECTION_ANALYSIS}}</h2>
     <!-- analytic estimates table, FEA/modal results if run -->
-    <!-- {{ANALYZA}} -->
+    <!-- {{ANALYSIS}} -->
   </section>
 
-  <section class="assumptions"><h2>Předpoklady a nejistoty</h2>
-    <ul><!-- {{PREDPOKLADY_ITEMS}} — every assumption + parameter name that changes it --></ul>
+  <section class="assumptions"><h2>Assumptions &amp; uncertainties</h2>
+    <ul><!-- {{ASSUMPTION_ITEMS}} — every assumption + parameter name that changes it --></ul>
   </section>
 
   <footer>
-    <p>{{FOOTER_ZDROJE}}</p>
-    <p>Navrženo s agenty v <a class="wordmark" href="https://robion.app">ROB<span>ION</span></a>
+    <p>{{FOOTER_SOURCES}}</p>
+    <p>Designed with agents in <a class="wordmark" href="https://robion.app">ROB<span>ION</span></a>
       · <a href="https://robion.app">robion.app</a></p>
   </footer>
 </div>

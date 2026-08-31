@@ -72,9 +72,9 @@ model.py, drawings.py, cutlist.py, merge_pdfs.py, blender_viz.py, fea.py,
 datauri.py, buildsheet.html, CLAUDE.md.template → CLAUDE.md). After `uv sync`,
 run `make font` (ISO 3098 lettering for drawings; skip offline — Arial
 fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
-`out/drawings/` (SVG + PNG checks + per-sheet PDF + merged `vykresy_A3.pdf`),
+`out/drawings/` (SVG + PNG checks + per-sheet PDF + merged `drawings_A3.pdf`),
 `out/viz_*.png`, `out/fea/`, `out/bom.md`, `out/cutlist.{md,svg,png}`,
-`out/<product>_komplet.pdf`; textures in `assets/`.
+`out/<product>_complete.pdf`; textures in `assets/`.
 
 ## Stage pipeline (solids)
 
@@ -88,15 +88,15 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
    drawings/viz.
 2. **Drawings** — use the proven Sheet/View framework in `templates/solids/drawings.py`:
-   fixed A3 landscape sheets with border frame and Czech title block (razítko —
-   číslo výkresu, měřítko, materiál, kusy, datum), TRUE per-sheet scale (1:10
+   fixed A3 landscape sheets with border frame and a localized title block
+   (drawing number, scale, material, quantity, date), TRUE per-sheet scale (1:10
    panels / 1:5 details / 1:1 small parts), ISO first-angle views laid out
    automatically (`add_views`), italic technical-blue dims anchored on model
    parameters via `view.pt()` (affine-calibrated to the projection).
    Annotations come from `build123d-drafting-helpers` (pinned in pyproject):
    named-side dims, hole callouts ("4× ⌀8"), center marks, section
-   indicators; assembly sheets get balloons + a kusovník table
-   (`parts_table(parts_rows())`). Section views (řezy) with per-material
+   indicators; assembly sheets get balloons + a BOM table
+   (`parts_table(parts_rows())`). Section views with per-material
    hatching are supported — add one when interior heights or layered build-ups
    need showing. `write(dxf=True)` adds a true-1:1 layered DXF for CNC/laser;
    for actual CNC routing use exact face-wire DXFs per
@@ -105,17 +105,18 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    [drafting-conventions.md](drafting-conventions.md).
    *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
    outside outlines, legibility — before showing the user. Then
-   `make drawings-pdf` → printable true-scale `out/drawings/vykresy_A3.pdf`.
+   `make drawings-pdf` → printable true-scale `out/drawings/drawings_A3.pdf`.
 3. **Viz** — headless Blender/Cycles via the `blender_viz.py` template (per-part
    materials, PBR textures, bbox-driven camera/lights). Known traps:
    [blender-gotchas.md](blender-gotchas.md). *Gate:* Read the
    render; user approves the hero shot.
 4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
    cross-checked against `Shape.volume × density`; include fasteners, adhesives,
-   finish materials with Czech names. Then `make cutlist` — declare the stock in
-   `cutlist.py` STOCK (sizes from the workshop profile) and get the nářezový
-   plán: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
-5. **Assembly + finishing plan** — numbered Czech steps; include the surface-finish
+   finish materials named as the user's market sells them. Then `make cutlist`
+   — declare the stock in
+   `cutlist.py` STOCK (sizes from the workshop profile) and get the cutting
+   plan: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
+5. **Assembly + finishing plan** — numbered localized steps; include the surface-finish
    schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
    steps so interior surfaces get finished while still accessible.
 6. **Analysis** — ALWAYS produce analytic estimates first (governing-member stress,
@@ -124,11 +125,11 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    *Gate:* sanity checks pass before any number reaches the user.
 7. **PCB (optional)** — KiCad authoring + `kicad-cli` exports, board STEP into the
    CAD assembly for fit-check: [pcb.md](pcb.md).
-8. **Build sheet** — assemble the Czech výrobní list artifact from
+8. **Build sheet** — assemble the localized build-sheet artifact from
    `templates/common/buildsheet.html` per [../core/buildsheet.md](../core/buildsheet.md);
    load the `artifact-design` skill before composing the page; mirror the content in
    the project README.md. The template's `@media print` block makes the same
-   `out/vyrobni_list.html` printable — `make pdf` → one complete PDF (A4 build
+   `out/build_sheet.html` printable — `make pdf` → one complete PDF (A4 build
    sheet + all A3 drawing sheets), per the print-variant section of buildsheet.md.
 
 ## Stack-specific traps

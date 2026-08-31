@@ -12,7 +12,7 @@ metal/wood redesign instead.
 
 - Which material for THIS part (from the profile's `materials`): PLA (easy,
   stiff, hates heat/UV), PETG (tougher, outdoor-ok), ASA/ABS (heat, enclosure
-  needed). Record the choice and why under "Předpoklady".
+  needed). Record the choice and why under "Assumptions".
 - Fit partners: what does the part mate with — get the real dimensions of the
   mating object measured, never guessed.
 - Load direction: layer adhesion is the weak direction — printed parts are
@@ -30,7 +30,7 @@ Stack: **solids**.
   - Orient the part on the bed at MODEL time: the largest flat face down, load
     paths within layers, not across them. If two orientations fight, split the
     part and add a joint.
-  - Holes print undersized: add +0.2 mm to diameters or note "převrtat".
+  - Holes print undersized: add +0.2 mm to diameters or note "drill to size".
     Mating clearances 0.2–0.3 mm per side; test-fit features on first print.
   - Chamfer bottom edges 0.4 mm against elephant foot.
   - Check the part fits the profile's `bed_mm` — the assert belongs in
@@ -49,12 +49,14 @@ Stack: **solids**.
   No slicer on PATH ⇒ hand the user the STL and the orientation notes, and
   say the estimate is missing.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Filament suppliers a BOM may name: Prusament, Fillamentum, Plasty Mladeč —
-or "filament z profilu" when the user prints from stock on hand. Threaded
-inserts (mosazné závitové vložky) and machine screws for enclosure lids belong
-in the BOM.
+Filament is specified by polymer, diameter (1.75 mm typical) and spool weight
+(1 kg standard) — and by the tuned print profile it goes with; say "filament
+on hand" when the user prints from stock. Brass heat-set threaded inserts and
+machine screws for enclosure lids belong in the BOM. Name filament brands and
+vendors from the user's own market — the workshop profile may name preferred
+suppliers; never invent a supplier or a price, and leave prices per project.
 
 ## Last mile
 
@@ -66,6 +68,6 @@ assume it exists.
 ## Safety gates
 
 **The agent never starts a print** — G-code is handed over, the click is the
-user's. Build sheet must warn about: ASA/ABS fumes (větrání/enclosure), first
-print of a fit feature is a test fit, and load-bearing prints: state the load
-assumption and the weak direction explicitly.
+user's. Build sheet must warn about: ASA/ABS fumes (ventilation/enclosure),
+first print of a fit feature is a test fit, and load-bearing prints: state the
+load assumption and the weak direction explicitly.

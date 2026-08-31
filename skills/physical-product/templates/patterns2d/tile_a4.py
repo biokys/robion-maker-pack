@@ -7,8 +7,8 @@ so taping crosses onto crosses reconstructs the sheet. Page 1 is an info
 page: piece table, page-map, and the 100 mm control square the user must
 measure after printing.
 
-Run: uv run tile_a4.py          # -> out/print/strih_A4.html
-     make pdf                   # Chrome-prints it -> out/print/strih_A4.pdf
+Run: uv run tile_a4.py          # -> out/print/pattern_A4.html
+     make pdf                   # Chrome-prints it -> out/print/pattern_A4.pdf
 
 The @page rule and mm-sized SVGs make Chrome print at exact scale — never
 print this from a viewer that "fits to page".
@@ -66,7 +66,7 @@ def page_svg(content: str, col: int, row: int, cols: int, rows: int) -> str:
     overlay.append(
         f'<text x="{x0 + 3:.1f}" y="{y0 + 7:.1f}" font-size="6" fill="#c00" '
         f'font-family="Helvetica,Arial,sans-serif">{page_id} — slepit na '
-        f'křížky, přesah {OVERLAP:.0f} mm</text>')
+        f'crosses, overlap {OVERLAP:.0f} mm</text>')
     return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{USABLE_W}mm" '
             f'height="{USABLE_H}mm" '
             f'viewBox="{x0:.1f} {y0:.1f} {USABLE_W} {USABLE_H}">'
@@ -101,21 +101,21 @@ def info_page(pieces, sheet_w: float, sheet_h: float, content: str,
               '<rect x="3" y="3" width="100" height="100" fill="none" '
               'stroke="#1a1a1a" stroke-width="0.5"/>'
               '<text x="53" y="56" font-size="6" text-anchor="middle" '
-              'font-family="Helvetica,Arial,sans-serif">KONTROLNÍ ČTVEREC '
+              'font-family="Helvetica,Arial,sans-serif">CONTROL SQUARE '
               '100 × 100 mm</text></svg>')
     return (
-        f'<h1>{html.escape(product_name())} — střih 1:1</h1>'
-        f'<p>Tisknout na 100 % (žádné „přizpůsobit stránce"). Nejdřív '
-        f'ZMĚŘIT kontrolní čtverec — musí mít přesně 100 × 100 mm. Stránky '
-        f'slepit křížek na křížek v pořadí po řadách (A1, A2, …). Šedé '
-        f'stránky mapy jsou prázdné a netisknou se.</p>'
+        f'<h1>{html.escape(product_name())} — pattern 1:1</h1>'
+        f'<p>Print at 100 % (never "fit to page"). FIRST measure the '
+        f'control square — it must be exactly 100 × 100 mm. Tape the pages '
+        f'cross to cross, row by row (A1, A2, …). Grey pages on the map are '
+        f'empty and are not printed.</p>'
         f'<div style="display:flex;gap:10mm;align-items:flex-start">'
         f'<div>{square}</div>'
-        f'<div><h2 style="margin-top:0">Mapa stránek</h2>{minimap}</div>'
+        f'<div><h2 style="margin-top:0">Page map</h2>{minimap}</div>'
         f'</div>'
-        f'<h2>Díly</h2><table border="1" cellspacing="0" cellpadding="4" '
+        f'<h2>Pieces</h2><table border="1" cellspacing="0" cellpadding="4" '
         f'style="border-collapse:collapse;font-size:10pt">'
-        f'<tr><th>Díl</th><th>Stříhat</th><th>Rozměr</th></tr>{rows_html}'
+        f'<tr><th>Piece</th><th>Cut</th><th>Size</th></tr>{rows_html}'
         f'</table>')
 
 
@@ -150,7 +150,7 @@ def main() -> None:
             if (r, c) in used:
                 pages.append(f'<div class="page tile">'
                              f'{page_svg(content, c, r, cols, rows)}</div>')
-    (OUT / "strih_A4.html").write_text(
+    (OUT / "pattern_A4.html").write_text(
         '<!doctype html><html><head><meta charset="utf-8">'
         '<style>@page{size:A4 portrait;margin:0}'
         'body{margin:0;font-family:Helvetica,Arial,sans-serif}'
@@ -161,7 +161,7 @@ def main() -> None:
         f'.page.info svg{{display:block;margin:4mm 0}}'
         '</style></head><body>'
         + "".join(pages) + '</body></html>\n')
-    print(f"  strih_A4.html — {len(pages)} pages (grid {rows}×{cols}, "
+    print(f"  pattern_A4.html — {len(pages)} pages (grid {rows}×{cols}, "
           f"{rows * cols - len(pages) + 1} blank skipped, + info), "
           f"sheet {sheet_w:.0f} × {sheet_h:.0f} mm")
 

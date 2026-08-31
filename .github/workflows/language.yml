@@ -1,0 +1,52 @@
+# The pack is a language-neutral English knowledge base: deliverables get
+# localized into the user's language at scaffold time (SKILL.md, Language
+# rule), but nothing in the repo itself may be written in one specific
+# natural language. This guard fails the build if localized content creeps
+# back in — the easiest way for that to happen is copying a snippet out of a
+# real product project.
+#
+# Two checks, because diacritics alone do not catch everything: a Czech word
+# spelled without them (deska, zbytek, kusovnik) is invisible to the first.
+name: language
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: language-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  english-only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      # MIGRATIONS.md is a historical changelog — past entries legitimately
+      # quote the names and strings that shipped in older versions.
+      - name: No language-specific letters outside the changelog
+        run: |
+          if grep -rInE '[ěščřžůťďňĚŠČŘŽŮŤĎŇ]' \
+               --exclude-dir=.git --exclude=MIGRATIONS.md . ; then
+            echo
+            echo "FAIL: localized text found — the pack itself stays English."
+            echo "Deliverables are translated at scaffold time, not here."
+            exit 1
+          fi
+          echo "OK: no language-specific letters"
+
+      - name: No diacritic-free localized words
+        run: |
+          # Whole words only, case-insensitive; extend as new ones show up.
+          PATTERN='\b(kusovnik|nazev|rozmer|delka|sirka|vyska|hmotnost|pocet|zbytek|prorez|vyrobni|nastreh|strih|vykres|deska|sparovka|preklizka|plech|tyc|jakl|vrut|sroub|matice|lepidlo|montaz|postup|predpoklad|nejistota|spotreba|latka|zapinani)\b'
+          if grep -rInEi "$PATTERN" \
+               --exclude-dir=.git --exclude=MIGRATIONS.md \
+               --exclude=language.yml . ; then
+            echo
+            echo "FAIL: localized vocabulary found — see the list in this job."
+            exit 1
+          fi
+          echo "OK: no diacritic-free localized words"

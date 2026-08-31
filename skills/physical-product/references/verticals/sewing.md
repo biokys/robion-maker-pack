@@ -2,26 +2,26 @@
 
 ## When this applies
 
-Products cut from flexible sheet goods and sewn: bags, aprons ("zástěra"),
-covers, cushions, organizers, pouches, simple unfitted garments. Leather goods
+Products cut from flexible sheet goods and sewn: bags, aprons, covers,
+cushions, organizers, pouches, simple unfitted garments. Leather goods
 follow the same pipeline (allowance and assembly differ — noted inline).
 Honest boundary: **fitted garment drafting (tailoring) is iterative fit work**
-— the pipeline produces the pattern, but a fitted garment needs a test garment
-("zkušební šití z levné látky") as a mandatory gate; never promise fit from
-measurements alone.
+— the pipeline produces the pattern, but a fitted garment needs a test
+garment (a toile sewn from cheap fabric) as a mandatory gate; never promise
+fit from measurements alone.
 
 ## Intake additions
 
 - Fabric reality: what's on hand or planned — material, **usable width**
-  (typical 140–150 cm; leather = hides, no width), directional print or nap
-  ("směr vzoru")? Washable → note pre-shrinking ("srazit předem") in the plan.
+  (typical 140–150 cm; leather = hides, no width), directional print or nap?
+  Washable → note pre-shrinking (pre-wash before cutting) in the plan.
 - Machine: domestic machine, overlock available? (drives seam finish
   choices) — lives in the workshop profile (`machines.sewing`,
   `machines.overlock`, `notions_on_hand`); ask only what it doesn't answer.
 - For garments: measurements (mm, over the actual person), desired ease, and
   the fit-gate agreement above.
-- Hardware/notions: zips (exact length matters), buckles, webbing, interfacing
-  ("výztuha").
+- Hardware/notions: zips (exact length matters), buckles, webbing,
+  interfacing.
 
 ## Stack & stage refinements
 
@@ -36,7 +36,7 @@ Stack: **patterns2d** ([../stacks/patterns2d.md](../stacks/patterns2d.md)) —
   seam-matching point — two pieces sewn together carry notches at the same
   arc positions; on `allowance=0` edges notches are invisible — use
   `PieceSpec.marks` instead. Internal markings (stitching channels, fold
-  lines, placement of pockets/appliqués) always go into `marks` +
+  lines, placement of pockets/appliques) always go into `marks` +
   `mark_labels` so they print on the 1:1 sheets.
 - **See it** — the marker and per-piece PNGs in the cockpit as image tiles
   plus the `make viz` hero illustration; there is no live viewport — sliders
@@ -49,17 +49,21 @@ Stack: **patterns2d** ([../stacks/patterns2d.md](../stacks/patterns2d.md)) —
   fabric ⇒ layout must not rotate pieces — consumption goes up; that's real,
   don't hide it.
 - **Make plan** — cutting instructions (which pieces from which fold), then
-  the sewing order as numbered Czech steps, pressing ("přežehlit") between
-  steps, seam finishes per machine (overlock / zigzag / French seam), and
+  the sewing order as numbered steps, pressing seams between steps, seam
+  finishes per machine (overlock / zigzag / French seam), and
   hardware installation steps. Leather: cutting with a knife, edge finishing,
   glue-then-stitch order.
 - **Analysis** — none; the fit gate replaces it for garments.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Kanvas/kepr, bavlněné plátno, softshell, kůže/koženka; výztuhy (ronar,
-vlizelín). Suppliers a BOM may name: Látky Mráz, Stoklasa (galanterie,
-hardware), local galanterie. Leave prices per project.
+Canvas and twill, cotton sheeting, softshell, leather and faux leather;
+interfacings (fusible and sew-in, woven and non-woven). Fabric comes off the
+roll at a usable width (typically 140–150 cm); notions are bought by size —
+zip length, webbing width and metres, buckle bar width, thread. Name a fabric
+shop and a haberdashery from the user's own market — the workshop profile may
+name preferred suppliers; never invent a supplier or a price. Leave prices
+per project.
 
 ## Last mile
 

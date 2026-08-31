@@ -2,11 +2,11 @@
 
 ## When this applies
 
-Plyo boxes, pull-up bars ("hrazda"), squat stands, benches, dip bars,
-climbing holds' backboards, kids' gym frames. Composes with woodworking
-(boxes, benches) and metalwork (bars, stands). Out of scope: anything
-overhead-suspended for swinging children (playground norms) and motorized
-equipment — design conservatively and say a norm check is the user's job.
+Plyo boxes, pull-up bars, squat stands, benches, dip bars, climbing holds'
+backboards, kids' gym frames. Composes with woodworking (boxes, benches) and
+metalwork (bars, stands). Out of scope: anything overhead-suspended for
+swinging children (playground norms) and motorized equipment — design
+conservatively and say a norm check is the user's job.
 
 ## Intake additions
 
@@ -42,11 +42,14 @@ ones [woodworking.md](woodworking.md).
   the worst position), FEA to verify anything welded or slender. Weld
   quality assumption stated per metalwork.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Steel per metalwork (jäkl, trubka; Ferona, Kondor); birch plywood or
-smrk KVH for boxes/benches per woodworking; chemické kotvy + svorníky from
-spojovací technika / hobbymarket. Leave prices per project.
+Steel per metalwork (square hollow section, round tube); birch plywood or
+planed construction-grade softwood (KVH class) for boxes and benches per
+woodworking; chemical anchors and through-bolts sized to the substrate, each
+with a stated load rating. Name vendors from the user's own market — the
+workshop profile may name preferred suppliers; never invent a supplier or a
+price. Leave prices per project.
 
 ## Last mile
 

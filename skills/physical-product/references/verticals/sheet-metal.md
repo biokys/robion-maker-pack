@@ -2,11 +2,11 @@
 
 ## When this applies
 
-Boxes, covers, brackets, chassis, panels bent from thin sheet (ocel, hliník,
-nerez, typ. 0.5–3 mm) on a brake ("ohýbačka") or by a fab shop. Combines with
-laser (cutting the flat), cnc-router (aluminum flats), electronics (chassis).
-Out of scope: rolled curves, deep drawing, hems on thick stock — and no CAM:
-this playbook produces the exact FLAT pattern ("rozvin") + a bend plan; the
+Boxes, covers, brackets, chassis, panels bent from thin sheet (mild steel,
+aluminium, stainless, typ. 0.5–3 mm) on a brake or by a fab shop. Combines
+with laser (cutting the flat), cnc-router (aluminum flats), electronics
+(chassis). Out of scope: rolled curves, deep drawing, hems on thick stock —
+and no CAM: this playbook produces the exact FLAT pattern + a bend plan; the
 bending itself is manual or the fab shop's.
 
 ## Intake additions
@@ -23,7 +23,7 @@ bending itself is manual or the fab shop's.
 Stack: **solids** — with the sheet-metal twist: **the flat pattern and the
 folded part are BOTH derived from the same flange parameters.**
 
-- **Model — the rozvin recipe:**
+- **Model — the flat-pattern recipe:**
   - Parameters: flange lengths (to outside faces), thickness `T`, inside
     radius `R`, K-factor `K` (default 0.44 for air-bent mild steel — a
     playbook default, calibrate below), bend angles.
@@ -48,20 +48,24 @@ folded part are BOTH derived from the same flange parameters.**
 - **Drawings** — the folded part with outside dims + a flat-pattern sheet
   with bend lines dimensioned and bend DIRECTION marked (up/down), plus a
   bend table: order, angle, tool line.
-- **BOM + cut plan** — `cutlist.py` Sheets (tabule, typ. 2000×1000);
+- **BOM + cut plan** — `cutlist.py` Sheets (mill sheet, typ. 2000×1000 mm);
   deburring consumables, edge protection.
 - **Make plan** — cut → deburr EVERY edge → punch/drill far-from-bend holes
   → bend in the stated ORDER (inner bends first where the brake reach
   demands; the order is designed, not improvised) → post-bend holes →
-  finish (zinc spray, paint; nerez stays bare).
+  finish (zinc spray, paint; stainless stays bare).
 - **Analysis** — usually none for enclosures; brackets get the metalwork
   analytic treatment.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Plech: ocel DC01, pozink, hliník, nerez — Ferona, Kondor, local hutní
-materiál; fab-shop cutting/bending as BOM service rows. Leave prices per
-project.
+Sheet: cold-rolled mild steel (DC01), hot-dip galvanized steel, aluminium
+(formable alloys such as EN AW-5754), stainless (1.4301 / AISI 304).
+Typical sheet size 2000×1000 mm, thickness 0.5–3 mm. Fab-shop cutting and
+bending are bought services — list them as BOM service rows. Name a steel
+stockholder and a fab shop from the user's own market — the workshop profile
+may name preferred suppliers; never invent a supplier or a price. Leave
+prices per project.
 
 ## Last mile
 

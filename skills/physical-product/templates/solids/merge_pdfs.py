@@ -1,14 +1,14 @@
 """Merge per-sheet drawing PDFs (from `make drawings-pdf`) into one
-printable out/drawings/vykresy_A3.pdf, in drawing-number order.
+printable out/drawings/drawings_A3.pdf, in drawing-number order.
 
 Sheet order comes from out/drawings/manifest.json, which drawings.py
 maintains (sorted by drawing number) — no hand-kept list needed.
 
-With --komplet, also prepend the printed build sheet
-(out/vyrobni_list.pdf, an A4 document printed from the build sheet)
-into out/<product>_komplet.pdf — one complete PDF.
+With --complete, also prepend the printed build sheet
+(out/build_sheet.pdf, an A4 document printed from the build sheet)
+into out/<product>_complete.pdf — one complete PDF.
 
-Run: uv run merge_pdfs.py [--komplet]
+Run: uv run merge_pdfs.py [--complete]
 """
 
 import json
@@ -24,14 +24,14 @@ OUT = ROOT / "out" / "drawings"
 SHEET_ORDER: list[str] = [  # fallback only — used when manifest.json is
     "bracket",              # missing (e.g. hand-built sheets); normally
 ]                           # the manifest wins
-KOMPLET_NAME: str | None = None  # None -> "<pyproject name>_komplet.pdf"
+COMPLETE_NAME: str | None = None  # None -> "<pyproject name>_complete.pdf"
 
 
-def komplet_name() -> str:
-    if KOMPLET_NAME:
-        return KOMPLET_NAME
+def complete_name() -> str:
+    if COMPLETE_NAME:
+        return COMPLETE_NAME
     meta = tomllib.loads((ROOT / "pyproject.toml").read_text())
-    return f"{meta['project']['name']}_komplet.pdf"
+    return f"{meta['project']['name']}_complete.pdf"
 
 
 def sheet_stems() -> list[str]:
@@ -46,7 +46,7 @@ def merge(target: Path, sources: list[Path]) -> None:
     for pdf in sources:
         if not pdf.exists():
             raise SystemExit(f"missing {pdf} — run `make drawings-pdf` "
-                             "(and print the build sheet for --komplet)")
+                             "(and print the build sheet for --complete)")
         writer.append(str(pdf))
     with target.open("wb") as fh:
         writer.write(fh)
@@ -56,7 +56,7 @@ def merge(target: Path, sources: list[Path]) -> None:
 
 if __name__ == "__main__":
     sheets = [OUT / f"{stem}.pdf" for stem in sheet_stems()]
-    merge(OUT / "vykresy_A3.pdf", sheets)
-    if "--komplet" in sys.argv:
-        merge(ROOT / "out" / komplet_name(),
-              [ROOT / "out" / "vyrobni_list.pdf", *sheets])
+    merge(OUT / "drawings_A3.pdf", sheets)
+    if "--complete" in sys.argv:
+        merge(ROOT / "out" / complete_name(),
+              [ROOT / "out" / "build_sheet.pdf", *sheets])

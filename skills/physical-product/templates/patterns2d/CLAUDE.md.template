@@ -11,8 +11,8 @@ Pack: robion-maker-pack v{{PACK_VERSION}} — template change log & migration
 steps live in MIGRATIONS.md in the pack repo.
 This is a product-engineering project, not a software project — no tests or
 linters; deliverables are the pattern pieces, the marker, the BOM and the
-Czech build sheet. All dimensions are millimetres. Design decisions and the
-human-readable kusovník live in `README.md` (Czech — keep it Czech).
+build sheet. All dimensions are millimetres. Design decisions and the
+human-readable BOM live in `README.md`, in the deliverable language.
 
 ## Commands
 
@@ -21,11 +21,11 @@ uv sync                 # once
 make pattern            # piece SVGs + marker into out/
 make check              # validity gate: outlines, notches, marks, fabric width
 make bom                # fabric + notions table into out/bom.md
-make tile               # A4 tiling (out/print/strih_A4.html)
+make tile               # A4 tiling (out/print/pattern_A4.html)
 make pdf                # printable 1:1 pattern PDF (needs Chrome)
 make previews           # marker + per-piece PNGs — Read before showing
 make viz                # hero illustration (out/viz_hero.png)
-make buildsheet-pdf     # výrobní list PDF (`pdf` is the PATTERN here)
+make buildsheet-pdf     # build sheet PDF (`pdf` is the PATTERN here)
 make doctor             # tool availability
 ```
 

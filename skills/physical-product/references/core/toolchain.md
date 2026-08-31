@@ -27,15 +27,16 @@ pipeline.
 
 ## Degrade matrix
 
-When a tool is missing, skip the stage, continue the pipeline, and put the exact
-sentence into the build sheet's "Předpoklady a nejistoty":
+When a tool is missing, skip the stage, continue the pipeline, and state it in
+the build sheet's assumptions & uncertainties section — translated into the
+user's language, and always naming what was lost and how to get it back:
 
-| Missing | Skip | Build-sheet sentence (Czech) |
+| Missing | Skip | What the build sheet must say |
 |---|---|---|
-| ccx | FEA (analytic stays) | „Pevnostní a modální analýza je pouze analytický odhad — FEA solver (CalculiX) není nainstalován; instalace: `brew install costerwi/calculix/calculix-ccx`." |
-| Blender | photoreal viz (use CAD screenshots) | „Fotorealistická vizualizace chybí — Blender není k dispozici; přiloženy jsou technické rendery z CAD." |
-| Chrome | SVG→PNG (ship SVG) | „Výkresy jsou přiloženy jako SVG — převod do PNG nebyl na tomto stroji možný." |
-| kicad-cli | PCB checks/exports | „Kontroly a exporty PCB (ERC/DRC/gerbery) je nutné spustit ručně v KiCadu." |
+| ccx | FEA (analytic stays) | Strength and modal analysis is an analytic estimate only — the FEA solver (CalculiX) is not installed; install with `brew install costerwi/calculix/calculix-ccx`. |
+| Blender | photoreal viz (use CAD screenshots) | No photoreal visualization — Blender is unavailable; technical CAD renders are attached instead. |
+| Chrome | SVG→PNG (ship SVG) | Drawings are attached as SVG — conversion to PNG was not possible on this machine. |
+| kicad-cli | PCB checks/exports | PCB checks and exports (ERC/DRC/gerbers) must be run by hand in KiCad. |
 
 ## Output layout (canonical)
 

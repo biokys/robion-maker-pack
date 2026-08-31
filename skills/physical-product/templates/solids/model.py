@@ -17,7 +17,7 @@ Conventions (do not break):
 
 CLI (via uv):
     uv run model.py export   # STEP + STL per part into out/parts/
-    uv run model.py bom      # Czech kusovnik table into out/bom.md (+ stdout)
+    uv run model.py bom      # BOM table into out/bom.md (+ stdout)
     uv run model.py check    # mass/COG + interference + clearance gate
     uv run model.py show     # list parts and computed masses
 """
@@ -96,12 +96,12 @@ OUT_DIR = Path(__file__).parent / "out" / "parts"
 # --------------------------------------------------------------------------
 @dataclass(frozen=True)
 class Material:
-    czech_name: str          # goes into the kusovnik
+    local_name: str          # L10N, goes into the BOM
     density: float           # kg/mm^3
-    finish: str              # Czech finishing note
+    finish: str              # L10N finishing note
 
-STEEL = Material("ocel S235", 7.85e-6, "černý komaxit")
-OAK = Material("dub (spárovka)", 7.0e-7, "tvrdý voskový olej, 2 vrstvy")
+STEEL = Material("steel S235", 7.85e-6, "black powder coat")
+OAK = Material("oak (edge-glued panel)", 7.0e-7, "hard wax oil, 2 coats")
 
 
 # --------------------------------------------------------------------------
@@ -133,17 +133,17 @@ def build_bracket() -> Part:
 class PartSpec:
     builder: Callable[[], Part]
     material: Material
-    czech_name: str
+    local_name: str
     count: int = 1
     note: str = ""
-    # Part family: specs sharing a group collapse into ONE kusovnik row
-    # (counts and masses summed, czech_name/material from the first member) —
+    # Part family: specs sharing a group collapse into ONE BOM row
+    # (counts and masses summed, local_name/material from the first member) —
     # e.g. group="lamela" on 25 unique lamella specs.
     group: str | None = None
 
 PARTS: dict[str, PartSpec] = {
-    "bracket": PartSpec(build_bracket, STEEL, "úhelník", count=2,
-                        note=f"plech {thickness:g} mm, otvory Ø{hole_diameter:g}"),
+    "bracket": PartSpec(build_bracket, STEEL, "angle bracket", count=2,
+                        note=f"sheet {thickness:g} mm, holes Ø{hole_diameter:g}"),
 }
 
 # Viz-only merged exports: <stl name> -> [PARTS keys] OR a zero-arg callable
@@ -153,8 +153,8 @@ PARTS: dict[str, PartSpec] = {
 # cannot: N shifted copies of one part
 #   "rings": lambda: Compound(children=[Pos(0, 0, i * ring_pitch)
 #                                       * build_ring() for i in range(58)])
-# and purchased hardware modeled only for the render (tyče, objímka,
-# žárovka) that has no PARTS entry. Empty = no merged exports.
+# and purchased hardware modeled only for the render (rods, socket,
+# bulb) that has no PARTS entry. Empty = no merged exports.
 VIZ_COMPOUNDS: dict[str, list[str] | Callable[[], Shape]] = {}
 
 # --- assembly check configuration (uv run model.py check) ------------------
@@ -183,7 +183,7 @@ def export_parts() -> None:
 
 
 def bom_rows() -> list[tuple[int, str, str, int, float, str]]:
-    """Kusovnik rows (poz, name, material, count, mass_kg_per_piece, note),
+    """BOM rows (pos, name, material, count, mass_kg_per_piece, note),
     with PartSpec groups collapsed into single rows (counts summed, mass =
     total group mass / total count). Shared by bom() and the drawings'
     parts_rows() so balloon numbers always match."""
@@ -202,22 +202,23 @@ def bom_rows() -> list[tuple[int, str, str, int, float, str]]:
         count = sum(s.count for s in specs)
         mass = sum(s.builder().volume * s.material.density * s.count
                    for s in specs) / count
-        name = first.group or first.czech_name
-        rows.append((i, name, first.material.czech_name, count, mass,
+        name = first.group or first.local_name
+        rows.append((i, name, first.material.local_name, count, mass,
                      first.note))
     return rows
 
 
 def bom() -> str:
-    rows = ["| Poz. | Díl | Materiál | Ks | Hmotnost | Pozn. |",
+    # L10N: BOM table headers and the total line reach the reader
+    rows = ["| Pos. | Part | Material | Qty | Mass | Note |",
             "|---|---|---|---|---|---|"]
     total = 0.0
     for i, name, material, count, mass, note in bom_rows():
         total += mass * count
         rows.append(f"| {i} | {name} | {material} "
-                    f"| {count} | {mass:.2f} kg/ks | {note} |")
-    rows.append(f"\nCelková hmotnost dílů: **{total:.2f} kg** "
-                "(bez spojovacího materiálu).")
+                    f"| {count} | {mass:.2f} kg/pc | {note} |")
+    rows.append(f"\nTotal mass of parts: **{total:.2f} kg** "
+                "(fasteners not included).")
     table = "\n".join(rows)
     out = Path(__file__).parent / "out" / "bom.md"
     out.parent.mkdir(parents=True, exist_ok=True)

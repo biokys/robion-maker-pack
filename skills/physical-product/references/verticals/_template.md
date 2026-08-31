@@ -3,8 +3,8 @@
 Every vertical playbook follows this anatomy, in this order, so the agent can
 skim any of them the same way. A playbook REFINES the spine's stages — it never
 introduces new stages or replaces SKILL.md. Keep it under ~100 lines: knowledge
-that earns its place, not an essay. Czech terms the deliverables use belong in
-quotes, the way the rest of the pack does it.
+that earns its place, not an essay. Playbooks are written in English only —
+deliverables get localized into the user's language at scaffold time.
 
 ## When this applies
 
@@ -14,20 +14,21 @@ One paragraph: which products route here, and what is explicitly out of scope
 ## Intake additions
 
 Bullet list of questions BEYOND the workshop profile that this vertical needs
-answered (or assumed under "Předpoklady") before modeling starts.
+answered (or assumed under "Assumptions") before modeling starts.
 
 ## Stack & stage refinements
 
 Which stack (usually solids), then per spine stage only what CHANGES:
 modeling rules of thumb, drawing content this vertical demands, what the BOM
-and cut plan must include, what the make plan looks like ("Postup" sections),
-when analysis is mandatory vs optional.
+and cut plan must include, what the make plan looks like (the build sheet's
+procedure sections), when analysis is mandatory vs optional.
 
-## Materials & suppliers (CZ)
+## Materials & stock
 
-Stock forms, standard dimensions, and the Czech suppliers a BOM should name.
-Facts only — never invent a supplier or a price; leave price columns to be
-filled per project.
+Stock forms, standard dimensions and material grades a BOM should name. Facts
+only — name vendors from the user's own market (the workshop profile may name
+preferred suppliers); never invent a supplier or a price, and leave price
+columns to be filled per project.
 
 ## Last mile
 
