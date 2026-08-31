@@ -115,5 +115,9 @@ Verify by Reading pages of the PDF (page count, sizes, light theme).
   collapse via CSS until filled, so leaving them empty is fine.
 - Theme-aware tokens (light+dark) per artifact rules; body background explicit.
 - Title = product name (short, distinctive); keep favicon stable across updates.
+- `out/vyrobni_list.html` is a BUILD ARTIFACT: with inlined data URIs it is
+  a several-hundred-kB monolith no one can hand-edit or patch reliably —
+  every update goes through the generator script and a re-run, never
+  through editing or string-patching the rendered file.
 - README.md in the repo mirrors the same content in Markdown (tables included) so
   the repo is self-contained without the artifact.

@@ -31,6 +31,31 @@ poor FEA input. If forced down this path, mirror the build123d template's struct
 in OpenSCAD terms: a `VIEW` dispatch variable selecting part/assembly renders,
 `echo()`-emitted BOM lines parsed from stdout, and per-part STL exports for Blender.
 
+Hard-won rules for this path (from a real product on OpenSCAD 2021.01):
+
+- **Three speeds, use the right one:** `openscad -o x.echo model.scad`
+  evaluates the model WITHOUT geometry — asserts + echo-BOM in well under a
+  second, the fastest parameter-tuning loop; `-o x.png` without `--render`
+  goes through the OpenCSG preview (sub-second); STL export always runs full
+  CGAL (minutes for an assembly, seconds per part) — export per part while
+  iterating.
+- **CSG robustness:** a union of bodies touching only at a face or an edge
+  is non-2-manifold — always overlap 0.3–0.5 mm. A coplanar `difference()`
+  through a face that is also another body's surface produces degenerate
+  triangles — compute the part's dimension instead of cutting it to size.
+  CGAL keeps "contact" faces at coplanar contacts, which later masquerade
+  as overhangs in print analysis — fix the overlaps first, only then read
+  overhang reports.
+- **`make check` does not exist here — replace it.** Write an independent
+  probe script over the exported STLs (ray/containment tests on the mesh):
+  no part's vertices intrude into another part, nothing protrudes above a
+  functional plane, planes tested as planes rather than as sums of the
+  formulas that built them. This finds errors renders cannot show
+  (sub-millimetre intrusions, a plate proud of a seating plane). Keep one
+  known part volume as a regression guard when refactoring builders.
+- **Camera:** `--camera=tx,ty,tz,rx,ry,rz,dist`; `rz=0` looks from −Y,
+  `rz=90` from +X; with `--projection=o` the `dist` acts as zoom.
+
 ## Conventions that hold across the stack
 
 - Units: **millimetres** everywhere (CAD, drawings, Blender scale 0.001, FEA uses

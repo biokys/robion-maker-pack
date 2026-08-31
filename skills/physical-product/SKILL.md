@@ -1,6 +1,6 @@
 ---
 name: physical-product
-description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut and sheet-metal parts, CNC-routed parts, electronics with a PCB, sewn and leather goods, van build-outs, fitness gear, animal housing, upholstered pieces, aquarium stands: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán, rozvin), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru, peněženku, vestavbu do dodávky, hrazdu, plyo box, úl, kurník, králíkárnu, budku, čalouněnou lavici, stolek pod akvárium, krabičku z plechu), výrobní výkres, kusovník, nářezový plán, rozvin plechu, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, leather wallet, parametric 3D model, build sheet, BOM, technical drawing, FEA."
+description: "Design a complete physical product end-to-end — furniture and joinery, welded metal frames, 3D prints, laser-cut and sheet-metal parts, CNC-routed parts, electronics with a PCB, sewn and leather goods, van build-outs, fitness gear, animal housing, upholstered pieces, aquarium stands: parametric model or cutting pattern, dimensioned production drawings, photoreal renders, BOM/kusovník, cut plans (nářezový plán, rozvin), assembly & finishing plan, strength/modal analysis (FEA), and a published Czech build sheet (výrobní list). Triggers on: navrhni mi (stolek, poličku, držák, krabičku, bránu, plot, regál, konstrukci, střih, tašku, zástěru, peněženku, vestavbu do dodávky, hrazdu, plyo box, úl, kurník, králíkárnu, budku, čalouněnou lavici, stolek pod akvárium, krabičku z plechu), výrobní výkres, kusovník, nářezový plán, rozvin plechu, pevnostní výpočet, vlastní frekvence, svařovaná konstrukce, polička z hliníkových profilů, T-slot/V-slot konstrukce, design a bracket/enclosure/table/gate/rack/fixture, sewing pattern, leather wallet, parametric 3D model, build sheet, BOM, technical drawing, FEA."
 ---
 
 # Physical Product
@@ -58,7 +58,8 @@ applies and compose; the spine stays single.
 | The product is… | Playbook |
 |---|---|
 | furniture, shelving, joinery — solid wood / sheet goods | [verticals/woodworking.md](references/verticals/woodworking.md) |
-| a welded or bolted metal frame — gate, fence, rack, stand, bracket | [verticals/metalwork.md](references/verticals/metalwork.md) |
+| a welded or bolted steel frame — gate, fence, rack, stand, bracket | [verticals/metalwork.md](references/verticals/metalwork.md) |
+| a frame bolted from aluminium T-slot extrusions — polička, stojan, rám stroje | [verticals/aluminum-profiles.md](references/verticals/aluminum-profiles.md) |
 | a 3D-printed part or enclosure | [verticals/3d-print.md](references/verticals/3d-print.md) |
 | flat parts laser-cut from plywood/acrylic/steel | [verticals/laser.md](references/verticals/laser.md) |
 | flat parts machined on a CNC router | [verticals/cnc-router.md](references/verticals/cnc-router.md) |
@@ -90,7 +91,9 @@ vertical:
 
 ## 4 · Scaffold & bootstrap
 
-New project: copy `templates/common/` plus the chosen stack's
+New project: `git init` first (design iterations, retro and template
+migrations all lean on the history — a project without it can't answer
+"what changed"), then copy `templates/common/` plus the chosen stack's
 `templates/<stack>/` files flat into the repo root, **rename `[project].name`
 in pyproject.toml to the product slug**, fill the `{{PACK_VERSION}}` stamp in
 CLAUDE.md with the installed pack version (it tells future sessions which

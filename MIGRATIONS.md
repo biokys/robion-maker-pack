@@ -9,6 +9,30 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.19.0
+
+New vertical playbook `references/verticals/aluminum-profiles.md` (frames
+bolted from T-slot extrusions: systems/slot compatibility, joint matrix,
+slide-in-nut assembly order, effective-density mass from catalog kg/m,
+tilted-shelf pattern, racking/bracing, CZ suppliers) — informed by the
+first real profile build; SKILL.md routing row + triggers, metalwork
+playbook scoped to steel with a cross-link. From the same retrospective:
+stacks/solids.md OpenSCAD-fallback rules (echo-eval loop, CSG
+non-2-manifold/coplanar traps, camera semantics, and the mesh-probe
+verify script replacing `make check` on that path), `git init` added to
+the scaffold step, and core/buildsheet.md notes (rendered výrobní list is
+a build artifact — regenerate, never hand-patch).
+
+Template change: `templates/common/buildsheet.html` — `ol.steps li`
+switched from flex to block with an absolutely positioned number. In a
+flex/grid container every inline child (`<code>`, `<span>`) becomes its
+own item, so any step mentioning a screw size fragmented into gapped
+columns.
+
+**Migrate:** re-copy the `ol.steps` CSS block (or re-copy
+buildsheet.html and re-fill the slots); projects that worked around the
+broken steps with wrapper `<div>`s can keep them — they render the same.
+
 ## v0.18.0
 
 Retrospective fixes from the first real patterns2d product (roll-up tool

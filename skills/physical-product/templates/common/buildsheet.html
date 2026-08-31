@@ -55,11 +55,14 @@
   th,td { text-align:left; padding:.5rem 1rem; border-top:1px solid var(--hairline); }
   th { font-size:.7rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); font-weight:500; }
   td.num,td.size { font-variant-numeric:tabular-nums; white-space:nowrap; }
+  /* steps are block, number absolute — NOT flex/grid: there each inline
+     child (<code>, <span>) becomes its own item and the text falls apart */
   ol.steps { list-style:none; margin:0; padding:0; counter-reset:step; }
-  ol.steps li { counter-increment:step; display:flex; gap:1rem; padding:.8rem 0; border-top:1px solid var(--hairline); }
+  ol.steps li { counter-increment:step; position:relative; padding:.8rem 0 .8rem 3.2rem; border-top:1px solid var(--hairline); }
   ol.steps li:first-child { border-top:none; }
-  ol.steps li::before { content:counter(step,decimal-leading-zero); font-weight:700; font-size:1.05rem;
-      min-width:2.2rem; background:linear-gradient(100deg,var(--grad-violet),var(--grad-mid) 55%,var(--grad-cyan));
+  ol.steps li::before { content:counter(step,decimal-leading-zero); position:absolute; left:0; top:.7rem;
+      font-weight:700; font-size:1.05rem;
+      background:linear-gradient(100deg,var(--grad-violet),var(--grad-mid) 55%,var(--grad-cyan));
       -webkit-background-clip:text; background-clip:text; color:transparent; }
   .assumptions { border:1px dashed var(--line); border-radius:6px; background:var(--panel); padding:1.25rem 1.5rem; }
   a { color:var(--link); text-decoration-color:var(--line); text-underline-offset:3px; }

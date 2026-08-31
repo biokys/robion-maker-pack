@@ -7,7 +7,9 @@ fences, racks ("regál"), stands, brackets, machine bases, table frames.
 Combines routinely with woodworking (steel frame + wood infill/top). Out of
 scope: pressure vessels, lifting equipment, anything requiring a certified
 weld or a stamped structural calculation — design it, but the build sheet must
-say a professional has to verify it.
+say a professional has to verify it. Aluminium T-slot extrusions are a
+different system (bolted catalog hardware, no welding) →
+[aluminum-profiles.md](aluminum-profiles.md).
 
 ## Intake additions
 
