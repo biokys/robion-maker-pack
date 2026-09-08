@@ -9,6 +9,11 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.22.2
+
+The design map example named a panel icon Robion does not have (`route`); it is
+`layers` now. Nothing to migrate.
+
 ## v0.22.1
 
 **Robion 0.13 widgets and the app's change requests.** `design-record.md`

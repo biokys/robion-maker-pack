@@ -167,7 +167,7 @@ Build it right after the record exists, before the first question:
 
 ```json
 {
-  "scope": "task", "panel": "brief", "panelLabel": "Design", "panelIcon": "route",
+  "scope": "task", "panel": "brief", "panelLabel": "Design", "panelIcon": "layers",
   "mode": "merge",
   "controls": [
     {
