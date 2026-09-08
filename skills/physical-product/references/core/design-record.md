@@ -200,6 +200,17 @@ Build it right after the record exists, before the first question:
   `decide_for_me`** (labelled in the user's language). One `send` button
   returns the answers as the next prompt; questions a `select` cannot hold
   go in the chat with the same ids.
+- The concept gate on the same panel (Robion 0.13+, `controls_help` lists the
+  types): a `choices` control whose options are the variants — `value` = the
+  variant id from the record, `label`, `description`, `image` (the quick
+  preview), `tags` (mass, hours, stiffness) — plus a `send` button; a
+  `gallery` for views of one variant, a `table` for the BOM and cut list later.
+  Older Robion: a `select` plus `image` tiles.
+- **A change from the app.** Robion's design panel lets the user edit a
+  recorded answer; it arrives as a prompt naming the question's label and id,
+  the old and the new value, and asking for the record update. Treat it
+  exactly as the change protocol below: update the answer (`decidedBy: user`),
+  log the change, mark the stale stages, say what regenerates.
 - Bare terminal (no `set_controls`): the record alone; ask in the chat.
 
 ## Change protocol (§7 in record terms)

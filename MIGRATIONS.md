@@ -9,6 +9,15 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.22.1
+
+**Robion 0.13 widgets and the app's change requests.** `design-record.md`
+names the `choices` control for the concept gate (variant cards with image,
+description and fact chips; a `gallery` for views, a `table` for BOM and cut
+lists) and describes the prompt Robion's design panel sends when the user
+edits a recorded answer — handled as an ordinary change request. No template
+change; nothing to migrate.
+
 ## v0.22.0
 
 **The design record.** A project's memory used to live only in the transcript

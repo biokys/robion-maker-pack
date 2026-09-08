@@ -89,7 +89,8 @@ Then STOP before any geometry. Three steps, dialogue in the user's language:
    the preferred medium is a `brief` controls panel (task scope): `select` /
    `toggle` / `text` controls with the defaults preselected, *decide for me*
    as the first option of every select, the `steps` design map at the top,
-   and one `send` button that returns the answers as the next prompt. Keep
+   and one `send` button that returns the answers as the next prompt (the
+   concept gate uses `choices` cards on the same panel — design-record.md). Keep
    that panel for the life of the project: a value the user changes later
    arrives as a controls diff with their next prompt and is a change request
    (§7). **Wait for the answers.** "Never stall" applies only to facts the

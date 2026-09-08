@@ -7,7 +7,7 @@
       "name": "maker",
       "source": ".",
       "description": "From idea to a manufacturing-ready package: parametric CAD, drawings, renders, BOM, assembly plans, FEA, optional PCB.",
-      "version": "0.22.0",
+      "version": "0.22.1",
       "homepage": "https://robion.app",
       "repository": "https://github.com/biokys/robion-maker-pack",
       "license": "MIT"

@@ -1,7 +1,7 @@
 {
   "name": "maker",
   "description": "Robion Maker Pack — playbooks that take a physical product from idea to a manufacturing-ready package: parametric CAD (build123d) or 2D cutting patterns, dimensioned drawings, photoreal renders, BOM, assembly & finishing plan, FEA, optional KiCad PCB, and a printable build sheet.",
-  "version": "0.22.0",
+  "version": "0.22.1",
   "author": { "name": "BudgetBakers s.r.o.", "url": "https://robion.app" },
   "homepage": "https://robion.app",
   "repository": "https://github.com/biokys/robion-maker-pack",
