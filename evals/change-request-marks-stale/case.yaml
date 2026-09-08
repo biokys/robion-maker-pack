@@ -1,0 +1,109 @@
+# Scaffold for the change-request case: a workbench project that already
+# passed the concept freeze, the model and the previews. The prompt then
+# changes the width and delegates the finish. No build123d is installed in
+# the eval workspace — the Makefile targets are no-ops so the agent can
+# "regenerate" cheaply and the graders look only at design.json and the reply.
+# Runs only with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+context:
+  scaffold_script: |
+    set -e
+    mkdir -p "$HOME/.robion"
+    cat > "$HOME/.robion/workshop.yaml" <<'YAML'
+    updated: 2026-09-08
+    language: en
+    country: CZ
+    currency: CZK
+    machines: { printer: null, laser: null, cnc: null }
+    tools: [track saw, router, drill press, random-orbit sander]
+    materials_on_hand:
+      - { name: "beech, 40 mm boards", size_mm: [2000, 200, 40], qty: 6 }
+    fasteners_on_hand: [dowels 10 mm, PU glue, screws 5x80]
+    suppliers: {}
+    workshop:
+      space: "garage, 2 m bench"
+      finishing_available: [hard wax oil, oil stain]
+      no_go: [welding]
+    skill_level: advanced hobby
+    YAML
+
+    cat > design.json <<'JSON'
+    {
+      "version": 1,
+      "updated": "2026-09-08T12:00:00Z",
+      "product": { "name": "Workbench 1600", "slug": "workbench-1600", "language": "en" },
+      "idea": { "text": "a sturdy workbench for hand planing, about 1.6 m, beech", "attachments": [] },
+      "spec": {
+        "summary": "Free-standing workbench 1600 x 800 x 900 mm, solid beech top 40 mm, must resist racking under hand planing; track saw and router, no CNC.",
+        "verticals": ["woodworking"],
+        "stack": "solids",
+        "open": []
+      },
+      "questions": [
+        { "id": "purpose", "group": "function", "label": "Purpose", "answer": "hand planing and assembly", "default": "general workbench", "decidedBy": "user", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "load", "group": "function", "label": "Load case", "answer": "150 kg static, planing impacts", "default": "100 kg static", "decidedBy": "user", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "width", "group": "dimensions", "label": "Width", "answer": "1600", "default": "1600", "decidedBy": "user", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "depth", "group": "dimensions", "label": "Depth", "answer": "800", "default": "800", "decidedBy": "default", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "height", "group": "dimensions", "label": "Height", "answer": "900", "default": "900", "decidedBy": "default", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "finish", "group": "materials", "label": "Finish", "answer": "hard wax oil", "default": "hard wax oil", "decidedBy": "default", "answeredAt": "2026-09-08T11:00:00Z" }
+      ],
+      "concept": {
+        "variants": [
+          { "id": "a", "title": "Four legs, apron", "summary": "Simplest build, softer against racking.", "facts": { "mass_kg": 58, "build_h": 6 } },
+          { "id": "b", "title": "Frame with stretchers", "summary": "Low stretchers plus a centre rail, stiffest for planing.", "facts": { "mass_kg": 66, "build_h": 8 } }
+        ],
+        "recommended": "b",
+        "chosen": "b",
+        "frozenAt": "2026-09-08T11:30:00Z"
+      },
+      "stages": [
+        { "id": "idea", "label": "Idea", "status": "done" },
+        { "id": "brief", "label": "Brief", "status": "done" },
+        { "id": "concept", "label": "Concept", "status": "done" },
+        { "id": "model", "label": "Model", "status": "done", "artifacts": ["model.py"] },
+        { "id": "preview", "label": "Previews", "status": "done", "artifacts": ["out/viz_hero.png"] },
+        { "id": "drawings", "label": "Drawings", "status": "pending" },
+        { "id": "bom", "label": "Materials & cuts", "status": "pending" },
+        { "id": "plan", "label": "Build plan", "status": "pending" },
+        { "id": "analysis", "label": "Strength", "status": "pending" },
+        { "id": "buildsheet", "label": "Build sheet", "status": "pending" }
+      ],
+      "changes": []
+    }
+    JSON
+
+    cat > model.py <<'PY'
+    """Workbench model — eval stub, no build123d in this workspace.
+
+    Parameters are the single source of truth; the real template reads
+    ROBION_PARAMS and builds the PARTS registry from them.
+    """
+    WIDTH = 1600
+    DEPTH = 800
+    HEIGHT = 900
+    TOP_THICKNESS = 40
+    LEG = 70
+    PY
+
+    printf 'parts check bom:\n\t@echo "$@ ok"\n\nviz drawings-png drawings-pdf fea pdf:\n\t@echo "$@ (expensive) ok"\n' > Makefile
+
+    cat > CLAUDE.md <<'MD'
+    # Workbench 1600 — project notes
+
+    Scaffolded from the Maker Pack templates (pack 0.22.0). The parametric
+    source of truth is `model.py`; `design.json` is the design record.
+
+    ## Cost of a change
+
+    Cheap (seconds — run freely while iterating): `make parts check bom`, the
+    live viewport. Expensive (minutes, order-dependent — run only after the
+    shape is frozen, and name which of them a change invalidates before
+    rerunning): `make viz` (~3 min), `make drawings-png` (~6 min), `make fea`
+    (~10 min), `make pdf`.
+
+    ## Gotchas learned here
+    MD
+
+    mkdir -p out
+    printf 'placeholder render\n' > out/viz_hero.png
+    printf '# Workbench 1600\n\nConcept B (frame with stretchers) approved 2026-09-08.\n' > README.md

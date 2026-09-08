@@ -9,6 +9,42 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.22.0
+
+**The design record.** A project's memory used to live only in the transcript
+and whatever the README captured — lost on a fresh session, impossible to
+edit, invisible to the app. Every project now keeps `design.json` in its root:
+the idea, the spec, every answer with who decided it (`user`, `default`,
+`claude` + reason), the concept variants and the chosen one, the ten stages
+with their status (`pending | working | needs_you | done | stale | skipped`)
+and a change log. Rules, schema and stage ids:
+`references/core/design-record.md`. Spine changes in SKILL.md:
+
+- §1: the record is created right after the brief analysis and updated at
+  every gate; each answer records who decided it. The Robion `brief` panel
+  carries a `steps` design map at the top, *decide for me* as the first
+  option of every select, and stays for the life of the project — a value
+  the user changes later is a change request.
+- §5: passing a gate = the stage `done` in the record and the map's `current`
+  advanced (one `set_controls` merge of `design_map`); a skipped stage is
+  `skipped`, never removed.
+- §7: a change after the freeze is logged in the record and marks the
+  invalidated stages `stale` before anything regenerates.
+
+Evals: `evals/` gains two cases (record exists after intake; a change request
+marks stages stale and a "decide for me" answer is recorded with a reason).
+They run with the early-access `claude plugin eval`.
+
+This is the first step of Robion's design panel (contract v2, CONTRACT.md §4):
+the app will read the record, render the map with stale / needs-you states,
+and let the user edit an answer in place.
+
+Template change: none.
+
+**Migrate:** optional — write `design.json` for a running project from the
+decisions in its README (schema in `design-record.md`, stages already passed
+as `done`), then build the `design_map` control on the `brief` panel.
+
 ## v0.21.0
 
 **Intake is a gate now.** The first electronics product (AirQualityBox

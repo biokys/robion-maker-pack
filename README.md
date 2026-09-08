@@ -30,7 +30,7 @@ it needs:
 | **Spine** | `SKILL.md` | Intake, vertical routing, the stage pipeline with gates, verification habits. Every project walks it. |
 | **Verticals** | `references/verticals/` | Playbooks for WHAT is being made — 14 of them: woodworking, metalwork, sheet-metal, 3d-print, laser, cnc-router, electronics, sewing, leather-goods, upholstery, van-conversion, fitness-equipment, animal-housing, aquarium-terrarium. Pure content — the anatomy is fixed by `_template.md`. |
 | **Stacks** | `references/stacks/` | Recipes for HOW artifacts are produced: `solids` (build123d), `patterns2d` (2D cutting patterns), `pcb` (KiCad). |
-| **Core** | `references/core/` | Shared conventions: the workshop profile, toolchain & degrade rules, the build sheet. |
+| **Core** | `references/core/` | Shared conventions: the workshop profile, the design record, toolchain & degrade rules, the build sheet. |
 | **Templates** | `templates/` | Project scaffold: `common/` + one stack directory, copied flat into a new project. |
 
 How it scales — the three growth rules:
@@ -58,8 +58,9 @@ exactly what was skipped). For the full pipeline on macOS:
 ## With Robion
 
 Inside [Robion](https://robion.app), every artifact the skills produce shows up
-live: the 3D model panel with a slider-driven customizer, drawings and renders in
-the media panel, KiCad DRC/ERC checks — and the cockpit on your phone. The
+live: the design map and the question round on the `brief` panel, the 3D model
+panel with a slider-driven customizer, drawings and renders in the media panel,
+KiCad DRC/ERC checks — and the cockpit on your phone. The
 conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
 
 ## Notes
@@ -70,6 +71,10 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
 - The skills remember your workshop (machines, tools, materials on hand) in
   `~/.robion/workshop.yaml` — created once by a short interview, read at every
   project intake, yours to hand-edit.
+- Every project keeps a design record in `design.json` — the idea, the answers
+  and who decided them, the chosen concept, the state of each stage and a
+  change log. The next session reads it instead of the lost transcript; in
+  Robion it drives the design map on the `brief` panel.
 - Releases are git tags; the marketplace pins the plugin version per release.
   Template changes between versions and how to migrate a running project:
   [MIGRATIONS.md](MIGRATIONS.md).

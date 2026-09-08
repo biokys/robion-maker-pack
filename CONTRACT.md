@@ -79,3 +79,12 @@ Rules that hold across every stage:
   `skills/physical-product/references/core/workshop-profile.md`); contract v2 will
   make it app-binding (the app may read it — e.g. the printer bed for the
   viewport outline).
+- `design.json` — the design record in the project root: idea, spec, every
+  answer with who decided it, the chosen concept, per-stage status
+  (`pending | working | needs_you | done | stale | skipped`) and a change log.
+  A **content-level convention since pack 0.22.0** (schema, stage ids and
+  rules: `skills/physical-product/references/core/design-record.md`; the
+  `steps` map on the `brief` panel is its visible twin today). Contract v2
+  makes it app-binding: the app's design panel reads it, renders the map with
+  the stale / needs-you states, and an answer the user edits there reaches
+  the agent as a change request.

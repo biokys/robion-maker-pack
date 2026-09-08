@@ -1,0 +1,30 @@
+# Scaffold for the intake case: the workshop profile the skill reads first.
+# Without it the skill starts the workshop interview and never reaches the
+# brief analysis — the assertions would fail for the wrong reason.
+# Runs only with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+context:
+  scaffold_script: |
+    set -e
+    mkdir -p "$HOME/.robion"
+    cat > "$HOME/.robion/workshop.yaml" <<'YAML'
+    # eval fixture — a small hobby woodworking shop
+    updated: 2026-09-08
+    language: en
+    country: CZ
+    currency: CZK
+    machines:
+      printer: null
+      laser: null
+      cnc: null
+    tools: [track saw, router, drill press, random-orbit sander, cordless drill]
+    materials_on_hand:
+      - { name: "birch plywood 18 mm", size_mm: [1250, 600, 18], qty: 1 }
+    fasteners_on_hand: [screws 4x40, wall plugs 8 mm, PU glue]
+    suppliers: {}
+    workshop:
+      space: "garage, 2 m bench"
+      finishing_available: [hard wax oil]
+      no_go: [welding]
+    skill_level: advanced hobby
+    YAML
