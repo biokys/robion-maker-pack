@@ -42,27 +42,55 @@ to you (`language:` in the workshop profile overrides it), then:
   standards and currency belong to the user's market, not to the pack: take
   them from the workshop profile or ask. Never invent a supplier or a price.
 
-## 1 · Intake
+## 1 · Intake = brief analysis, then a question round (mandatory gate)
 
 **Workshop profile first:** read `~/.robion/workshop.yaml` before asking
 anything — it answers machines, tools and materials once for all projects.
 Missing file ⇒ run the one-time workshop interview and create it:
 [references/core/workshop-profile.md](references/core/workshop-profile.md).
 
-Then ask what the profile can't know (batched, in the user's language) — but
-never stall: if the user can't answer, assume a sensible value and record it
-in the build sheet's assumptions section:
+Then STOP before any geometry. Three steps, dialogue in the user's language:
 
-- Function and load case: what does it carry/do, worst realistic load, static or
-  dynamic (vibration source nearby?).
-- Dimensions: which are fixed (space constraints, stock material on hand) vs derived.
-- Materials for THIS project beyond what the profile lists (stock on hand matters
-  most).
-- Manufacturing reality beyond the profile: who makes the parts the user can't —
-  and anything borrowed or one-off for this build.
-- Aesthetic reference (photo) if looks matter.
-- Electronics inside? → PCB stage applies.
-- Depth wanted: quick concept vs full package with FEA.
+1. **Brief analysis** — reading only (the profile, the playbooks), no other
+   tools: restate the request as a spec — function, users, must-haves,
+   constraints, what the brief leaves open. Route the vertical(s) now (§2;
+   electronics inside ⇒ the pcb stack applies) so each playbook's *Intake
+   additions* join the question round. Post the spec.
+2. **Question round** — ask everything the spec leaves open, batched into
+   groups, each question with a recommended default so the user can answer
+   "ok" per group. The generic groups:
+   - function and load case: what it carries/does, worst realistic load,
+     static or dynamic (vibration source nearby?);
+   - dimensions: which are fixed (space constraints, stock on hand) vs
+     derived;
+   - form factor and ergonomics: handheld / desk / wall, orientation, size
+     or thickness limits;
+   - user interface, where there is one: controls, what each does, labels
+     and their language, display;
+   - connectors and openings, and which face each sits on;
+   - materials and colours for THIS project beyond the profile (stock on
+     hand matters most);
+   - manufacturing reality beyond the profile: who makes the parts the user
+     can't, anything borrowed or one-off for this build;
+   - aesthetic reference (photo) if looks matter;
+   - depth wanted: quick concept vs full package with FEA;
+   - what is fixed vs negotiable;
+   - plus the *Intake additions* of every playbook routed in step 1.
+
+   More questions are fine here — it is the cheapest place to ask. In Robion
+   the preferred medium is a `brief` controls panel (task scope): `select` /
+   `toggle` / `text` controls with the defaults preselected and one `send`
+   button that returns the answers as the next prompt. **Wait for the
+   answers.** "Never stall" applies only to facts the user cannot know (a
+   material constant, a standard, a catalogue size) — assume those and
+   record them in the build sheet's assumptions section. Taste decisions —
+   shape, ergonomics, UI, labels, colour — are never assumed, in any mode,
+   autonomous runs included.
+3. **Concept gate** — a 2D block layout (component rectangles, key
+   dimensions), the part list with alternatives, quick previews — and an
+   explicit approval before the schematic or the detailed model exists.
+   Approval freezes shape, UI and connector positions; §5 keys the expensive
+   stages on that freeze.
 
 ## 2 · Vertical routing
 
@@ -126,7 +154,7 @@ bootstrap steps (fonts, extras) and the canonical `out/` layout are listed in
 the stack recipe. Environment specifics and the degrade matrix when tools are
 missing: [references/core/toolchain.md](references/core/toolchain.md).
 
-## 5 · Stage pipeline
+## 5 · Stage pipeline — cost-aware ordering
 
 Run stages in order; each has a gate. Skipping a stage is fine when the user
 says so — note it in the build sheet. Concrete commands live in the stack
@@ -143,6 +171,16 @@ what each stage must cover.
 | 5 | **Make plan** | numbered assembly/sewing/welding steps + finishing schedule | ordered so it's actually executable |
 | 6 | **Analysis** (when load-bearing) | analytic estimates first, FEA to verify | sanity checks pass before numbers reach the user |
 | 7 | **Build sheet** | build sheet per [core/buildsheet.md](references/core/buildsheet.md) | user approves; mirror into README |
+
+**Artifacts have very different regeneration costs.** Cheap (seconds —
+regenerate freely): the parametric model, `make check`, previews and the live
+viewport, board outline and placement, ERC. Expensive (minutes to an hour,
+and order-dependent — every moved button rebuilds them): routing, photoreal
+renders, dimensioned drawings, cut plans, FEA, the build sheet. Run the
+expensive stages only after shape, UI and connector positions are frozen at
+the concept gate (§1); until then iterate on the cheap ones. During any
+autonomous run longer than ~20 minutes, post a short status: what was
+decided, what is being built, what the next gate is.
 
 **Robion cockpit — build it unprompted.** When the `set_controls` MCP tool
 exists, the cockpit is part of stage 1, not an optional extra (read
@@ -185,6 +223,10 @@ User feedback → change parameters (never hardcode inside builders) → `make` 
 Keep the dialogue in the user's language, short iterations, one proposal at a time.
 Record design decisions in the project README; record newly discovered tool gotchas
 in the project CLAUDE.md ("Gotchas learned here").
+
+Change requests after the concept freeze: state which expensive artifacts the
+change invalidates (routing? renders? drawings?) before regenerating them —
+the project CLAUDE.md's "Cost of a change" section lists the chain.
 
 ## 8 · Degrade & uncertainty
 

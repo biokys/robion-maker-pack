@@ -44,6 +44,17 @@ variables; blender is on PATH.
 - Verify visuals by rendering PNG and Reading it; Blender exit code is
   meaningless (Makefile greps the log).
 
+## Cost of a change
+
+Cheap (seconds — run freely while iterating): `make parts check bom`, the
+live viewport. Expensive (minutes, order-dependent — run only after the
+shape is frozen, and name which of them a change invalidates before
+rerunning): `make viz`, `make drawings-png`, `make drawings-pdf`, `make fea`,
+`make pdf`. A project with a PCB adds its own board chain here (placement
+seconds, routing ~10 min, then fab outputs).
+
+<!-- keep this current: replace the estimates with measured timings -->
+
 ## Gotchas learned here
 
 <!-- append project-specific tool/geometry gotchas as they are discovered -->

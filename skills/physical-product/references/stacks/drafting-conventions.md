@@ -54,7 +54,9 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   coordinates to sheet coordinates** — anchor every dimension through it,
   so parameters, not retyped numbers, drive the dims and the projection's
   mild perspective (~0.3 %) cannot detach them. `shift` places secondary
-  views (first angle: top view shifts −Y by view height + gap).
+  views (first angle: top view shifts −Y by view height + gap). A view that
+  comes back with no edges is the axis-aligned camera trap — see the
+  stack-specific traps in [solids.md](solids.md).
 - **`Sheet(name, number, title, scale, material, count, note)`** owns
   layers, the draft style scaled by P, the A3 frame and the title block.
   `scale` accepts `5`, `0.5`, `"1:5"` or `"2:1"`; DATUM defaults to today

@@ -44,6 +44,15 @@ make doctor             # tool availability
   Never screenshot a mm-sized SVG directly (Chrome ≈ 3.78 px/mm) — always
   go through the pixel `.html` wrappers the scripts write.
 
+## Cost of a change
+
+Everything here regenerates in seconds (`make pattern check bom previews
+viz`, `make pdf`). The expensive artifact is the user's: a printed and taped
+1:1 tiling and cut fabric — so freeze the pieces with the user before
+`make pdf`, and say so when a change arrives after printing.
+
+<!-- keep this current if a slow step appears -->
+
 ## Gotchas learned here
 
 <!-- append project-specific gotchas as they are discovered -->

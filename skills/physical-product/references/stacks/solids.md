@@ -139,3 +139,12 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
 - Projected drawing views carry a mild perspective residual — CAM geometry must
   come from face wires, never projected views
   ([../verticals/cnc-router.md](../verticals/cnc-router.md)).
+- build123d 0.11: booleans on a located `Compound` (e.g. `Pos(...) *
+  import_step(...)`) ignore the children's placements — move every solid
+  explicitly: `Compound(children=[loc * Solid(s.wrapped) for s in
+  shape.solids()])`.
+- `Compound(children=[...])` re-parents its children — copy parts before
+  putting one part into a second compound.
+- `project_to_viewport` with an exactly axis-aligned camera can return no
+  edges at all (seen on an imported-STEP assembly) — nudge the direction by
+  ~1e-3 or shorten the camera distance.

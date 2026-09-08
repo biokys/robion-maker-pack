@@ -9,6 +9,44 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.21.0
+
+**Intake is a gate now.** The first electronics product (AirQualityBox
+retrospective, 2026-09-08) showed that "never stall" plus an autonomous run
+skipped the "user approves the geometry" gates: two hours of routing,
+renders and drawings were built on a shape and UI the user wanted to
+change. Spine changes in SKILL.md:
+
+- §1 Intake is a brief analysis (spec restated, vertical routed) followed by
+  a mandatory question round — batched groups with recommended defaults, a
+  `brief` controls panel in Robion — and a concept gate (block layout, part
+  list, quick previews) that freezes shape, UI and connector positions.
+  "Never stall" applies only to facts the user cannot know; taste decisions
+  are never assumed.
+- §5 is cost-aware: cheap artifacts (model, check, previews, placement,
+  ERC) iterate freely; expensive ones (routing, renders, drawings, cut
+  plans, FEA, build sheet) run only after the freeze. Autonomous runs over
+  ~20 minutes post a status.
+- §7: a change request after the freeze names the expensive artifacts it
+  invalidates before regenerating them.
+
+References: `verticals/electronics.md` intake additions (UI, power,
+electronics route) and concept-first ordering; `stacks/pcb.md` rewritten
+around scripted authoring (circuit as data → generated schematic and
+pcbnew board → Freerouting), the enclosure → `out/pcb_layout.json` → board
+chain, the verification chain and the traps learned (pcbnew exit hang, "/"
+net prefix, Freerouting planes and Java versions); `stacks/solids.md`
+build123d 0.11 traps (booleans on a located Compound, Compound
+re-parenting, axis-aligned `project_to_viewport`).
+
+Template change: both `CLAUDE.md.template` files gained a **Cost of a
+change** section listing that stack's cheap vs expensive make targets — the
+thing §7 points at when a change comes in after the freeze.
+
+**Migrate:** optional — append the "Cost of a change" section from the
+template to your project's CLAUDE.md and fill in the project's own chain (a
+PCB project adds placement → routing → fab outputs).
+
 ## v0.20.0
 
 **The pack is now language-neutral English.** It used to be written for a

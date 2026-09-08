@@ -11,8 +11,13 @@ safety gates.
 
 ## Intake additions
 
-- What the circuit does, inputs/outputs, connectors (exact types — they drive
-  enclosure cutouts), power source and budget.
+- What the circuit does, inputs/outputs, connectors (exact types and which
+  face each sits on — they drive enclosure cutouts).
+- User interface: buttons (what each does), indicator LEDs, display type and
+  size, labels and their language — every one of these moves the board.
+- Power: source, runtime target vs cell size, charging, power budget.
+- Electronics route: off-the-shelf module vs custom board; assembly service
+  vs hand soldering; budget.
 - Fab plan: order boards (JLCPCB, PCBWay, or a board house in the user's own
   market) vs etch at home — drives design rules (min trace/space, vias).
 - Firmware: which MCU ecosystem the user already works with — firmware itself
@@ -24,7 +29,11 @@ safety gates.
 Stacks: **pcb** for the board, **solids** for the enclosure — they meet at the
 fit gate.
 
-- **Schematic → ERC → layout → DRC** — per
+- **Concept first** — the schematic exists only after the concept gate
+  (SKILL.md §1): a block layout of the board inside the enclosure, connector
+  faces and the UI agreed. Routing is the expensive, order-dependent step —
+  once per freeze, never per iteration.
+- **Schematic → ERC → placement → DRC → routing → DRC** — per
   [../stacks/pcb.md](../stacks/pcb.md); checks run headless via `kicad-cli`
   and belong in the cockpit as status tiles. Zero ERC/DRC warnings before the
   user sees "done" — waivers are listed with reasons.
@@ -59,7 +68,8 @@ project.
 The user orders boards and parts from the BOM, solders per the assembly order,
 runs the bring-up checklist, then flashes firmware — at which point the
 project continues as a software project in the same repo (firmware/ dir), no
-skill needed.
+skill needed. ESPHome: `esphome config` validates the YAML but does not
+compile lambdas — only `esphome compile` is the real check.
 
 ## Safety gates
 
