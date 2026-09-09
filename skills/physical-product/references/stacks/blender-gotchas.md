@@ -18,6 +18,12 @@ The `templates/solids/blender_viz.py` encodes these; keep them when modifying it
 - `Material.use_nodes` is deprecated in 5.x (auto node trees); guard with
   `if mat.node_tree is None: mat.use_nodes = True`.
 - Metal GPU: set cycles prefs in try/except and fall back to CPU silently.
+- **`read_factory_settings(use_empty=True)` drops every datablock made before
+  it** — materials included. Build materials *after* it (the template's
+  `PARTS()` and every `SCENES()[name]["parts"]` entry are zero-arg callables
+  called inside `setup_scene()` for that reason; a dict built at import time
+  renders grey). A second scene (print orientation, exploded kit) is one more
+  `SCENES()` entry with its own parts/shots/explode — not a copy of the script.
 
 ## Color & material traps
 

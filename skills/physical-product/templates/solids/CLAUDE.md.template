@@ -48,10 +48,11 @@ variables; blender is on PATH.
 
 `design.json` in this folder is the design record: the idea, every answer and
 who decided it, the chosen concept, the ten stages with their status and the
-log of changes. Update it at every gate and log every change after the
-freeze (rules: the maker pack's `references/core/design-record.md`); Robion
-draws its design panel from it, and a session that skips it leaves the panel
-lying.
+log of changes. It is written only by `design_record.py` next to it — never by
+hand: `python3 design_record.py stage <id> working|needs_you|done`, `next <id>`,
+`change <what> --from … --to … --invalidates …`, `check --strict` (rules: the
+maker pack's `references/core/design-record.md`). Robion draws its design
+panel from it, and a session that skips it leaves the panel lying.
 
 ## Cost of a change
 
@@ -60,7 +61,11 @@ live viewport. Expensive (minutes, order-dependent — run only after the
 shape is frozen, and name which of them a change invalidates before
 rerunning): `make viz`, `make drawings-png`, `make drawings-pdf`, `make fea`,
 `make pdf`. A project with a PCB adds its own board chain here (placement
-seconds, routing ~10 min, then fab outputs).
+seconds, routing ~10 min, then fab outputs). Any parameter edit after the
+concept freeze — including one forced by `make check` — is a change: record
+it first with `python3 design_record.py change model.<param> --from … --to …
+--invalidates …` (add `--fact key=value` when it moves a number on a concept
+card), then regenerate.
 
 <!-- keep this current: replace the estimates with measured timings -->
 

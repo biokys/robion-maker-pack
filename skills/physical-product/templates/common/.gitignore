@@ -1,0 +1,6 @@
+out/
+.venv/
+.robion/
+__pycache__/
+*.pyc
+assets/

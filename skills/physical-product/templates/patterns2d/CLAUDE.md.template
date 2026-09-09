@@ -48,10 +48,11 @@ make doctor             # tool availability
 
 `design.json` in this folder is the design record: the idea, every answer and
 who decided it, the chosen concept, the ten stages with their status and the
-log of changes. Update it at every gate and log every change after the
-freeze (rules: the maker pack's `references/core/design-record.md`); Robion
-draws its design panel from it, and a session that skips it leaves the panel
-lying.
+log of changes. It is written only by `design_record.py` next to it — never by
+hand: `python3 design_record.py stage <id> working|needs_you|done`, `next <id>`,
+`change <what> --from … --to … --invalidates …`, `check --strict` (rules: the
+maker pack's `references/core/design-record.md`). Robion draws its design
+panel from it, and a session that skips it leaves the panel lying.
 
 ## Cost of a change
 

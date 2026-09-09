@@ -38,6 +38,10 @@ user's language, and always naming what was lost and how to get it back:
 | Chrome | SVG→PNG (ship SVG) | Drawings are attached as SVG — conversion to PNG was not possible on this machine. |
 | kicad-cli | PCB checks/exports | PCB checks and exports (ERC/DRC/gerbers) must be run by hand in KiCad. |
 
+Slicers (PrusaSlicer, Bambu Studio, Cura) are deliberately not tools of this
+pipeline: a printed part is delivered as STL + STEP + a print plan for the
+user's slicer, never as G-code.
+
 ## Output layout (canonical)
 
 ```

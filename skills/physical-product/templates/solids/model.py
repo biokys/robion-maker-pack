@@ -140,6 +140,11 @@ class PartSpec:
     # (counts and masses summed, local_name/material from the first member) —
     # e.g. group="lamela" on 25 unique lamella specs.
     group: str | None = None
+    # A mating object the user does NOT make (the board in an enclosure, the
+    # wall a shelf hangs on): built and exported so `make check` and the Blender
+    # scenes fit against it, but no BOM row, no drawing, no cut-plan piece.
+    # Its dimensions come from a real source (core/fit-partners.md).
+    reference: bool = False
 
 PARTS: dict[str, PartSpec] = {
     "bracket": PartSpec(build_bracket, STEEL, "angle bracket", count=2,
@@ -174,7 +179,8 @@ def export_parts() -> None:
         part = spec.builder()
         export_step(part, str(OUT_DIR / f"{name}.step"))
         export_stl(part, str(OUT_DIR / f"{name}.stl"))
-        print(f"exported {name}: {part.volume * spec.material.density:.3f} kg")
+        print(f"exported {name}: {part.volume * spec.material.density:.3f} kg"
+              + (" (reference, not made)" if spec.reference else ""))
     for name, source in VIZ_COMPOUNDS.items():
         merged = source() if callable(source) else Compound(
             children=[PARTS[k].builder() for k in source])
@@ -190,6 +196,8 @@ def bom_rows() -> list[tuple[int, str, str, int, float, str]]:
     order: list[str] = []                      # group name or part key
     members: dict[str, list[PartSpec]] = {}
     for key, spec in PARTS.items():
+        if spec.reference:
+            continue
         bucket = spec.group or key
         if bucket not in members:
             order.append(bucket)
@@ -242,6 +250,8 @@ def mass_properties(shapes: dict[str, Part] | None = None):
     shapes = shapes or _built_parts()
     total, moment = 0.0, Vector(0, 0, 0)
     for name, spec in PARTS.items():
+        if spec.reference:
+            continue
         mass = shapes[name].volume * spec.material.density * spec.count
         total += mass
         moment += shapes[name].center(CenterOf.MASS) * mass

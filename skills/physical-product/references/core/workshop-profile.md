@@ -61,6 +61,7 @@ machines:
     bed_mm: [250, 210, 220]
     nozzle_mm: 0.4
     materials: [PLA, PETG]
+    slicer: PrusaSlicer          # the print plan speaks this slicer's words
   laser: null
   cnc: null
   sewing:

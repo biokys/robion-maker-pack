@@ -73,8 +73,12 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
   project intake, yours to hand-edit.
 - Every project keeps a design record in `design.json` — the idea, the answers
   and who decided them, the chosen concept, the state of each stage and a
-  change log. The next session reads it instead of the lost transcript; in
-  Robion it drives the design map on the `brief` panel.
+  change log. It is written only by the project's own `design_record.py`
+  (stamped by the clock, validated, committed at every gate), so the next
+  session reads it instead of the lost transcript and Robion draws the design
+  panel from it.
+- 3D-printed parts are delivered as STL + STEP plus a print plan in the words
+  of your slicer; the pack never slices and never produces G-code.
 - Releases are git tags; the marketplace pins the plugin version per release.
   Template changes between versions and how to migrate a running project:
   [MIGRATIONS.md](MIGRATIONS.md).

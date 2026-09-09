@@ -17,6 +17,7 @@ Key invariants:
 
 from __future__ import annotations
 
+import math
 import sys
 from pathlib import Path
 
@@ -47,6 +48,14 @@ BEVEL_MM = 0.0
 #          EXPLODE = {"lid.stl": (0, 0, 1), "base.stl": (0, 0, -0.3)} and
 #          SHOTS["viz_exploded"] = {..., "distance": 3.0, "explode": 0.5}.
 #          Assembled-position parts (not listed) stay put.
+# SCENES: name -> dict(parts=<zero-arg callable returning {stl: material or
+#                            (material, euler_degrees)}>, shots=SHOTS-like,
+#                      explode=EXPLODE-like). One entry renders exactly like
+#          the PARTS/SHOTS/EXPLODE trio below; a second scene reuses the same
+#          STLs in another pose — the print orientation (part lying as
+#          printed, `viz_print`), an exploded kit, a variant. `parts` MUST be
+#          a callable: materials are created after `read_factory_settings`,
+#          which drops anything made before it.
 # --------------------------------------------------------------------------
 TEXTURE_DIR = Path(__file__).resolve().parent / "assets" / "oak_veneer_01"
 
@@ -61,6 +70,15 @@ SHOTS = {
 }
 
 EXPLODE: dict[str, tuple[float, float, float]] = {}
+
+
+def SCENES():
+    return {
+        "main": {"parts": PARTS, "shots": SHOTS, "explode": EXPLODE},
+        # "print": {"parts": lambda: {"bracket_print.stl": (powder_coat(), (0, 0, 0))},
+        #           "shots": {"viz_print": {"direction": (-0.7, -1.0, 0.7), "distance": 2.0, "lens": 50}},
+        #           "explode": {}},
+    }
 
 
 # --------------------------------------------------------------------------
@@ -310,15 +328,18 @@ def add_area_light(name, location, target, size, energy):
     aim(obj, target)
 
 
-def setup_scene():
+def setup_scene(parts=None):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
 
     parts_dir = out_dir() / "parts"
     imported: dict[str, bpy.types.Object] = {}
-    for stl_name, material in PARTS().items():
+    for stl_name, entry in (parts or PARTS)().items():
+        material, euler = entry if isinstance(entry, tuple) else (entry, None)
         obj = import_stl(parts_dir / stl_name)
         obj.data.materials.append(material)
+        if euler is not None:
+            obj.rotation_euler = tuple(math.radians(a) for a in euler)
         imported[stl_name] = obj
 
     bpy.context.view_layer.update()
@@ -361,18 +382,20 @@ def setup_scene():
     return scene, center, size, imported
 
 
-def render_shots(scene, center, size, objects):
+def render_shots(scene, center, size, objects, shots=None, explode=None):
+    shots = SHOTS if shots is None else shots
+    explode = EXPLODE if explode is None else explode
     camera = bpy.data.objects.new("Camera", bpy.data.cameras.new("Camera"))
     bpy.context.collection.objects.link(camera)
     scene.camera = camera
-    for name, shot in SHOTS.items():
+    for name, shot in shots.items():
         # exploded-view shot: move parts along EXPLODE directions, render,
         # restore — later shots always start from the assembled positions
         factor = shot.get("explode", 0.0)
         original = {stl: obj.location.copy() for stl, obj in objects.items()}
         if factor:
             for stl, obj in objects.items():
-                obj.location += (Vector(EXPLODE.get(stl, (0, 0, 0)))
+                obj.location += (Vector(explode.get(stl, (0, 0, 0)))
                                  * factor * size)
         direction = Vector(shot["direction"]).normalized()
         camera.location = center + direction * size * shot["distance"]
@@ -388,5 +411,8 @@ def render_shots(scene, center, size, objects):
 
 
 if __name__ == "__main__":
-    scene, center, size, objects = setup_scene()
-    render_shots(scene, center, size, objects)
+    for scene_name, definition in SCENES().items():
+        print(f"scene {scene_name}")
+        scene, center, size, objects = setup_scene(definition["parts"])
+        render_shots(scene, center, size, objects,
+                     definition.get("shots"), definition.get("explode"))

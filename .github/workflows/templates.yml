@@ -52,6 +52,17 @@ jobs:
           cp -R skills/physical-product/templates/common/. "$PROJ/"
           cp -R skills/physical-product/templates/solids/. "$PROJ/"
 
+      - name: Design record script (init, stage, next, check --strict)
+        working-directory: ${ env.PROJ }
+        run: |
+          python3 design_record.py init --name "CI solids" --slug ci-solids --language en \
+            --idea "a smoke-test product" --summary "exercises the record script" \
+            --verticals woodworking --stack solids
+          python3 design_record.py stage brief done
+          python3 design_record.py next concept --estimate "a minute"
+          python3 design_record.py check --strict
+          git log --oneline | grep -q "idea: recorded"
+
       - name: uv sync (with the recognise extra — exercises auto_holes)
         working-directory: ${{ env.PROJ }}
         run: uv sync --extra recognise
@@ -137,6 +148,17 @@ jobs:
           mkdir -p "$PROJ"
           cp -R skills/physical-product/templates/common/. "$PROJ/"
           cp -R skills/physical-product/templates/patterns2d/. "$PROJ/"
+
+      - name: Design record script (init, stage, next, check --strict)
+        working-directory: ${ env.PROJ }
+        run: |
+          python3 design_record.py init --name "CI patterns2d" --slug ci-patterns2d --language en \
+            --idea "a smoke-test product" --summary "exercises the record script" \
+            --verticals woodworking --stack patterns2d
+          python3 design_record.py stage brief done
+          python3 design_record.py next concept --estimate "a minute"
+          python3 design_record.py check --strict
+          git log --oneline | grep -q "idea: recorded"
 
       - name: uv sync
         working-directory: ${{ env.PROJ }}

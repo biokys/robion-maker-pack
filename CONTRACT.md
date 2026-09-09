@@ -88,3 +88,8 @@ Rules that hold across every stage:
   the map with the stale / needs-you states, and an answer the user edits
   there reaches the agent as a change request). The stage ids and statuses
   are therefore binding from pack 0.23 on, ahead of the contract bump.
+  Since pack 0.24.0 the record is written only by the project's
+  `design_record.py` (from `templates/common/`): every write stamps
+  `updated`, `stages[].updatedAt` and `tool` (`design_record.py/<version>`),
+  every gate is a git commit, and every control on the `brief` panel carries
+  `page: '<stage id>'` so the app can show the page of the current stage.

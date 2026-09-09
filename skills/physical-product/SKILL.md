@@ -20,7 +20,8 @@ The skill is layered — load only what the project needs:
 - **`references/stacks/`** — recipes: HOW artifacts get produced (solids =
   build123d, patterns2d = 2D cutting patterns, pcb = KiCad).
 - **`references/core/`** — shared conventions (workshop profile, design record,
-  toolchain & degrade, build sheet).
+  toolchain & degrade, build sheet, fit partners = real dimensions of what the
+  product mates with).
 
 **Language rule.** This pack is English and language-neutral by design; the
 product it produces is not. Work out the user's language from how they write
@@ -51,22 +52,28 @@ Missing file ⇒ run the one-time workshop interview and create it:
 
 **Design record second:** the project keeps its memory in `design.json` —
 idea, spec, every answer and who decided it, the chosen concept, the state of
-each stage, every change after a gate. Create it at the end of step 1, update
-it at every gate — before every stop-and-wait the waiting stage is `needs_you`,
-while you produce one it is `working`, after approval `done`; Robion draws the
-map of stages from it. Rules, schema, the brief panel:
+each stage, every change after a gate. It is written only by
+`design_record.py` (copied from the pack's `templates/common/` as the project's
+first file): one call per move, the script stamps the clock, keeps the record
+valid and commits every gate. Never edit `design.json` by hand. Before every
+stop-and-wait the waiting stage is `needs_you`, while you produce one it is
+`working`, after approval `done`; Robion draws the map of stages from it.
+Rules, commands, the brief panel:
 [references/core/design-record.md](references/core/design-record.md).
 
 Then STOP before any geometry. Three steps, dialogue in the user's language:
 
-1. **Brief analysis** — reading only (the profile, the playbooks); the one
-   file this step writes is the design record: restate the request as a spec
-   — function, users, must-haves, constraints, what the brief leaves open.
-   Route the vertical(s) now (§2; electronics inside ⇒ the pcb stack applies)
-   so each playbook's *Intake additions* join the question round. Post the
-   spec and write the design record — idea, spec, routed verticals, the ten
-   stages with `idea` done, `brief` needs_you (you are about to wait for the
-   answers) and the rest `pending`.
+1. **Brief analysis** — reading only (the profile, the playbooks); the only
+   files this step writes are the record and its script: restate the request
+   as a spec — function, users, must-haves, constraints, what the brief leaves
+   open. Route the vertical(s) now (§2; electronics inside ⇒ the pcb stack
+   applies) so each playbook's *Intake additions* join the question round.
+   Post the spec, copy `templates/common/design_record.py` and `.gitignore`
+   into the working directory, then
+   `python3 design_record.py init --name … --slug … --language … --idea "…"
+   --summary "…" --verticals … --stack … --label brief=… …` — it writes the
+   record with `idea` done, `brief` needs_you (you are about to wait for the
+   answers) and the rest `pending`, and makes the first commit.
 2. **Question round** — ask everything the spec leaves open, batched into
    groups, each question with a recommended default so the user can answer
    "ok" per group. The generic groups:
@@ -91,26 +98,28 @@ Then STOP before any geometry. Three steps, dialogue in the user's language:
    More questions are fine here — it is the cheapest place to ask. In Robion
    the preferred medium is a `brief` controls panel (task scope): `select` /
    `toggle` / `text` controls, every select with `default` = the recommended
-   value and *decide for me* as its first option, and one `send` button that
-   returns the answers as the next prompt (the concept gate adds `choices`
-   cards on the same panel; every later call on it is `mode: 'merge'` —
-   design-record.md). Robion draws the map of stages from the record, so the
+   value and *decide for me* as its first option, every control with
+   `page: 'brief'`, and one `send` button that returns the answers as the next
+   prompt (the concept gate adds `choices` cards with `page: 'concept'` on the
+   same panel; every later call on it is `mode: 'merge'` — design-record.md). Robion draws the map of stages from the record, so the
    panel carries no map. Keep that panel for the life of the project: a value
    the user changes later arrives as a controls diff with their next prompt
    and is a change request (§7). **Wait for the answers.** "Never stall" applies only to facts the
    user cannot know (a material constant, a standard, a catalogue size) —
    assume those and record them in the build sheet's assumptions section.
    Taste decisions — shape, ergonomics, UI, labels, colour — are never
-   assumed, in any mode, autonomous runs included. Record every answer in
-   the design record with who decided it (`user`, `default`, or `claude` plus
-   the reason), set `brief` done, and move on.
+   assumed, in any mode, autonomous runs included. Record every answer with
+   who decided it: `python3 design_record.py answers answers.json` (`user`,
+   `default`, or `claude` plus the reason), then move on — the concept
+   command below closes `brief`.
 3. **Concept gate** — a 2D block layout (component rectangles, key
    dimensions), the part list with alternatives, quick previews — and an
    explicit approval before the schematic or the detailed model exists.
    Approval freezes shape, UI and connector positions; §5 keys the expensive
-   stages on that freeze. Post the variants as `choices` cards, record them
-   with the recommended one and set `concept` needs_you; on approval record
-   the chosen one and `frozenAt` — the `concept` stage is done only then.
+   stages on that freeze. Post the variants as `choices` cards and record
+   them: `python3 design_record.py concept variants.json --recommended b`
+   (brief done, concept needs_you); on approval `python3 design_record.py
+   freeze <variant>` — the `concept` stage is done only then.
 
 ## 2 · Vertical routing
 
@@ -155,10 +164,11 @@ vertical:
 
 ## 4 · Scaffold & bootstrap
 
-New project: `git init` first (design iterations, retro and template
-migrations all lean on the history — a project without it can't answer
-"what changed"), then copy `templates/common/` plus the chosen stack's
-`templates/<stack>/` files flat into the repo root, **rename `[project].name`
+New project: the repository exists since `design_record.py init` (design
+iterations, retro and template migrations all lean on the history — every
+gate is a commit). Copy `templates/common/` plus the chosen stack's
+`templates/<stack>/` files flat into the repo root (skip the two files already
+there), **rename `[project].name`
 in pyproject.toml to the product slug**, **run `make l10n` and translate every
 listed string into the user's language** (the templates ship English — see the
 Language rule), fill the `{{PACK_VERSION}}` stamp in
@@ -177,13 +187,15 @@ missing: [references/core/toolchain.md](references/core/toolchain.md).
 ## 5 · Stage pipeline — cost-aware ordering
 
 Run stages in order; each has a gate. Skipping a stage is fine when the user
-says so — note it in the build sheet and set the stage `skipped` in the design
-record. While you produce a stage it is `working` (with `startedAt` and an
-`estimate` from the project's "Cost of a change"); while its gate waits for
-the user it is `needs_you`; passing the gate = `done`. Robion draws the map
-from these statuses — nothing to update on the panel. At every gate that
-waits, offer the next step as `send` buttons on the `brief` panel (Continue /
-Wait) so the user never needs the terminal to answer
+says so — note it in the build sheet: `python3 design_record.py stage <id>
+skipped --note …`. Starting a stage: `python3 design_record.py stage <id>
+working --estimate "…"` (or `next <id>`, which also closes the current one);
+before every stop for the user: `stage <id> needs_you`; passing the gate:
+`stage <id> done --artifact out/…`. The script stamps the times; Robion draws
+the map from these statuses — nothing to update on the panel. At every gate
+that waits, offer the next step as `send` buttons on the `brief` panel
+(Continue / Wait, `page: '<stage id>'`) so the user never needs the terminal
+to answer
 ([references/core/design-record.md](references/core/design-record.md)). Concrete commands live in the stack
 recipe ([solids](references/stacks/solids.md),
 [patterns2d](references/stacks/patterns2d.md)); the vertical playbook refines
@@ -256,9 +268,10 @@ in the project CLAUDE.md ("Gotchas learned here").
 Change requests after the concept freeze: state which expensive artifacts the
 change invalidates (routing? renders? drawings?) before regenerating them —
 the project CLAUDE.md's "Cost of a change" section lists the chain. Log the
-change in the design record first and set the invalidated stages `stale`
-(change protocol in design-record.md); they are `done` again only once
-regenerated.
+change first — `python3 design_record.py change <what> --from … --to …
+--invalidates …` marks the stages `stale` (change protocol in
+design-record.md); they are `done` again only once regenerated. A parameter
+edit forced by `make check` after the freeze is a change too.
 
 ## 8 · Degrade & uncertainty
 

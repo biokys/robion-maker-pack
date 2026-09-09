@@ -1,0 +1,132 @@
+# Scaffold for the post-freeze change case: the Pi 5 case past model and
+# previews, whose `make check` fails until GAP in model.py is raised from 5.0
+# to 5.6 mm. The fix is a change request against the frozen concept: logged
+# through design_record.py first (previews invalidated, the variant's fact
+# updated), the parameter edited second. No build123d in the eval workspace —
+# the other Makefile targets are no-ops.
+# Runs only with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+context:
+  scaffold_script: |
+    set -e
+    mkdir -p "$HOME/.robion"
+    cat > "$HOME/.robion/workshop.yaml" <<'YAML'
+    updated: 2026-09-08
+    language: en
+    country: CZ
+    currency: CZK
+    machines:
+      printer:
+        name: Bambu Lab P1S
+        bed_mm: [256, 256, 256]
+        nozzle_mm: 0.4
+        materials: [PLA, PETG]
+        slicer: Bambu Studio
+      laser: null
+      cnc: null
+    tools: [calipers, deburring tool, hex keys]
+    materials_on_hand:
+      - { name: "PETG black 1 kg", size_mm: [0, 0, 0], qty: 1 }
+    fasteners_on_hand: [M2.5 heat-set inserts, M2.5x6 screws]
+    suppliers: {}
+    workshop:
+      space: "desk"
+      finishing_available: []
+      no_go: []
+    skill_level: beginner
+    YAML
+
+    cat > design.json <<'JSON'
+    {
+      "version": 1,
+      "updated": "2026-09-08T12:00:00Z",
+      "tool": "design_record.py/0.24.0",
+      "product": { "name": "Pi 5 case", "slug": "pi5-case", "language": "en" },
+      "idea": { "text": "a printed case for a Raspberry Pi 5 with the active cooler, on a desk", "attachments": [] },
+      "spec": {
+        "summary": "Two-part PETG case for a Raspberry Pi 5 with the official active cooler; all ports reachable; four M2.5 inserts; printed on a Bambu Lab P1S.",
+        "verticals": ["3d-print"],
+        "stack": "solids",
+        "open": []
+      },
+      "questions": [
+        { "id": "cooler", "group": "function", "label": "Cooling", "answer": "official active cooler", "default": "official active cooler", "decidedBy": "user", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "mount", "group": "function", "label": "Mounting", "answer": "desk, rubber feet", "default": "desk, rubber feet", "decidedBy": "default", "answeredAt": "2026-09-08T11:00:00Z" },
+        { "id": "material", "group": "materials", "label": "Material", "answer": "PETG black", "default": "PETG", "decidedBy": "user", "answeredAt": "2026-09-08T11:00:00Z" }
+      ],
+      "concept": {
+        "variants": [
+          { "id": "a", "title": "Sleeve", "summary": "Board slides in from the side, one part plus a cap.", "facts": { "outer_mm": "98 x 68 x 32", "parts": 2 } },
+          { "id": "b", "title": "Tray and lid", "summary": "Board screwed to a tray, vented lid on four inserts.", "facts": { "outer_mm": "100 x 71 x 26", "parts": 2 } }
+        ],
+        "recommended": "b",
+        "chosen": "b",
+        "frozenAt": "2026-09-08T11:30:00Z"
+      },
+      "stages": [
+        { "id": "idea", "label": "Idea", "status": "done", "updatedAt": "2026-09-08T10:40:00Z" },
+        { "id": "brief", "label": "Brief", "status": "done", "updatedAt": "2026-09-08T11:00:00Z" },
+        { "id": "concept", "label": "Concept", "status": "done", "updatedAt": "2026-09-08T11:30:00Z" },
+        { "id": "model", "label": "Model", "status": "done", "artifacts": ["model.py"], "updatedAt": "2026-09-08T11:50:00Z" },
+        { "id": "preview", "label": "Previews", "status": "done", "artifacts": ["out/viz_hero.png"], "updatedAt": "2026-09-08T12:00:00Z" },
+        { "id": "drawings", "label": "Drawings", "status": "pending" },
+        { "id": "bom", "label": "Materials", "status": "pending" },
+        { "id": "plan", "label": "Print plan", "status": "pending" },
+        { "id": "analysis", "label": "Checks", "status": "pending" },
+        { "id": "buildsheet", "label": "Build sheet", "status": "pending" }
+      ],
+      "changes": []
+    }
+    JSON
+
+    cp "$CLAUDE_PLUGIN_ROOT/skills/physical-product/templates/common/design_record.py" . 2>/dev/null || true
+
+    cat > model.py <<'PY'
+    """Pi 5 case — eval stub, no build123d in this workspace.
+
+    Parameters are the single source of truth; the real template reads
+    ROBION_PARAMS and builds the PARTS registry from them.
+    """
+    BOARD = (85.0, 56.0, 1.6)   # reference: Raspberry Pi 5 mechanical drawing
+    WALL = 2.0
+    GAP = 5.0                    # clearance board edge -> inner wall
+    LID_VENT_MM = 3.0
+    PY
+
+    cat > Makefile <<'MK'
+    parts bom:
+    	@echo "$@ ok"
+
+    check:
+    	@python3 -c "import re,sys; g=float(re.search(r'GAP = ([0-9.]+)', open('model.py').read()).group(1)); ok=g>=5.6; print('check: ok' if ok else f'check: FAIL clearance board -> inner wall {g} mm, the USB-C plug needs 5.6 mm'); sys.exit(0 if ok else 1)"
+
+    viz drawings-png drawings-pdf fea pdf:
+    	@echo "$@ (expensive) ok"
+    MK
+
+    cat > CLAUDE.md <<'MD'
+    # Pi 5 case — project notes
+
+    Scaffolded from the Maker Pack templates (pack 0.24.0). The parametric
+    source of truth is `model.py`; `design.json` is the design record, written
+    only by `design_record.py` next to it.
+
+    ## Cost of a change
+
+    Cheap (seconds): `make parts check bom`, the live viewport. Expensive
+    (minutes, order-dependent — name which of them a change invalidates before
+    rerunning): `make viz` (~3 min), `make drawings-png` (~6 min), `make pdf`.
+    Any parameter edit after the concept freeze — including one forced by
+    `make check` — is a change: record it first with
+    `python3 design_record.py change model.<param> --from … --to … --invalidates …`.
+
+    ## Gotchas learned here
+    MD
+
+    mkdir -p out/parts
+    printf 'placeholder render\n' > out/viz_hero.png
+    printf 'solid tray\nendsolid tray\n' > out/parts/tray.stl
+    printf 'solid lid\nendsolid lid\n' > out/parts/lid.stl
+    printf 'placeholder step\n' > out/parts/tray.step
+    printf 'placeholder step\n' > out/parts/lid.step
+    printf '# Pi 5 case\n\nConcept B (tray and lid) approved 2026-09-08.\n' > README.md

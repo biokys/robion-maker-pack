@@ -13,8 +13,11 @@ metal/wood redesign instead.
 - Which material for THIS part (from the profile's `materials`): PLA (easy,
   stiff, hates heat/UV), PETG (tougher, outdoor-ok), ASA/ABS (heat, enclosure
   needed). Record the choice and why under "Assumptions".
-- Fit partners: what does the part mate with — get the real dimensions of the
-  mating object measured, never guessed.
+- Fit partners: what does the part mate with — name the 3–6 dimensions you
+  need and get them from a vendor STEP or drawing, calipers or a photo with a
+  ruler, never guessed ([core/fit-partners.md](../core/fit-partners.md)); the
+  mating object becomes a `reference=True` part so `make check` fits against
+  it.
 - Load direction: layer adhesion is the weak direction — printed parts are
   weakest in tension across layers.
 
@@ -38,16 +41,20 @@ Stack: **solids**.
 - **Drawings** — usually skipped (the STL is the deliverable); keep a
   dimensioned drawing only for parts others must verify or machine later.
 - **BOM** — part mass from `Shape.volume × density` is the SOLID mass; real
-  print weight is lower (infill) — report the solid mass as an upper bound,
-  or the slicer's estimate when available, and say which one it is.
-- **Make plan** — per part: material, orientation (photo/render of the part
-  lying as printed), supports yes/no and where, first-layer notes, any
-  post-processing (tapping, inserts, drilling to size).
-- **Slicing** — if PrusaSlicer exists on the machine, it can slice headless:
-  `prusa-slicer --export-gcode` with the user's printer profile; the G-code
-  header carries the time and filament estimates — quote them in the BOM.
-  No slicer on PATH ⇒ hand the user the STL and the orientation notes, and
-  say the estimate is missing.
+  print weight is lower (infill) — report the solid mass as an upper bound and
+  say so. Print time and filament use come from the user's slicer: leave a
+  "from your slicer" line, never quote a figure you did not get from the user.
+- **Make plan = the print plan** — the deliverable is STL + STEP + settings for
+  the user's own slicer (named in the workshop profile, `printer.slicer`), as
+  a table per part: the file to load (`out/parts/<part>_print.stl` in print
+  orientation when it differs from assembly coordinates, plus `<part>.step`),
+  material, layer height, walls in that slicer's own words (Bambu Studio "wall
+  loops", PrusaSlicer "perimeters"), top/bottom layers, infill % and pattern,
+  supports (none / where), brim, elephant-foot compensation, first-layer and
+  plate notes, post-processing (tapping, inserts, drilling to size); plus a
+  render of the part lying as printed. **Robion never slices**: no slicer CLI,
+  no G-code, no 3MF, no `slicing/`, no `out/slice/` — the maker loads the STL
+  with the plan's settings, checks the preview and slices in their own slicer.
 
 ## Materials & stock
 
@@ -60,14 +67,15 @@ suppliers; never invent a supplier or a price, and leave prices per project.
 
 ## Last mile
 
-The user slices (or reviews the provided G-code), starts the print themselves,
-and post-processes per the make plan. In Robion, print progress can be watched
+The user loads the STL with the print plan's settings into their own slicer,
+checks the preview, starts the print themselves, and post-processes per the
+make plan. In Robion, print progress can be watched
 via the cockpit when the user wires a probe to their printer's API — never
 assume it exists.
 
 ## Safety gates
 
-**The agent never starts a print** — G-code is handed over, the click is the
-user's. Build sheet must warn about: ASA/ABS fumes (ventilation/enclosure),
+**The agent never slices and never starts a print** — STL and the print plan
+are handed over; the slicer and the click are the user's. Build sheet must warn about: ASA/ABS fumes (ventilation/enclosure),
 first print of a fit feature is a test fit, and load-bearing prints: state the
 load assumption and the weak direction explicitly.

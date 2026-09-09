@@ -9,6 +9,42 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.24.0
+
+**The record is written by a script, and 3D printing stops at the print
+plan.** The first real run of the Robion 0.13 design panel (2026-09-09, a
+Raspberry Pi 5 case) showed the record with invented o'clock timestamps, an
+empty change log after a post-freeze parameter change, no commits, and the
+agent driving a slicer CLI. Changes:
+
+- `templates/common/design_record.py` (new, stdlib only) is the only writer
+  of `design.json`: `init`, `answers`/`answer`, `concept`, `freeze`,
+  `stage`, `next`, `change`, `merge`, `check --strict`. It stamps the clock
+  (`updated`, `stages[].updatedAt`, `startedAt`, `answeredAt`, `changes[].at`,
+  `tool`), validates against the app schema, refuses a second current stage,
+  and commits every gate. `templates/common/.gitignore` (new).
+- SKILL.md §1/§4/§5/§7 and design-record.md speak in those commands; every
+  control on the `brief` panel carries `page: '<stage id>'`; preset notes.
+- 3d-print.md: the deliverable is the **print plan** (STL in print orientation
+  + STEP + settings in the user's slicer's words); never a slicer CLI, G-code,
+  3MF, `slicing/` or `out/slice/`. workshop-profile: `printer.slicer`.
+- `templates/solids/blender_viz.py`: `SCENES()` (a second scene = print
+  orientation, exploded kit) — materials after `read_factory_settings`.
+- `templates/solids/model.py`: `PartSpec.reference` — a mating object built
+  for `make check` and the renders, without BOM row or drawing;
+  `references/core/fit-partners.md` (new) says where its dimensions come from.
+- `templates/common/buildsheet.html`: the `EXTRA_FIGURES` slot is mentioned
+  once in the comment and filled once.
+
+**Migrate:** copy `templates/common/design_record.py` and `.gitignore` into
+the project, run `python3 design_record.py check --strict` and fix what it
+lists (typically: o'clock timestamps stay, but future writes go through the
+script), add the "Design record" commands to the project CLAUDE.md, and — for
+a printed product — delete any `slice.py`, `slicing/`, `out/slice/` and the
+`make slice` target; the print plan in the build sheet replaces them. The
+`SCENES` and `reference` changes are opt-in: re-copy `blender_viz.py` /
+`model.py` only when the project needs a second scene or a fit partner.
+
 ## v0.23.0
 
 **Status discipline and no more map on the panel.** A review of the Robion
