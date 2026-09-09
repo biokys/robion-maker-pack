@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-TOOL = "design_record.py/0.24.0"
+TOOL = "design_record.py/0.24.1"
 FILE = "design.json"
 MAX_BYTES = 512_000
 

@@ -9,6 +9,16 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.24.1
+
+**CalculiX under its Homebrew name.** `brew install calculix-ccx` installs `ccx_2.23`
+and no bare `ccx`, so `fea.py` (and the toolchain check) reported the solver missing on
+a machine that had it. `find_ccx()` in `templates/solids/fea.py` accepts both and hands
+the path to pygccx; toolchain.md and fea-recipe.md say so.
+
+**Migrate:** copy `find_ccx()` into the project's `fea.py` (or re-copy the template) when
+the analysis stage claims ccx is missing although Homebrew has it.
+
 ## v0.24.0
 
 **The record is written by a script, and 3D printing stops at the print

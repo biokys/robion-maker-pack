@@ -18,7 +18,7 @@ Run `make doctor` (in the template Makefile) to print this table live.
 | Chrome (SVG→PNG) | app bundle | `/Applications/Google Chrome.app/Contents/MacOS/Google Chrome` |
 | OpenSCAD (fallback CAD) | app bundle | `/Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD` |
 | kicad-cli (PCB) | app bundle | `/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli` |
-| ccx / CalculiX (FEA solver) | `command -v ccx` | **not installed by default** |
+| ccx / CalculiX (FEA solver) | `command -v ccx` or `ls "$(brew --prefix)/bin"/ccx_*` — Homebrew installs the versioned `ccx_2.23` without a bare `ccx`; `fea.py`'s `find_ccx()` accepts both | **not installed by default** |
 
 CalculiX install (Apple Silicon, maintained tap): `brew install
 costerwi/calculix/calculix-ccx`. **Ask the user before installing anything via

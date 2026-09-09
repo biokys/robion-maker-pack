@@ -15,7 +15,9 @@ Run:  uv run --extra fea fea.py          # full analysis (needs ccx on PATH)
 
 from __future__ import annotations
 
+import re
 import shutil
+import os
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -76,6 +78,22 @@ MESH_SIZE_MM = 4.0        # EDIT-ME: ~ smallest wall thickness
 N_MODES = 8
 
 
+def find_ccx() -> str | None:
+    """CalculiX on PATH: `ccx`, else the versioned `ccx_2.23` Homebrew installs without a
+    bare `ccx` link. Returns the path to hand to pygccx (`ccx_path`), None when absent."""
+    found = shutil.which("ccx")
+    if found:
+        return found
+    for directory in os.environ.get("PATH", "").split(os.pathsep):
+        try:
+            names = sorted(n for n in os.listdir(directory) if re.fullmatch(r"ccx_\d+(\.\d+)*", n))
+        except OSError:
+            continue
+        if names:
+            return os.path.join(directory, names[-1])
+    return None
+
+
 def _require_complete(block, name: str) -> None:
     missing = [k for k, v in vars(block).items() if v is None]
     if missing:
@@ -129,7 +147,8 @@ def run_fea() -> str:
     """
     import gmsh  # provided by the uv 'fea' extra (wheel bundles the library)
 
-    if shutil.which("ccx") is None:
+    ccx = find_ccx()
+    if ccx is None:
         return ("## FEA\n\nStrength and modal analysis is an analytic "
                 "estimate only — the FEA solver (CalculiX) is not installed; "
                 "install with: "
@@ -150,7 +169,8 @@ def run_fea() -> str:
     finally:
         gmsh.finalize()
 
-    # EDIT-ME: pygccx model — material, SPC on "FIX", loads, steps:
+    # EDIT-ME: pygccx model (pass ccx_path=ccx: Homebrew names the solver ccx_2.23) —
+    # material, SPC on "FIX", loads, steps:
     #   static step + frequency step (N_MODES); solve; read .frd results.
     # Sanity checks before reporting (fea-recipe.md):
     #   sum(reactions) == sum(loads); f1_FEA within ~2x of ANALYTIC.f1;
