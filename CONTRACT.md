@@ -84,7 +84,7 @@ Rules that hold across every stage:
   (`pending | working | needs_you | done | stale | skipped`) and a change log.
   A **content-level convention since pack 0.22.0** (schema, stage ids and
   rules: `skills/physical-product/references/core/design-record.md`; the
-  `steps` map on the `brief` panel is its visible twin today). Contract v2
-  makes it app-binding: the app's design panel reads it, renders the map with
-  the stale / needs-you states, and an answer the user edits there reaches
-  the agent as a change request.
+  Robion 0.13 reads it: the design panel and the phone's design tab render
+  the map with the stale / needs-you states, and an answer the user edits
+  there reaches the agent as a change request). The stage ids and statuses
+  are therefore binding from pack 0.23 on, ahead of the contract bump.

@@ -44,6 +44,15 @@ variables; blender is on PATH.
 - Verify visuals by rendering PNG and Reading it; Blender exit code is
   meaningless (Makefile greps the log).
 
+## Design record
+
+`design.json` in this folder is the design record: the idea, every answer and
+who decided it, the chosen concept, the ten stages with their status and the
+log of changes. Update it at every gate and log every change after the
+freeze (rules: the maker pack's `references/core/design-record.md`); Robion
+draws its design panel from it, and a session that skips it leaves the panel
+lying.
+
 ## Cost of a change
 
 Cheap (seconds — run freely while iterating): `make parts check bom`, the

@@ -52,18 +52,21 @@ Missing file ⇒ run the one-time workshop interview and create it:
 **Design record second:** the project keeps its memory in `design.json` —
 idea, spec, every answer and who decided it, the chosen concept, the state of
 each stage, every change after a gate. Create it at the end of step 1, update
-it at every gate; in Robion it also drives the `steps` map on the `brief`
-panel. Rules, schema, the map:
+it at every gate — before every stop-and-wait the waiting stage is `needs_you`,
+while you produce one it is `working`, after approval `done`; Robion draws the
+map of stages from it. Rules, schema, the brief panel:
 [references/core/design-record.md](references/core/design-record.md).
 
 Then STOP before any geometry. Three steps, dialogue in the user's language:
 
-1. **Brief analysis** — reading only (the profile, the playbooks), no other
-   tools: restate the request as a spec — function, users, must-haves,
-   constraints, what the brief leaves open. Route the vertical(s) now (§2;
-   electronics inside ⇒ the pcb stack applies) so each playbook's *Intake
-   additions* join the question round. Post the spec and write the design
-   record — idea, spec, routed verticals, all ten stages `pending`.
+1. **Brief analysis** — reading only (the profile, the playbooks); the one
+   file this step writes is the design record: restate the request as a spec
+   — function, users, must-haves, constraints, what the brief leaves open.
+   Route the vertical(s) now (§2; electronics inside ⇒ the pcb stack applies)
+   so each playbook's *Intake additions* join the question round. Post the
+   spec and write the design record — idea, spec, routed verticals, the ten
+   stages with `idea` done, `brief` needs_you (you are about to wait for the
+   answers) and the rest `pending`.
 2. **Question round** — ask everything the spec leaves open, batched into
    groups, each question with a recommended default so the user can answer
    "ok" per group. The generic groups:
@@ -87,25 +90,27 @@ Then STOP before any geometry. Three steps, dialogue in the user's language:
 
    More questions are fine here — it is the cheapest place to ask. In Robion
    the preferred medium is a `brief` controls panel (task scope): `select` /
-   `toggle` / `text` controls with the defaults preselected, *decide for me*
-   as the first option of every select, the `steps` design map at the top,
-   and one `send` button that returns the answers as the next prompt (the
-   concept gate uses `choices` cards on the same panel — design-record.md). Keep
-   that panel for the life of the project: a value the user changes later
-   arrives as a controls diff with their next prompt and is a change request
-   (§7). **Wait for the answers.** "Never stall" applies only to facts the
+   `toggle` / `text` controls, every select with `default` = the recommended
+   value and *decide for me* as its first option, and one `send` button that
+   returns the answers as the next prompt (the concept gate adds `choices`
+   cards on the same panel; every later call on it is `mode: 'merge'` —
+   design-record.md). Robion draws the map of stages from the record, so the
+   panel carries no map. Keep that panel for the life of the project: a value
+   the user changes later arrives as a controls diff with their next prompt
+   and is a change request (§7). **Wait for the answers.** "Never stall" applies only to facts the
    user cannot know (a material constant, a standard, a catalogue size) —
    assume those and record them in the build sheet's assumptions section.
    Taste decisions — shape, ergonomics, UI, labels, colour — are never
    assumed, in any mode, autonomous runs included. Record every answer in
    the design record with who decided it (`user`, `default`, or `claude` plus
-   the reason) before moving on.
+   the reason), set `brief` done, and move on.
 3. **Concept gate** — a 2D block layout (component rectangles, key
    dimensions), the part list with alternatives, quick previews — and an
    explicit approval before the schematic or the detailed model exists.
    Approval freezes shape, UI and connector positions; §5 keys the expensive
-   stages on that freeze. Record the variants, the recommended and the chosen
-   one and `frozenAt`; the `concept` stage is done only then.
+   stages on that freeze. Post the variants as `choices` cards, record them
+   with the recommended one and set `concept` needs_you; on approval record
+   the chosen one and `frozenAt` — the `concept` stage is done only then.
 
 ## 2 · Vertical routing
 
@@ -173,8 +178,12 @@ missing: [references/core/toolchain.md](references/core/toolchain.md).
 
 Run stages in order; each has a gate. Skipping a stage is fine when the user
 says so — note it in the build sheet and set the stage `skipped` in the design
-record. Passing a gate = the stage `done` in the record and the map's `current`
-advanced by one `set_controls` merge of the `design_map` control
+record. While you produce a stage it is `working` (with `startedAt` and an
+`estimate` from the project's "Cost of a change"); while its gate waits for
+the user it is `needs_you`; passing the gate = `done`. Robion draws the map
+from these statuses — nothing to update on the panel. At every gate that
+waits, offer the next step as `send` buttons on the `brief` panel (Continue /
+Wait) so the user never needs the terminal to answer
 ([references/core/design-record.md](references/core/design-record.md)). Concrete commands live in the stack
 recipe ([solids](references/stacks/solids.md),
 [patterns2d](references/stacks/patterns2d.md)); the vertical playbook refines
@@ -217,8 +226,8 @@ exists, the cockpit is part of stage 1, not an optional extra (read
 - `image` tiles for renders, drawings, cut plans — they refresh on their own
   whenever the files are regenerated.
 - A `set` preset button restoring the defaults.
-- The `brief` panel (design map + answers) stays alongside the cockpit; never
-  fold it into the cockpit or remove it.
+- The `brief` panel (answers, concept cards, next-step buttons) stays alongside
+  the cockpit; never fold it into the cockpit or remove it.
 
 Keep the cockpit current as stages advance (BOM stage: a shopping `checklist`;
 plans: image tiles of the sheets). No `set_controls` tool (a bare terminal) ⇒

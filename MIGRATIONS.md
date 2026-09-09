@@ -9,6 +9,38 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.23.0
+
+**Status discipline and no more map on the panel.** A review of the Robion
+0.13 design panel (2026-09-09) showed the record's stages were written all
+`pending` and never `needs_you`, so the app's map said "not started" exactly
+while the agent waited for the user; and the `design_map` steps control on the
+`brief` panel drew a second, contradicting map under the app's own. Spine
+changes:
+
+- §1: the record is created with `idea` done and `brief` needs_you; before
+  every stop-and-wait the waiting stage is `needs_you`, while producing
+  `working` (+ `startedAt`, `estimate`), after approval `done`.
+- §1/§5: the `steps` design map is gone — Robion draws the map from the record.
+  The `brief` panel carries the questions (every select with `default`),
+  the concept `choices` cards (`width: 'full'`, send gated by `enabledWhen`)
+  and next-step `send` buttons (continue / wait / back) at every gate and
+  after a change request. Every call after the first is `mode: 'merge'`.
+- design-record.md: variant ids follow the question-id rule (snake_case,
+  <= 40 chars); `estimate` / `startedAt` on stages, `cost` on changes; a change
+  arriving from the app also re-defines the affected control; omit unknown
+  fields instead of `null`; never paste the record into the chat.
+- Evals: graders for `idea: done` / `brief: needs_you` after intake; the
+  change-request graders no longer depend on JSON key order or on the agent
+  refraining from cheap regeneration.
+
+Template change: both `CLAUDE.md.template` files gained a **Design record**
+section so a session that does not trigger the skill still knows the file.
+
+**Migrate:** optional — copy the "Design record" section into the project's
+CLAUDE.md; on the next gate set the current stage's status per the discipline
+above; `remove_controls` the `design_map` key from the `brief` panel.
+
 ## v0.22.2
 
 The design map example named a panel icon Robion does not have (`route`); it is
