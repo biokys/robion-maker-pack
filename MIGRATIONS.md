@@ -9,6 +9,30 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.27.2
+
+**What a CNC aluminium bottle opener taught the solids stack** (2026-09-10, the retro of
+test-w3). Changes in `templates/solids/` unless noted:
+
+- `blender_viz.py`: the camera's clip range follows the scene size (Blender's default
+  0.1 m near plane cut a 66 mm part into a grey band on the close shot).
+- `model.py`: `_apply_robion_params` keeps a fractional slider value on an integer default as
+  a float and says so, instead of truncating 6.5 to 6; the PARAMETERS comment says dimensions
+  are floats, counts ints (CONTRACT.md §2 too).
+- `model.py` / `buildsheet.py`: `mass_unit()` + `format_mass()` — grams for a table whose
+  total is under a kilogram (a 19 g part is no longer "0.02 kg"), kilograms above.
+- `drawings.py`: `lint-selftest` runs over a synthetic plate, not the project's parts — it
+  survives the demo bracket being replaced.
+- `common/design_record.py` 0.27.2: a `gallery` in `show` also accepts `paths` (normalized to
+  `images`); `show` prints a timeline (minutes per stage against the estimate).
+- `references/verticals/cnc-router.md`: aluminium on a hobby router (single-flute tool, shallow
+  passes, lubrication, engraving first, hand chamfers, blank margin as a cut-plan parameter).
+- SKILL.md §9: the retro includes the stage timeline.
+
+**Migrate:** re-copy `blender_viz.py`, `drawings.py` (or only `lint_selftest`), `design_record.py`;
+port `_apply_robion_params` and the two mass helpers into the project's `model.py` and use them
+in `buildsheet.py`.
+
 ## v0.27.1
 
 **CalculiX found the same way everywhere.** 0.24.1 taught `fea.py` the versioned Homebrew

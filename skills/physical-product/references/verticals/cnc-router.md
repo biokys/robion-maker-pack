@@ -52,6 +52,31 @@ exp.write("out/cam/plate.dxf")
 4. Depth per pass ≤ tool diameter/2 for wood, less for plywood edges.
 5. First run: air pass at +5 mm Z.
 
+## Aluminium on a hobby router
+
+Small aluminium parts (openers, brackets, plates from 6082/5754 sheet) machine
+well on a LowRider-class frame when the recipe respects the machine, not the
+material catalogue:
+
+- **Tool:** single-flute carbide (1Z, 3–6 mm) for chip evacuation; never a
+  wood spiral. Sharp, short stick-out.
+- **Passes:** shallow — 0.3–0.5 mm per pass for 6082 on a hobby frame
+  (rigidity, not the tool, sets the limit); full-width slots slower than
+  profile passes; climb for finish.
+- **Lubrication/cooling:** WD-40 or isopropanol mist by hand every few
+  passes; dry aluminium welds chips to the flute within seconds.
+- **Order of operations:** engraving first (flat, clamped stock, no bridges
+  in the way), then pockets, then the outer profile with tabs last.
+- **Chamfers and edge breaks** on the finished part are hand work (file,
+  deburring tool) unless the workshop has a chamfer mill — say so in the
+  build plan, do not draw them as machined.
+- **Blank margin:** the stock needs room for tabs and hold-down screws
+  around the outline — declare it as a cut-plan parameter
+  (`CNC_MARGIN`, e.g. 15 mm per side) in `cutlist.py`'s STOCK, never as a
+  hidden override of the part size.
+- **Verify the DXF before the first cut** exactly as above (re-import, one
+  known dimension), then an air pass at +5 mm.
+
 ## Build sheet integration
 
 CNC parts get a BOM note (`mill per out/cam/<part>.dxf`), and the footer

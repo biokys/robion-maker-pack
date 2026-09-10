@@ -40,7 +40,9 @@ values:
   derived values are computed. The template's `_apply_robion_params()` (in
   `templates/solids/model.py` since pack 0.2.0; `templates/patterns2d/pattern.py`
   implements the same contract) is the reference implementation: it
-  overrides only existing scalar parameters, preserves each parameter's type,
+  overrides only existing scalar parameters, preserves each parameter's type (an
+  integer default that receives a fractional value becomes a float, with a warning —
+  dimensions belong in floats, counts in ints),
   warns on stderr about unknown keys, and is a no-op without the variable.
 - **OpenSCAD** — the values arrive as `-D key=value` definitions (arrays are
   rendered as OpenSCAD vectors).

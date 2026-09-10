@@ -71,7 +71,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-VERSION = "0.27.1"
+VERSION = "0.27.2"
 TOOL = f"design_record.py/{VERSION}"
 FILE = "design.json"
 LOCK_FILE = "design.json.lock"
@@ -339,6 +339,8 @@ def validate_show(show: Any, where: str) -> None:
         if kind not in SHOW_TYPES:
             raise RecordError(f"{where}: show type must be one of {', '.join(SHOW_TYPES)}")
         if kind == "gallery":
+            if "images" not in item and isinstance(item.get("paths"), list):
+                item["images"] = item.pop("paths")  # the alias agents reach for; normalized
             images = item.get("images")
             if not isinstance(images, list) or not images:
                 raise RecordError(f"{where}: a gallery needs images")
@@ -1098,7 +1100,22 @@ def summary(record: dict[str, Any]) -> dict[str, Any]:
     replies.sort(key=lambda item: item[1].get("at", ""))
     last_reply = {"stage": replies[-1][0], **replies[-1][1]} if replies else None
     ask_stage = next((s for s in record.get("stages", []) if s.get("ask")), None)
+    timeline = []
+    for s in record.get("stages", []):
+        started, updated = s.get("startedAt"), s.get("updatedAt")
+        minutes = None
+        if started and updated and s.get("status") not in ("working", "pending"):
+            try:
+                a = datetime.strptime(started, "%Y-%m-%dT%H:%M:%SZ")
+                b = datetime.strptime(updated, "%Y-%m-%dT%H:%M:%SZ")
+                minutes = max(0, round((b - a).total_seconds() / 60))
+            except ValueError:
+                minutes = None
+        timeline.append(prune({"id": s["id"], "status": s.get("status"), "startedAt": started,
+                               "finishedAt": updated if s.get("status") in ("done", "skipped", "stale") else None,
+                               "minutes": minutes, "estimate": s.get("estimate")}))
     return {
+        "timeline": timeline,
         "product": record.get("product"),
         "updated": record.get("updated"),
         "tool": record.get("tool"),
@@ -1166,6 +1183,11 @@ def cmd_show(args: argparse.Namespace) -> None:
     if info["lastChange"]:
         change = info["lastChange"]
         print(f"Changes: {info['changes']} (last: {change.get('what')} {change.get('from', '')} -> {change.get('to', '')} at {change.get('at')})")
+    timed = [t for t in info["timeline"] if t.get("minutes") is not None]
+    if timed:
+        print("Timeline (stage: minutes from `working` to the last move, estimate):")
+        for entry in timed:
+            print(f"  {entry['id']:<10} {entry['minutes']:>4} min" + (f"  (estimate {entry['estimate']})" if entry.get("estimate") else ""))
     print("Rules:")
     for index, rule in enumerate(RULES, 1):
         print(f"  {index}. {rule}")

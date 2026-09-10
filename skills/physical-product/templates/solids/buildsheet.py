@@ -220,6 +220,7 @@ def build() -> None:
     today = datetime.date.today().isoformat()
     total_kg, _cog = model.mass_properties()
     bom = model.bom_rows()
+    unit = model.mass_unit(total_kg)  # grams for a light thing, kilograms otherwise
     manifest = json.loads((OUT / "drawings" / "manifest.json").read_text())["sheets"]
     plans, _uncovered = cutlist.plan_all()
     purchase = cutlist.purchase_rows(plans)
@@ -234,7 +235,7 @@ def build() -> None:
         "DIMENSIONS": esc(f"{model.bracket_leg_a:g} × {model.bracket_leg_b:g} × {model.bracket_width:g} mm"),
         "MATERIAL": esc(", ".join(sorted({s.material.local_name for s in model.PARTS.values()
                                           if not getattr(s, "reference", False)}))),
-        "MASS": f"{total_kg:.2f} kg (parts only)",
+        "MASS": f"{model.format_mass(total_kg, unit)} (parts only)",
         "DATE": today,
         "CONCEPT_PARAGRAPH": esc(concept_paragraph()),
         "PARAMETER_ROWS": "".join(
@@ -248,10 +249,10 @@ def build() -> None:
                    f"{e['title']} · scale {e['scale']} on A3", png=True)
             for e in manifest if (OUT / "drawings" / f"{e['name']}.png").exists()),
         "PRINT_NOTE": esc(PRINT_NOTE),
-        "BOM_MATERIAL_CAPTION": esc(f"Parts — total {total_kg:.2f} kg"),
+        "BOM_MATERIAL_CAPTION": esc(f"Parts — total {model.format_mass(total_kg, unit)}"),
         "BOM_ROWS": "".join(
             f'<tr><td class="num">{i}</td><td>{esc(name)}</td><td class="size">{esc(size_by_row(name))}</td>'
-            f'<td class="num">{count}</td><td class="num">{mass:.2f} kg/pc</td><td>{esc(note)}</td></tr>'
+            f'<td class="num">{count}</td><td class="num">{model.format_mass(mass, unit)}/pc</td><td>{esc(note)}</td></tr>'
             for i, name, _mat, count, mass, note in bom),
         "PURCHASE_ROWS": "".join(
             f'<tr><td>{esc(n)}</td><td>{esc(kind)}</td><td class="num">{q} pcs</td>'

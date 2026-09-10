@@ -1083,15 +1083,20 @@ def sheet_overview() -> None:
 
 def lint_selftest() -> None:
     """Deliberately broken annotations must trip the lints, clean ones must
-    stay silent. Exit non-zero on mismatch (CI runs this)."""
+    stay silent. Exit non-zero on mismatch (CI runs this). Works on a
+    synthetic plate, never on the project's parts — it survives the model
+    being replaced."""
     if not _DRAFTING:
         print("lint-selftest skipped (build123d_drafting missing)")
         return
-    part = model.PARTS["bracket"].builder()
+    length, width, thick, hole_x, hole_d = 100.0, 60.0, 5.0, 20.0, 8.0
+    part = Box(length, width, thick, align=(Align.MIN, Align.MIN, Align.MIN))
+    part -= Pos(hole_x, width / 2, 0) * Cylinder(
+        hole_d / 2, thick, align=(Align.CENTER, Align.CENTER, Align.MIN))
     s = Sheet("selftest", "ST-01", "SELFTEST", 1, "test")
     v = View(part, "front")
     s.add_view(v)
-    a, b = v.pt(0, 0, 0), v.pt(model.bracket_leg_a, 0, 0)
+    a, b = v.pt(0, 0, 0), v.pt(length, 0, 0)
     s.dim(a, b, "below", 10, "99")          # wrong -> 1 truth finding
     s.dim(a, b, "below", 18, "(60)")        # reference -> skipped
     s.dim(a, b, "below", 26, "2× 30")       # count -> skipped
@@ -1101,9 +1106,9 @@ def lint_selftest() -> None:
         print(f"SELFTEST FAIL: expected 1 dim-truth finding, got {truth}")
         ok = False
     # duplicate dim at the same offset -> label x label overlap
-    s.dim(a, b, "below", 10, f"{model.bracket_leg_a:.0f}")
+    s.dim(a, b, "below", 10, f"{length:.0f}")
     # a note dropped on the part outline -> part-edge finding
-    s.note("ON EDGE", v.pt(model.bracket_leg_a / 2, 0, model.thickness))
+    s.note("ON EDGE", v.pt(length / 2, 0, thick))
     # a centerline through the '99' label -> foreign-segment finding
     lb = next(x.label_bbox for x in s.layers["dims"]
               if getattr(x, "label", None) == "99")
@@ -1119,11 +1124,11 @@ def lint_selftest() -> None:
     s2 = Sheet("selftest2", "ST-02", "SELFTEST2", 1, "test")
     v2 = View(part, "top")
     s2.add_view(v2)
-    mid = model.bracket_width / 2
-    hole = (model.hole_positions_a[0][0], mid, 0)
+    mid = width / 2
+    hole = (hole_x, mid, 0)
     det = s2.detail(v2, hole, 11.0, "2:1", at=(200.0, 0.0))
-    s2.dim(det.pt(hole[0] - 4, mid, 0), det.pt(hole[0] + 4, mid, 0),
-           "above", 10, "8")
+    s2.dim(det.pt(hole[0] - hole_d / 2, mid, 0), det.pt(hole[0] + hole_d / 2, mid, 0),
+           "above", 10, f"{hole_d:.0f}")
     extra = s2._lint_dims()
     if extra:
         print(f"SELFTEST FAIL: detail dim false positive: {extra}")
@@ -1131,7 +1136,6 @@ def lint_selftest() -> None:
     print("lint-selftest OK" if ok else "lint-selftest FAILED")
     if not ok:
         raise SystemExit(1)
-
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "lint-selftest":

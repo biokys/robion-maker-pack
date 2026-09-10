@@ -424,6 +424,10 @@ def render_shots(scene, center, size, objects, shots=None, explode=None):
         direction = Vector(shot["direction"]).normalized()
         camera.location = center + direction * size * shot["distance"]
         camera.data.lens = shot["lens"]
+        # Blender's default clip range (0.1 m … 1 km) is made for rooms: a close shot of a
+        # 66 mm part clips the geometry into a grey band. Scale it to the scene instead.
+        camera.data.clip_start = max(size * 0.01, 1e-5)
+        camera.data.clip_end = max(size * 200.0, 10.0)
         target = center + Vector(shot.get("target_offset", (0, 0, 0))) * size
         aim(camera, target)
         scene.render.filepath = str(out_dir() / f"{name}.png")

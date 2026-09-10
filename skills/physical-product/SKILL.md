@@ -357,8 +357,10 @@ assumptions & uncertainties section listing every assumption made.
 ## 9 · Retrospective (end of project)
 
 After the user approves the build sheet, write `RETRO.md` into the project:
-what worked, what ground (ordered by severity), and every gotcha already
-recorded in the project CLAUDE.md. Then offer to turn the findings into pack
+what worked, what ground (ordered by severity), every gotcha already
+recorded in the project CLAUDE.md, and the timeline `python3 design_record.py
+show` prints (minutes per stage against the estimates) — where the time went
+is a finding too. Then offer to turn the findings into pack
 patches — templates, stack recipes, and vertical playbooks improve only
 through this loop (MIGRATIONS.md in the pack repo tracks what changed between
 versions for running projects). Vertical lessons with no playbook yet ⇒

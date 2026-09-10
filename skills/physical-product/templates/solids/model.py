@@ -56,11 +56,20 @@ def _apply_robion_params() -> None:
         return
     params = globals()
     for key, value in overrides.items():
-        if key.startswith("_") or not isinstance(params.get(key), (bool, int, float, str)):
+        current = params.get(key)
+        if key.startswith("_") or not isinstance(current, (bool, int, float, str)):
             print(f"ROBION_PARAMS: no parameter named {key!r}", file=sys.stderr)
             continue
         try:
-            params[key] = type(params[key])(value)
+            if (isinstance(current, int) and not isinstance(current, bool)
+                    and isinstance(value, (int, float)) and float(value) != int(value)):
+                # An integer default that receives 6.5 is a dimension typed as an int, not
+                # a count: keep the fraction instead of silently truncating it to 6.
+                params[key] = float(value)
+                print(f"ROBION_PARAMS: {key} = {value} kept as float (its default {current!r} is "
+                      "an int — declare dimensions as floats, e.g. 6.0)", file=sys.stderr)
+            else:
+                params[key] = type(current)(value)
         except (TypeError, ValueError):
             print(f"ROBION_PARAMS: cannot apply {key}={value!r}", file=sys.stderr)
 
@@ -68,6 +77,9 @@ def _apply_robion_params() -> None:
 # --------------------------------------------------------------------------
 # PARAMETERS (single source of truth) — replace the demo bracket with the
 # real product's parameters. Fixed inputs from the user first, then choices.
+# Dimensions are floats (60.0, never 60): the customizer keeps each parameter's
+# type, and an integer dimension would truncate a slider's 6.5 to 6. Counts
+# (screws, slats) are ints.
 # --------------------------------------------------------------------------
 bracket_width = 60.0
 bracket_leg_a = 100.0
@@ -216,16 +228,28 @@ def bom_rows() -> list[tuple[int, str, str, int, float, str]]:
     return rows
 
 
+def mass_unit(total_kg: float) -> str:
+    """One unit for a whole table: grams below a kilogram (a 19 g part is not
+    "0.02 kg"), kilograms above."""
+    return "g" if total_kg < 1.0 else "kg"
+
+
+def format_mass(kg: float, unit: str) -> str:
+    """`19 g` / `1.36 kg` — the unit chosen once per table by mass_unit()."""
+    return f"{kg * 1000:.0f} g" if unit == "g" else f"{kg:.2f} kg"
+
+
 def bom() -> str:
     # L10N: BOM table headers and the total line reach the reader
     rows = ["| Pos. | Part | Material | Qty | Mass | Note |",
             "|---|---|---|---|---|---|"]
-    total = 0.0
-    for i, name, material, count, mass, note in bom_rows():
-        total += mass * count
+    entries = bom_rows()
+    total = sum(mass * count for _i, _n, _m, count, mass, _note in entries)
+    unit = mass_unit(total)
+    for i, name, material, count, mass, note in entries:
         rows.append(f"| {i} | {name} | {material} "
-                    f"| {count} | {mass:.2f} kg/pc | {note} |")
-    rows.append(f"\nTotal mass of parts: **{total:.2f} kg** "
+                    f"| {count} | {format_mass(mass, unit)}/pc | {note} |")
+    rows.append(f"\nTotal mass of parts: **{format_mass(total, unit)}** "
                 "(fasteners not included).")
     table = "\n".join(rows)
     out = Path(__file__).parent / "out" / "bom.md"
