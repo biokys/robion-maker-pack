@@ -53,7 +53,7 @@ jobs:
           cp -R skills/physical-product/templates/solids/. "$PROJ/"
 
       - name: Design record script (init, stage, next, check --strict)
-        working-directory: ${ env.PROJ }
+        working-directory: ${{ env.PROJ }}
         run: |
           python3 design_record.py init --name "CI solids" --slug ci-solids --language en \
             --idea "a smoke-test product" --summary "exercises the record script" \
@@ -164,7 +164,7 @@ jobs:
           cp -R skills/physical-product/templates/patterns2d/. "$PROJ/"
 
       - name: Design record script (init, stage, next, check --strict)
-        working-directory: ${ env.PROJ }
+        working-directory: ${{ env.PROJ }}
         run: |
           python3 design_record.py init --name "CI patterns2d" --slug ci-patterns2d --language en \
             --idea "a smoke-test product" --summary "exercises the record script" \
