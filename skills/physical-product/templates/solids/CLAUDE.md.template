@@ -19,6 +19,7 @@ BOM live in `README.md`, written in the language the deliverables use.
 ```sh
 uv sync                 # once; add --extra fea for analysis
 make parts              # STEP+STL per part into out/parts/
+make concept            # concept variants (parameter sets): previews + facts
 make drawings           # dimensioned SVGs (+ PNG via the pattern rule)
 make viz                # Blender renders (log-grepped for crashes)
 make bom                # bill of materials into out/bom.md

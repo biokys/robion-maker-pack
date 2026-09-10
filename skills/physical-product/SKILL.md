@@ -115,6 +115,10 @@ Then STOP before any geometry. Three steps, dialogue in the user's language:
 3. **Concept gate** — a 2D block layout (component rectangles, key
    dimensions), the part list with alternatives, quick previews — and an
    explicit approval before the schematic or the detailed model exists.
+   On the solids stack the variants are parameter sets of one early
+   `model.py` (`templates/solids/concept.py`: `make concept` exports,
+   renders and collects the facts per variant), so nothing built for the
+   cards is thrown away after the freeze.
    Approval freezes shape, UI and connector positions; §5 keys the expensive
    stages on that freeze. Post the variants as `choices` cards and record
    them: `python3 design_record.py concept variants.json --recommended b`

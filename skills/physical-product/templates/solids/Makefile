@@ -121,7 +121,12 @@ doctor:
 	@$(UV) run --extra fea python -c "import gmsh;print('  gmsh      OK')" 2>/dev/null || echo "  gmsh      MISSING (uv sync --extra fea)"
 	@test -x "$(KICAD_CLI)" && echo "  kicad-cli OK" || echo "  kicad-cli MISSING"
 
+# concept previews: every variant = a parameter set (ROBION_PARAMS) ->
+# out/concept/<id>/ (parts + quick render) and out/concept/facts.json
+concept:
+	$(UV) run concept.py
+
 clean:
 	rm -rf $(OUT)
 
-.PHONY: all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
+.PHONY: concept all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
