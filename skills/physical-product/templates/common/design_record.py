@@ -447,8 +447,8 @@ def cmd_next(args: argparse.Namespace) -> None:
     record = load(path)
     current = current_stage(record)
     if current is not None and current["id"] != args.id:
-        current["status"] = "done"
-        current["updatedAt"] = now()
+        # the artifacts belong to the stage being closed — what it produced
+        set_status(record, current["id"], "done", artifacts=args.artifact)
         commit_message = f"{current['id']}: done"
     else:
         commit_message = None
@@ -598,6 +598,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("id")
     p.add_argument("--estimate")
     p.add_argument("--note")
+    p.add_argument("--artifact", action="append",
+                   help="project-relative file the stage being CLOSED produced (repeatable)")
     p.set_defaults(func=cmd_next)
 
     p = sub.add_parser("change", help="a change after a gate: log it, mark stages stale")

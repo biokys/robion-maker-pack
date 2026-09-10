@@ -70,6 +70,12 @@ class Sheet:
 # a size override (the bracket is bent sheet — its flat development, not bbox),
 # Extra pieces, and the thickness/profile sanity declarations.
 # --------------------------------------------------------------------------
+def group_keys(name: str) -> list[str]:
+    """All PARTS keys whose spec.group == name — declare a 25-lamella
+    family as parts=(*group_keys("slat"),)."""
+    return [k for k, s in model.PARTS.items() if s.group == name]
+
+
 STOCK: dict[str, Bar | Sheet] = {
     "sheet 5 mm": Sheet(width=600, height=200, kerf=2.0, thickness=5.0,
                         parts=(("bracket", (175.0, 60.0)),)),
@@ -80,12 +86,6 @@ STOCK: dict[str, Bar | Sheet] = {
 # Parts deliberately NOT cut from stock (3D print, purchased finished):
 # key -> reason (L10N); listed in the md, suppresses the coverage warning.
 NO_STOCK: dict[str, str] = {}
-
-
-def group_keys(name: str) -> list[str]:
-    """All PARTS keys whose spec.group == name — declare a 25-lamella
-    family as parts=(*group_keys("slat"),)."""
-    return [k for k, s in model.PARTS.items() if s.group == name]
 
 
 # --------------------------------------------------------------------------

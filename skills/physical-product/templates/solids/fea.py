@@ -23,7 +23,18 @@ from dataclasses import dataclass
 from pathlib import Path
 
 OUT = Path(__file__).parent / "out" / "fea"
-STEP_FILE = Path(__file__).parent / "out" / "parts" / "bracket.step"
+
+
+def default_step_file() -> Path:
+    """The first MADE part's STEP (reference parts skipped) — EDIT-ME when
+    the analysed body is another part or a merged assembly export."""
+    import model
+    key = next(k for k, spec in model.PARTS.items()
+               if not getattr(spec, "reference", False))
+    return Path(__file__).parent / "out" / "parts" / f"{key}.step"
+
+
+STEP_FILE = default_step_file()
 
 
 # --------------------------------------------------------------------------
@@ -104,6 +115,8 @@ def _require_complete(block, name: str) -> None:
 
 
 def analytic_report() -> str:
+    # L10N: every string below reaches the build sheet verbatim — translate
+    # the headings, labels and units into the user's language at scaffold time
     if ANALYTIC is None and STABILITY is None:
         raise SystemExit(
             "No analytic block: fill ANALYTIC (strength/deflection) and/or "
@@ -113,7 +126,7 @@ def analytic_report() -> str:
         _require_complete(ANALYTIC, "ANALYTIC")
         sf = ANALYTIC.allowable_stress_mpa / ANALYTIC.governing_stress_mpa
         parts.append(
-            "## Analytic estimate\n\n"
+            "## Analytic estimate\n\n"          # L10N
             f"- Load case: {ANALYTIC.load_case}\n"
             f"- Stress at the critical section: "
             f"{ANALYTIC.governing_stress_mpa:.1f} MPa "
@@ -126,10 +139,10 @@ def analytic_report() -> str:
     if STABILITY is not None:
         _require_complete(STABILITY, "STABILITY")
         parts.append(
-            "## Tip-over stability\n\n"
+            "## Tip-over stability\n\n"          # L10N
             f"- Load case: {STABILITY.load_case}\n"
             f"- Mass {STABILITY.mass_kg:.1f} kg, centre of gravity "
-            f"{STABILITY.cog_height_mm:.0f} mm nad podlahou\n"
+            f"{STABILITY.cog_height_mm:.0f} mm above the floor\n"
             f"- Lever arm to the tipping edge b = "
             f"{STABILITY.base_half_width_mm:.0f} mm\n"
             f"- Tipping force at {STABILITY.force_height_mm:.0f} mm: "
