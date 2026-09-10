@@ -71,7 +71,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-VERSION = "0.26.0"
+VERSION = "0.26.1"
 TOOL = f"design_record.py/{VERSION}"
 FILE = "design.json"
 LOCK_FILE = "design.json.lock"
@@ -491,7 +491,9 @@ def commit(message: str, no_commit: bool) -> None:
     try:
         if git(["rev-parse", "--is-inside-work-tree"], check=False).returncode != 0:
             git(["init", "--initial-branch=main"])
-        git(["add", "-A", "--", ".", f":(exclude){LOCK_FILE}"])
+        git(["add", "-A"])
+        # The lock file is scratch: never part of a gate commit (git reset ignores an absent path).
+        git(["reset", "-q", "--", LOCK_FILE], check=False)
         staged = git(["diff", "--cached", "--quiet"], check=False)
         if staged.returncode == 0:
             return

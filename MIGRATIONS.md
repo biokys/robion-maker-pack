@@ -9,6 +9,12 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.26.1
+
+`design_record.py`: the gate commit stages with plain `git add -A` and unstages the lock
+file afterwards — the `:(exclude)` pathspec failed on the CI runner's git (0.26.0 never
+committed there). Re-copy the script.
+
 ## v0.26.0
 
 **The record is the only channel** (2026-09-10, after two real projects in
