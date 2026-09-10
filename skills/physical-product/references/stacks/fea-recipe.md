@@ -24,6 +24,46 @@ sanity anchor for it). Work through:
 If loads are unknown: assume standard values (person 1000 N, shelf 25 kg/m,
 leaning load 300 N horizontal) and record them in the assumptions section.
 
+## A2 · Beam-element frame model — the default for frames (no solver needed)
+
+Frames of slender members — welded or bolted hollow sections, flat bars,
+round tubes: stands, racks, gates, table and bench frames — are analysed
+with **beam elements**, not solid tets: `templates/solids/frame_fea.py`
+assembles 12-DOF Euler–Bernoulli elements on the member centrelines and
+solves them with numpy (`make frame-fea`, seconds). It captures what the
+hand formulas of part A cannot and what solid FEA only obscures with
+weld-corner singularities: joint fixity, torsion of the rails, weak-axis
+bending of flat bars, and load redistribution between members.
+
+- Geometry from `model.py` (centrelines = profile size / 2 inside the outer
+  faces); **break every member at every junction** — a node lying on
+  another member is not connected to it. 16+ elements on loaded members.
+- Sections: `shs_section`, `chs_section`, `flat_section` (a flat bar's
+  `zref` orients its strong axis). Rigid joints for welds; release or a
+  short soft element for a bolted or pinned joint.
+- Supports: pinned feet (translations) unless bolted down. Loads lumped to
+  nodes; put the same assumptions as part A (`import fea`) so both agree.
+- **Load cases a stand or rack must include:** the design load spread as it
+  really sits (contact chord of a pot base, feet of a machine); the same
+  load as point loads where a foot or nub can land (conservative); and the
+  horizontal case — a leaning load or wind on whatever the product carries.
+  A horizontal force on a tall load does two things: it pushes the frame
+  sideways AND shifts the vertical resultant by *M / W* (M = force × height
+  above the bearing surface); with a rigid base on line supports the
+  windward support lifts off and one member takes most of the load. On the
+  planter stand that turned a 52 MPa hand estimate into 100 MPa in the
+  leeward slat — the governing case.
+- Output: `out/fea/stress.png` (von Mises on the deformed shape, one panel
+  per case), `frame_report.md` (table), `frame_results.json`. The build
+  sheet embeds the figure and the table.
+- Sanity checks (all built in, but read them): Σ reactions = Σ loads per
+  case; the simply-supported hand estimate of part A must bound the FE
+  value of the same member from above (fixity lowers midspan moments) and
+  the two should agree within ~30 %; rigid-body motion = a missing support.
+
+Solid FEA (part B) remains the tool for plates, castings, printed parts and
+local weld detail — when CalculiX is present and the stakes warrant it.
+
 ## B · FEA pipeline (when toolchain present and stakes warrant it)
 
 Stack: **STEP (from build123d) → gmsh (pip wheel, Python API) → CalculiX `ccx` via

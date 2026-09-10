@@ -107,8 +107,11 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    outside outlines, legibility — before showing the user. Then
    `make drawings-pdf` → printable true-scale `out/drawings/drawings_A3.pdf`.
 3. **Viz** — headless Blender/Cycles via the `blender_viz.py` template (per-part
-   materials, PBR textures, bbox-driven camera/lights). Known traps:
-   [blender-gotchas.md](blender-gotchas.md). *Gate:* Read the
+   materials, PBR textures, bbox-driven camera/lights). `PARTS()` globs
+   `out/parts/*.stl` and picks the material by part name (`MATERIAL_BY_STEM`),
+   so variants and part families need no edit; `VIZ_SAMPLES=48
+   VIZ_SHOTS=viz_hero` renders a quick preview (what `concept.py` does).
+   Known traps: [blender-gotchas.md](blender-gotchas.md). *Gate:* Read the
    render; user approves the hero shot.
 4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
    cross-checked against `Shape.volume × density`; include fasteners, adhesives,
@@ -120,8 +123,10 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
    steps so interior surfaces get finished while still accessible.
 6. **Analysis** — ALWAYS produce analytic estimates first (governing-member stress,
-   deflection, first natural frequency, safety factor); FEA static + modal via
-   pygccx/gmsh/CalculiX only to verify: [fea-recipe.md](fea-recipe.md).
+   deflection, first natural frequency, safety factor); frames of slender
+   members then get the beam-element model (`make frame-fea`, numpy, no
+   solver); solid FEA static + modal via pygccx/gmsh/CalculiX only for
+   plates, castings and local detail: [fea-recipe.md](fea-recipe.md).
    *Gate:* sanity checks pass before any number reaches the user.
 7. **PCB (optional)** — KiCad authoring + `kicad-cli` exports, board STEP into the
    CAD assembly for fit-check: [pcb.md](pcb.md).

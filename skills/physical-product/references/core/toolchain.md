@@ -33,7 +33,7 @@ user's language, and always naming what was lost and how to get it back:
 
 | Missing | Skip | What the build sheet must say |
 |---|---|---|
-| ccx | FEA (analytic stays) | Strength and modal analysis is an analytic estimate only — the FEA solver (CalculiX) is not installed; install with `brew install costerwi/calculix/calculix-ccx`. |
+| ccx | solid FEA (analytic + the beam-element frame model stay) | Solid FEA was not run — the solver (CalculiX) is not installed; strength is verified analytically and, for frames, with the beam-element model (`frame_fea.py`). Install with `brew install costerwi/calculix/calculix-ccx`. |
 | Blender | photoreal viz (use CAD screenshots) | No photoreal visualization — Blender is unavailable; technical CAD renders are attached instead. |
 | Chrome | SVG→PNG (ship SVG) | Drawings are attached as SVG — conversion to PNG was not possible on this machine. |
 | kicad-cli | PCB checks/exports | PCB checks and exports (ERC/DRC/gerbers) must be run by hand in KiCad. |

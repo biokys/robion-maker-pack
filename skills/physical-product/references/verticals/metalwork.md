@@ -51,9 +51,18 @@ Stack: **solids**.
   finish, then mount hardware.
 - **Analysis** — mandatory for anything load-bearing or human-adjacent
   (racks, gates, stands). Analytic first (governing member bending +
-  deflection, tip-over for stands), FEA to verify. State the weld assumption
-  explicitly in the build sheet: calculations assume sound full-perimeter
-  welds; execution quality is the welder's responsibility.
+  deflection, tip-over for stands), then the **beam-element frame model**
+  (`frame_fea.py`, fea-recipe.md § A2) — the right FE for a frame of
+  hollow sections and flat bars, no solver to install. Load cases: the
+  design load as it sits, the same as point loads where a foot can land,
+  and the horizontal case (leaning load, wind on a plant or a sign): the
+  moment of a horizontal force shifts the vertical resultant and can lift
+  one support — on a planter stand that put 2.2 kN and weak-axis bending on
+  one flat-bar slat (100 MPa) where the hand calc saw 52 MPa. Run the
+  strength check **before** the BOM gate: a profile change after the freeze
+  is a logged change, but a cheap one. State the weld assumption explicitly
+  in the build sheet: calculations assume sound full-perimeter welds;
+  execution quality is the welder's responsibility.
 
 ## Materials & stock
 

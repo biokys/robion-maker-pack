@@ -2,7 +2,13 @@
 
 The final deliverable: one artifact page a user can print or hand to a
 fabricator, mirroring the project README.md. Compose from
-`templates/common/buildsheet.html`. **Load the `artifact-design` skill before composing
+`templates/common/buildsheet.html` through the generator
+`templates/solids/buildsheet.py` (`make buildsheet`; `make pdf` runs it
+first): the machinery — slot filling, data-URI images, Markdown→HTML for the
+analysis reports, BOM and purchasing rows from `model.py` / `cutlist.py`,
+drawing figures from the manifest, README and `out/plan.md` mirrors — is
+fixed; the CONTENT block (name, concept paragraph, parameter rows, fastener
+rows, steps, assumptions) is what a project writes, in the user's language. **Load the `artifact-design` skill before composing
 the page** (required for artifacts). The aesthetic is the Robion brand
 (robion.app): JetBrains Mono, hairlines instead of borders, dark cockpit palette
 with a paper-light print counterpart, and the violet→cyan gradient as the one
@@ -123,7 +129,15 @@ Verify by Reading pages of the PDF (page count, sizes, light theme).
   `uv run datauri.py <img> [--png]` (portable Pillow, no sips/ImageMagick).
 - Optional skeleton slots: `{{EXTRA_FIGURES}}` (more renders in Concept)
   and `{{FASTENERS_TABLE}}` (fasteners rows in the BOM) — they
-  collapse via CSS until filled, so leaving them empty is fine.
+  collapse via CSS until filled, so leaving them empty is fine. Slots that
+  sit inside HTML comments in the skeleton (`<!-- {{BOM_ROWS}} -->`) are
+  unwrapped by the generator's `fill()` before substitution — a plain
+  string replace would leave the rows commented out.
+- `{{PARAMETER_ROWS}}` (Concept: fixed vs derived), `{{PURCHASE_ROWS}}` and
+  `{{CUTLIST_DATA_URI}}` / `{{CUTLIST_CAPTION}}` (BOM: purchasing table and
+  the cut-plan figure) are filled from `cutlist.purchase_rows()` and
+  `out/cutlist.png`; the generator degrades to a note when the PNG is
+  missing.
 - Theme-aware tokens (light+dark) per artifact rules; body background explicit.
 - Title = product name (short, distinctive); keep favicon stable across updates.
 - `out/build_sheet.html` is a BUILD ARTIFACT: with inlined data URIs it is
