@@ -18,6 +18,7 @@ Key invariants:
 from __future__ import annotations
 
 import math
+import os
 import sys
 from pathlib import Path
 
@@ -27,7 +28,8 @@ from mathutils import Vector
 MM = 0.001  # STL millimetres -> scene metres
 
 RESOLUTION = (1400, 1000)
-SAMPLES = 96
+# VIZ_SAMPLES=48 for quick previews (concept cards); the hero keeps 96
+SAMPLES = int(os.environ.get("VIZ_SAMPLES", "96"))
 EXPOSURE = -0.3
 # Edge rounding: >0 (e.g. 1.2) reads as machined edges on box-like parts, but
 # STREAKS on faces with dense tessellation (holes, fillets). 0 disables.
@@ -35,7 +37,11 @@ BEVEL_MM = 0.0
 
 # --------------------------------------------------------------------------
 # CONFIG — edit per product.
-# PARTS: stl filename (under <out_dir>/parts/) -> material factory call.
+# PARTS: every STL under <out_dir>/parts/ -> material, chosen by the part's
+#        name (file stem) in material_for(); powder coat otherwise.
+#        A glob, not a fixed list: concept variants with optional members,
+#        part families and reference parts render without editing this file.
+#        Map a whole family by prefix in `material_for` when names vary.
 # Factories: powder_coat(), plastic(rgb), brushed_metal(),
 #            oak_sparovka(seed, lamella_mm, texture_dir)
 # SHOTS: name -> dict(direction=unit-ish vector from bbox center,
@@ -59,15 +65,33 @@ BEVEL_MM = 0.0
 # --------------------------------------------------------------------------
 TEXTURE_DIR = Path(__file__).resolve().parent / "assets" / "oak_veneer_01"
 
-def PARTS():
-    return {
-        "bracket.stl": powder_coat(),
+def material_for(stem: str):
+    """Material factory for one exported part (by file stem = PARTS key).
+    EDIT-ME per product; the dict lives inside the function because the
+    factories are defined further down. Extend for name prefixes (every
+    "leg_*" powder-coated, every "shelf_*" oak with its own seed)."""
+    by_stem = {
+        "bracket": powder_coat,
     }
+    return by_stem.get(stem, powder_coat)
+
+
+def PARTS():
+    parts = {}
+    for stl in sorted((out_dir() / "parts").glob("*.stl")):
+        parts[stl.name] = material_for(stl.stem)()
+    if not parts:
+        raise RuntimeError(f"no STL files under {out_dir() / 'parts'} — run `make parts`")
+    return parts
 
 SHOTS = {
     "viz_hero": {"direction": (-0.7, -1.0, 0.55), "distance": 2.2, "lens": 50},
     "viz_detail": {"direction": (0.3, -1.0, 0.25), "distance": 1.4, "lens": 60},
 }
+# VIZ_SHOTS=viz_hero renders a subset (concept previews, quick checks)
+_only = os.environ.get("VIZ_SHOTS")
+if _only:
+    SHOTS = {k: v for k, v in SHOTS.items() if k in _only.split(",")}
 
 EXPLODE: dict[str, tuple[float, float, float]] = {}
 
