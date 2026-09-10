@@ -4,7 +4,8 @@ Claude Code skills that take a physical product from idea to a
 manufacturing-ready package: parametric CAD (build123d) or a parametric cutting
 pattern, dimensioned production drawings, photoreal Blender renders, a bill of
 materials, cut plans, an assembly & finishing plan, strength/modal analysis
-(FEA), an optional KiCad PCB, and a printable build sheet.
+(beam-element frame model built in, solid FEA via CalculiX), an optional
+KiCad PCB, and a printable build sheet.
 
 The pack is the process content behind [Robion](https://robion.app) — a macOS
 cockpit for Claude Code agents — but it is standard Claude Code content and works
@@ -52,7 +53,8 @@ exactly what was skipped). For the full pipeline on macOS:
 - Python via [uv](https://docs.astral.sh/uv/) — build123d, drawings, FEA meshing
 - [Blender](https://www.blender.org) — photoreal renders
 - [KiCad](https://www.kicad.org) — only for products with electronics
-- CalculiX (`ccx`) — only for FEA verification
+- CalculiX (`ccx`) — only for solid FEA; frames of slender members use the
+  built-in beam-element model (`frame_fea.py`, numpy) without any solver
 - [OpenSCAD](https://openscad.org) — fallback CAD for trivial parts
 
 ## With Robion

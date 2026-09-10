@@ -9,6 +9,51 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.25.0
+
+**What a welded planter stand taught the solids stack** (2026-09-10, Robion
+0.13 + pack 0.24.1: ten stages, two logged changes, the strength check
+before the BOM gate, and a beam-element model written on the spot because
+CalculiX was absent). Changes, all in `templates/solids/` unless noted:
+
+- **`frame_fea.py` (new)** — beam-element frame FE in numpy: SHS/CHS/flat
+  sections, rigid joints, pinned feet, von Mises per element, deformed-shape
+  plot per load case, `Σ reactions = Σ loads` check; `make frame-fea`;
+  `matplotlib` joins the default dependencies. fea-recipe.md § A2 and
+  metalwork.md make it the default analysis for frames and describe the
+  horizontal load case with the shifted resultant (the case that turned a
+  52 MPa hand estimate into 100 MPa on the stand).
+- **`concept.py` (new)** — concept variants as parameter sets applied
+  through ROBION_PARAMS: parts + one quick render + facts per variant into
+  `out/concept/`; `make concept`; SKILL.md §1 step 3 names it.
+- **`buildsheet.py` (new)** — the build-sheet generator as a template
+  (comment-wrapped slots unwrapped, data-URI images, Markdown→HTML for the
+  analysis reports, BOM/purchasing rows, drawing figures from the manifest,
+  README + `out/plan.md` mirrors, fallbacks for skipped stages);
+  `make buildsheet`; `make pdf` runs it first. `common/buildsheet.html`
+  gains `PARAMETER_ROWS`, `PURCHASE_ROWS`, `CUTLIST_DATA_URI`,
+  `CUTLIST_CAPTION`; `make l10n` lists the skeleton's visible strings.
+- `drawings.py`: `add_view(s)(..., hidden=False)` for hollow sections,
+  `note(..., align=)`, a clear error for a zero-length leader;
+  drafting-conventions.md: thin-profile dims, centered notes, leaders.
+- `blender_viz.py`: `PARTS()` globs `out/parts/*.stl`, material by part name
+  (`material_for`), `VIZ_SAMPLES` / `VIZ_SHOTS` env overrides.
+- `fea.py`: `STEP_FILE` from the first made PARTS entry, L10N markers on the
+  report; `cutlist.py`: `group_keys()` above STOCK;
+  `common/design_record.py`: `next <id> --artifact …`.
+- CI runs `frame_fea.py` and `buildsheet.py` on the demo.
+
+**Migrate:** copy the three new scripts into the project and add the
+`concept`, `frame-fea` and `buildsheet` targets (plus `pdf: drawings-pdf
+buildsheet`) from the template Makefile; add `matplotlib>=3.8` to
+pyproject and `uv sync`. Re-copy `drawings.py` / `blender_viz.py` only when
+the project needs the new options (hidden-line opt-out, note align, glob
+parts); a project with its own generator keeps its skeleton or fills the
+four new slots. `design_record.py`: re-copy for `next --artifact` (optional).
+`frame_fea.py` needs the project's geometry in `build_mesh()` and its loads
+in `load_cases()` — derive both from `model.py` / `fea.py`, then check the
+FE numbers against the analytic ones before they reach the build sheet.
+
 ## v0.24.1
 
 **CalculiX under its Homebrew name.** `brew install calculix-ccx` installs `ccx_2.23`
