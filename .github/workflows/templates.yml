@@ -106,6 +106,13 @@ jobs:
           make drawings-pdf CHROME=google-chrome
           test -f out/drawings/drawings_A3.pdf
 
+      - name: Beam-element frame model (numpy + matplotlib, no solver)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv run frame_fea.py | tee frame.log
+          grep -q 'balance OK' frame.log
+          test -f out/fea/stress.png && test -f out/fea/frame_report.md
+
       - name: Drawing lint selftest (deliberately broken sheet must trip)
         working-directory: ${{ env.PROJ }}
         run: uv run drawings.py lint-selftest

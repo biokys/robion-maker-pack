@@ -26,6 +26,7 @@ make bom                # bill of materials into out/bom.md
 make check              # assembly gate: mass/COG, interference, clearance
 make cutlist            # cutting plan (out/cutlist.{md,svg}; -png variant)
 make fea                # analysis (degrades to analytic-only without ccx)
+make frame-fea          # beam-element frame model: stress plot + report
 make doctor             # tool availability
 ```
 

@@ -75,6 +75,10 @@ viz: parts
 	@! grep -q Traceback $(OUT)/viz.log || \
 		{ echo 'BLENDER SCRIPT CRASHED — see $(OUT)/viz.log'; exit 1; }
 
+# beam-element frame model (numpy, no solver): out/fea/stress.png + report
+frame-fea:
+	$(UV) run frame_fea.py
+
 fea:
 	@command -v ccx >/dev/null \
 		&& $(UV) run --extra fea fea.py \
@@ -129,4 +133,4 @@ concept:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: concept all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
+.PHONY: frame-fea concept all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
