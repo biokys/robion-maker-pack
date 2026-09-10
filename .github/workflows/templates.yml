@@ -101,7 +101,9 @@ jobs:
 
       - name: CalculiX discovery takes a versioned binary; no template tests for a bare ccx
         run: |
-          if grep -rn "command -v ccx" skills/physical-product/templates; then
+          # The only allowed place for `command -v ccx` is the Makefile's CCX definition (as the
+          # first candidate); a bare test anywhere else is the bug that hid the installed solver.
+          if grep -rn "command -v ccx" skills/physical-product/templates | grep -v "CCX ?= "; then
             echo "a template still tests for a bare ccx"; exit 1; fi
           mkdir -p "$PROJ/fakebin"
           printf '#!/bin/sh\nexit 0\n' > "$PROJ/fakebin/ccx_2.23" && chmod +x "$PROJ/fakebin/ccx_2.23"
