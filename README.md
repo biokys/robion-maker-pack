@@ -2,7 +2,7 @@
 
 Claude Code skills that take a physical product from idea to a
 manufacturing-ready package: parametric CAD (build123d) or a parametric cutting
-pattern, dimensioned production drawings, photoreal Blender renders, a bill of
+pattern, dimensioned production drawings, photoreal path-traced renders, a bill of
 materials, cut plans, an assembly & finishing plan, strength/modal analysis
 (beam-element frame model built in, solid FEA via CalculiX), an optional
 KiCad PCB, and a printable build sheet.
@@ -51,7 +51,8 @@ The skills degrade gracefully when a tool is missing (the build sheet records
 exactly what was skipped). For the full pipeline on macOS:
 
 - Python via [uv](https://docs.astral.sh/uv/) — build123d, drawings, FEA meshing
-- [Blender](https://www.blender.org) — photoreal renders
+- Google Chrome with a GPU — photoreal renders (`viz.py` drives it headless;
+  the engine is three.js + three-gpu-pathtracer, built from `engine/viz/`)
 - [KiCad](https://www.kicad.org) — only for products with electronics
 - CalculiX (`ccx`) — only for solid FEA; frames of slender members use the
   built-in beam-element model (`frame_fea.py`, numpy) without any solver

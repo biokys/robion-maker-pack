@@ -8,8 +8,9 @@
 # canary for upstream breakage (a new build123d or drafting-helpers release)
 # — exactly what a product project would hit at `uv sync` time.
 #
-# Blender viz is skipped: a multi-hundred-MB install plus minutes of Cycles
-# render; the viz path stays covered by local `make doctor` + product runs.
+# The photoreal viz (viz.py, headless Chrome + GPU path tracer) runs only as a
+# dry run here: the runner has no GPU. The render path stays covered by local
+# product runs; test_viz.py covers the driver's Chrome-free half.
 name: templates
 
 on:
@@ -38,6 +39,9 @@ jobs:
 
       - name: design_record.py unit tests (stdlib only, real git)
         run: python3 -m unittest skills/physical-product/templates/test_design_record.py -v
+
+      - name: viz.py unit tests (scene config, Chrome discovery — no Chrome)
+        run: python3 -m unittest skills/physical-product/templates/test_viz.py -v
 
       - name: Versions agree (plugin.json, marketplace.json, design_record.py)
         run: |
@@ -125,6 +129,12 @@ jobs:
           uv run model.py check
           uv run cutlist.py > /dev/null
           uv run drawings.py
+
+      - name: Viz dry run (scene config from the exported parts, no Chrome)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv run viz.py --dry-run out
+          python3 -c "import json; c=json.load(open('out/viz_scene.json')); assert c['scenes']['main']['parts'], c"
 
       - name: Assert expected outputs
         working-directory: ${{ env.PROJ }}

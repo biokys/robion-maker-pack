@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Project
 
 {{ONE_LINE_PRODUCT_DESCRIPTION}}. Built with the `physical-product` skill:
-parametric build123d model, dimensioned drawings, Blender renders, BOM, analysis.
+parametric build123d model, dimensioned drawings, photoreal renders, BOM, analysis.
 Pack: robion-maker-pack v{{PACK_VERSION}} — template change log & migration
 steps live in MIGRATIONS.md in the pack repo.
 This is a product-engineering project, not a software project — no tests or
@@ -21,7 +21,7 @@ uv sync                 # once; add --extra fea for analysis
 make parts              # STEP+STL per part into out/parts/
 make concept            # concept variants (parameter sets): previews + facts
 make drawings           # dimensioned SVGs (+ PNG via the pattern rule)
-make viz                # Blender renders (log-grepped for crashes)
+make viz                # photoreal renders (headless Chrome + GPU path tracer)
 make bom                # bill of materials into out/bom.md
 make check              # assembly gate: mass/COG, interference, clearance
 make cutlist            # cutting plan (out/cutlist.{md,svg}; -png variant)
@@ -33,7 +33,7 @@ make doctor             # tool availability
 ```
 
 Machine paths (this Mac): Chrome/OpenSCAD/KiCad as app bundles — see Makefile
-variables; blender is on PATH.
+variables.
 
 ## Architecture
 
@@ -43,10 +43,11 @@ variables; blender is on PATH.
 - `drawings.py` — first-angle dimensioned views from `model.PARTS`.
 - `cutlist.py` — STOCK declaration → FFD/shelf packing → cutting plan;
   stock/purchasing knowledge lives here, never in model.py.
-- `blender_viz.py` — headless Cycles; per-part materials; bbox-driven scene.
+- `viz.py` + `viz/` — headless Chrome, three.js path tracer; per-part
+  materials; bbox-driven scene. Same engine as Robion's viewport and robion.app.
 - `fea.py` — analytic gate, then gmsh+pygccx+CalculiX.
-- Verify visuals by rendering PNG and Reading it; Blender exit code is
-  meaningless (Makefile greps the log).
+- Verify visuals by rendering PNG and Reading it; viz.py's exit code is
+  trustworthy (0 ok, 1 failed → out/viz.log, 2 Chrome missing).
 
 ## Design record
 

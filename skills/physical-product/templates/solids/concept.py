@@ -6,8 +6,8 @@ parameters applied through ROBION_PARAMS (the same mechanism as Robion's
 sliders), so the cards the user picks from come from the model that later
 feeds drawings, BOM and analysis — nothing is thrown away after the freeze.
 
-Per variant: export parts, render one quick Blender shot (VIZ_SAMPLES /
-VIZ_SHOTS from blender_viz.py), collect facts. Outputs:
+Per variant: export parts, render one quick hero shot (VIZ_SAMPLES /
+VIZ_SHOTS from viz.py), collect facts. Outputs:
   out/concept/<id>/parts/*.step|stl   out/concept/<id>/viz_hero.png
   out/concept/facts.json              {id: {title, params, mass_kg, parts, …}}
 
@@ -17,7 +17,7 @@ weld joints, stiffness ratio); otherwise mass and part count are computed
 from PARTS. The variant ids double as the `choices` option values and as
 `concept.variants[].id` in the design record (snake_case).
 
-Run: uv run concept.py   (make concept). Without Blender on PATH the
+Run: uv run concept.py   (make concept). Without Chrome (viz.py exit 2) the
 renders are skipped and facts.json is still written.
 """
 
@@ -32,7 +32,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "out" / "concept"
-BLENDER = os.environ.get("BLENDER", "blender")
 CONCEPT_SAMPLES = "48"          # quick previews; the hero render keeps the default
 
 # EDIT-ME — the product's variants. L10N: titles are shown on the cards.
@@ -70,19 +69,16 @@ def render_variant(vid: str, variant: dict) -> dict:
     shutil.copytree(ROOT / "out" / "parts", vdir / "parts")
     facts = json.loads(_run([sys.executable, "-c", _FACTS_SNIPPET], env, capture=True))
 
-    if shutil.which(BLENDER):
-        log = subprocess.run(
-            [BLENDER, "--background", "--python", "blender_viz.py", "--", str(vdir)],
-            cwd=ROOT, text=True, capture_output=True,
-            env={**env, "VIZ_SAMPLES": CONCEPT_SAMPLES, "VIZ_SHOTS": "viz_hero"},
-        ).stdout
-        (vdir / "viz.log").write_text(log)
-        if "Traceback" in log or not (vdir / "viz_hero.png").exists():
-            raise SystemExit(f"Blender failed for variant {vid} — see {vdir / 'viz.log'}")
+    viz = subprocess.run(
+        [sys.executable, "viz.py", str(vdir)], cwd=ROOT, text=True, capture_output=True,
+        env={**env, "VIZ_SAMPLES": CONCEPT_SAMPLES, "VIZ_SHOTS": "viz_hero"},
+    )
+    if viz.returncode == 0 and (vdir / "viz_hero.png").exists():
         facts["image"] = str((vdir / "viz_hero.png").relative_to(ROOT))
+    elif viz.returncode == 2:  # viz.py: Chrome not found
+        print(f"  Chrome not found — variant {vid} exported without a render", file=sys.stderr)
     else:
-        print(f"  {BLENDER} not on PATH — variant {vid} exported without a render",
-              file=sys.stderr)
+        raise SystemExit(f"viz.py failed for variant {vid} — see {vdir / 'viz.log'}")
     print(f"variant {vid}: {facts}")
     return {"title": variant["title"], "params": variant["params"], **facts}
 

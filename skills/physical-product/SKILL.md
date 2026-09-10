@@ -297,7 +297,7 @@ exists, the cockpit is part of stage 1, not an optional extra (read
   `out/pieces/*.png` plus a `{kind:'run', command:'make previews'}` button
   that re-renders them after slider changes.
 - A hero button: `{kind:'run', command:'make viz', output:'out/viz_hero.png',
-  autoClose: true}` — Blender photoreal on solids, a flat parametric
+  autoClose: true}` — the path-traced photoreal on solids, a flat parametric
   illustration (viz.py) on patterns2d.
 - `image` tiles for renders, drawings, cut plans — they refresh on their own
   whenever the files are regenerated.
@@ -319,7 +319,7 @@ sheets). No `set_controls` tool ⇒ skip silently, never mention it.
   cross-checked against an independent measure (`Shape.volume`, layout area).
 - Analysis numbers pass the sanity checklist (reactions, rigid-body modes,
   hand-estimate agreement) before being reported.
-- Stack-specific traps (Blender exit codes, projection residuals) are listed in
+- Stack-specific traps (render GPU flags, projection residuals) are listed in
   the stack recipes — read them before the relevant stage.
 
 ## 7 · Iteration protocol

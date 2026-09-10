@@ -1,4 +1,4 @@
-"""Flat parametric hero illustration — the patterns2d analog of blender_viz.
+"""Flat parametric hero illustration — the patterns2d analog of the solids viz.
 
 A sewn product has no solid to photoreal-render; its hero is a 2D
 illustration of the FINISHED product, drawn from the same parameters as

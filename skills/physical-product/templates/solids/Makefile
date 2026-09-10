@@ -1,5 +1,5 @@
 # Product pipeline. All targets are regenerable; out/ is disposable.
-# Machine defaults are overridable: `make viz BLENDER=/path/to/blender`.
+# Machine defaults are overridable: `make viz CHROME=/path/to/chrome`.
 UV ?= uv
 # LEAF=1 (production subagents running side by side): no parts re-export, no uv
 # re-sync — the main thread ran `make parts check` and `uv sync` before the fan-out.
@@ -11,7 +11,6 @@ DEPS_PARTS := $(if $(LEAF),,parts)
 # honours the same variable (find_ccx), so the two never disagree again.
 CCX ?= $(shell command -v ccx 2>/dev/null || ls $(addsuffix /ccx_*,$(subst :, ,$(PATH))) \
 	/opt/homebrew/bin/ccx_* /usr/local/bin/ccx_* 2>/dev/null | sort -V | tail -1)
-BLENDER ?= blender
 CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KICAD_CLI ?= /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
 OUT := out
@@ -82,13 +81,10 @@ pdf: drawings-pdf buildsheet
 buildsheet: $(if $(LEAF),,bom cutlist)
 	$(RUN) buildsheet.py
 
-# Blender exits 0 even when the python script throws — the grep IS the check.
+# Photoreal renders: viz.py drives headless Chrome (GPU path tracer) over the
+# DevTools protocol; the exit code is trustworthy (2 = Chrome not found).
 viz: $(DEPS_PARTS)
-	$(BLENDER) --background --python blender_viz.py -- $(OUT) 2>&1 \
-		| tee $(OUT)/viz.log \
-		| grep -E 'Saved|Traceback|Error' || true
-	@! grep -q Traceback $(OUT)/viz.log || \
-		{ echo 'BLENDER SCRIPT CRASHED — see $(OUT)/viz.log'; exit 1; }
+	CHROME="$(CHROME)" $(UV) run viz.py $(OUT)
 
 # beam-element frame model (numpy, no solver): out/fea/stress.png + report
 frame-fea:
@@ -137,7 +133,6 @@ doctor:
 	@$(RUN) python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
 	@test -f assets/osifont/osifont.ttf && echo "  osifont   OK" || echo "  osifont   MISSING (make font; drawings fall back to Arial)"
 	@$(RUN) python -c "import b123d_recognisers;print('  recognisers OK')" 2>/dev/null || echo "  recognisers MISSING (uv sync --extra recognise; auto_holes degrades)"
-	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
 	@test -n "$(CCX)" && echo "  ccx       OK ($(CCX))" || echo "  ccx       MISSING (no ccx / ccx_* on PATH or under Homebrew; FEA -> analytic only)"
 	@$(RUN) --extra fea python -c "import gmsh;print('  gmsh      OK')" 2>/dev/null || echo "  gmsh      MISSING (uv sync --extra fea)"

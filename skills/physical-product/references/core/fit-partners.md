@@ -45,7 +45,7 @@ derive from it as an assumption in the build sheet, with its source.
 A mating object lives in `PARTS` like any part, with `reference=True`
 (`PartSpec` in `templates/solids/model.py`): it is built, exported to
 `out/parts/` and takes part in `make check` (clearances, collisions) and in
-Blender scenes (an `(material, euler)` entry shows it in place), but it has no
+viz scenes (an `(material, euler)` entry shows it in place), but it has no
 BOM row, no drawing and no cut-plan piece — the user does not make it. Name it
 after the thing (`pi5_board`, `wall`, `tank`), give it the plain material
 (`plastic()`, `powder_coat()`), and keep its dimensions in the parameters block

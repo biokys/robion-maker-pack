@@ -7,7 +7,7 @@ Conventions (do not break):
   in the finished product) — viz, drawings sections and fit checks all rely
   on it; never build parts around their own origin "to be re-placed later".
 - One builder function per part, registered in PARTS with a material record.
-  Downstream stages (drawings, Blender viz, FEA) consume per-part exports —
+  Downstream stages (drawings, viz, FEA) consume per-part exports —
   never one merged body. Part families (e.g. 25 unique lamellas) share a
   PartSpec `group` — the BOM aggregates them into one row; VIZ_COMPOUNDS can
   merge many parts into one STL for rendering.
@@ -153,7 +153,7 @@ class PartSpec:
     # e.g. group="lamela" on 25 unique lamella specs.
     group: str | None = None
     # A mating object the user does NOT make (the board in an enclosure, the
-    # wall a shelf hangs on): built and exported so `make check` and the Blender
+    # wall a shelf hangs on): built and exported so `make check` and the viz
     # scenes fit against it, but no BOM row, no drawing, no cut-plan piece.
     # Its dimensions come from a real source (core/fit-partners.md).
     reference: bool = False
@@ -165,7 +165,7 @@ PARTS: dict[str, PartSpec] = {
 
 # Viz-only merged exports: <stl name> -> [PARTS keys] OR a zero-arg callable
 # returning any Shape. `export` additionally writes out/parts/<name>.stl —
-# blender_viz.py then maps ONE material to the whole export instead of
+# viz.py then maps ONE material to the whole export instead of
 # needing an entry per part. The callable form covers what a key list
 # cannot: N shifted copies of one part
 #   "rings": lambda: Compound(children=[Pos(0, 0, i * ring_pitch)

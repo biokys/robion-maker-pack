@@ -16,6 +16,7 @@ dependencies = [
     "pillow>=10",     # datauri.py (build-sheet images); explicit, not
                       # relying on it arriving transitively
     "matplotlib>=3.8", # frame_fea.py stress plots (numpy comes with build123d)
+    "websockets>=13",  # viz.py drives headless Chrome over the DevTools protocol
 ]
 
 [project.optional-dependencies]

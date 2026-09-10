@@ -1,0 +1,15 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Robion viz</title>
+<style>body{margin:0;background:#1a1a1a}canvas{display:block}#status{position:fixed;top:0;left:0;margin:4px;color:#7f7;font:12px monospace}</style>
+<pre id="status">waiting for a config</pre>
+<script src="render.bundle.js"></script>
+<script>
+// Driver contract (viz.py, the desktop, the gallery): call
+// `RobionViz.run(config)` and read `window.__viz` — {status, results, stats,
+// error, done}. A `?config=<url>` query renders on load for manual checks.
+const status = document.getElementById('status');
+window.vizRun = (config) => RobionViz.run(config, (text) => { status.textContent = text; });
+const url = new URLSearchParams(location.search).get('config');
+if (url) fetch(url).then((r) => r.json()).then((config) => window.vizRun(config));
+</script>

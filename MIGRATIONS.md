@@ -9,6 +9,35 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.28.0
+
+**The viz stage moved from Blender to a browser path tracer** (2026-09-10). Same config
+surface, same outputs, one engine for the project, Robion's viewport and robion.app.
+
+- `templates/solids/viz.py` replaces `blender_viz.py`: identical `material_for` / `PARTS()`
+  / `SHOTS` / `EXPLODE` / `SCENES()` config and `VIZ_SAMPLES` / `VIZ_SHOTS` knobs; material
+  factories now return dicts (`powder_coat`, `plastic`, `brushed_metal`, `oak_sparovka`).
+  New: `pbr(**fields)` for any material (clearcoat, glass, sheen, emissive, maps…),
+  `glass()`, `VIZ_CREASE` (smooth-shading angle, default 30°), `FLOOR` / `WORLD` / `LIGHTS`
+  overrides, absolute shots (`position_mm`/`target_mm`), part offsets, `--dry-run`, a
+  trustworthy exit code (0 ok, 1 failed → `out/viz.log`, 2 Chrome not found), a persistent
+  Chrome profile with a one-off shader warm-up (see viz-gotchas.md).
+- `templates/common/viz/` (`index.html`, `render.bundle.js`) is the engine — three.js +
+  three-gpu-pathtracer, built from `engine/viz/` in the pack repo. Copy it into the project
+  next to `viz.py`.
+- `pyproject.toml`: `websockets>=13` (viz.py talks to Chrome over the DevTools protocol).
+- `Makefile`: `viz` runs `uv run viz.py $(OUT)` with `CHROME`; `BLENDER` is gone; `doctor`
+  no longer lists Blender.
+- `concept.py`: variant previews go through `viz.py` (exit 2 = no render, not a failure).
+- `buildsheet.py`: the degrade sentence names Chrome instead of Blender.
+- `references/stacks/viz-gotchas.md` replaces `blender-gotchas.md` (creased normals, mm→m,
+  Z-up shots, GPU flags per OS, the terminator artefact at strut/ring junctions).
+
+Migrate an existing project: copy `viz.py` and `viz/` from the templates, port the
+project's `material_for` and `SHOTS` (factories keep their names; project-specific Blender
+node materials become `pbr(...)` / `wood(...)` dicts), `uv add "websockets>=13"`, replace the
+Makefile `viz` target, delete `blender_viz.py`. Blender is no longer needed on the machine.
+
 ## v0.27.2
 
 **What a CNC aluminium bottle opener taught the solids stack** (2026-09-10, the retro of

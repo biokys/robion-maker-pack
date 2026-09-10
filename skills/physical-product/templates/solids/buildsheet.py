@@ -118,8 +118,8 @@ def assumption_items() -> list[str]:
         "(<code>fastener_rows</code>).",
     ]
     if not (OUT / "viz_hero.png").exists():
-        items.append("No photoreal visualization — Blender is unavailable; technical "
-                     "CAD renders are attached instead.")
+        items.append("No photoreal visualization — Chrome (the render engine's host) is "
+                     "unavailable; technical CAD renders are attached instead.")
     return items
 
 
@@ -195,7 +195,7 @@ def analysis_html() -> str:
 
 
 def hero_figure() -> tuple[str, str, str]:
-    """(data URI, alt, caption) — the Blender hero, else the first drawing."""
+    """(data URI, alt, caption) — the viz hero, else the first drawing."""
     hero = OUT / "viz_hero.png"
     if hero.exists():
         return data_uri(hero), PRODUCT_NAME, "Photoreal render of the finished product."

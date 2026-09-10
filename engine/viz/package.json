@@ -1,0 +1,19 @@
+{
+  "name": "@robion/maker-viz-engine",
+  "version": "0.1.0",
+  "description": "Photoreal product renders for the Maker Pack: three.js + three-gpu-pathtracer, bundled into templates/common/viz/render.bundle.js",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check"
+  },
+  "type": "module",
+  "dependencies": {
+    "three": "0.186.0",
+    "three-gpu-pathtracer": "0.0.24",
+    "three-mesh-bvh": "0.9.15"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  },
+  "private": true
+}

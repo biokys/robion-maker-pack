@@ -74,7 +74,7 @@ make buildsheet-pdf        # build sheet PDF (`pdf` is the PATTERN here)
 - NEVER screenshot a mm-sized SVG directly: headless Chrome renders it at
   ~3.78 px/mm and the window crops it — always go through the pixel `.html`
   wrappers `export()`/`viz.py` write (`data-window-size` drives the window).
-- Hero visualization: there is no Blender path for flat goods — `viz.py`
+- Hero visualization: there is no path-traced 3D scene for flat goods — `viz.py`
   draws the FINISHED product as a flat illustration from the same parameters
   (`make viz` → `out/viz_hero.png`). Cheap, reflows with sliders; replace
   its `scene()` per product, keep the palette + wrapper contract.

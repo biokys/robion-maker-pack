@@ -51,8 +51,9 @@ values:
 
 ```
 project/
-├── model.py  drawings.py  blender_viz.py  fea.py
+├── model.py  drawings.py  viz.py  fea.py
 ├── pyproject.toml  Makefile  CLAUDE.md  README.md  buildsheet.html
+├── viz/               # render engine copied from the pack (index.html + render.bundle.js)
 ├── assets/            # downloaded textures (CC0 only)
 └── out/               # ALL generated files; `make clean` removes it
     ├── parts/*.step  parts/*.stl        # per-part exports, never one merged body
@@ -64,9 +65,9 @@ project/
 
 Rules that hold across every stage:
 
-- Millimetres everywhere (CAD, drawings, Blender scale 0.001, FEA mm-N-s).
+- Millimetres everywhere (CAD, drawings, viz scale 0.001, FEA mm-N-s).
 - STEP is the interchange format between stages; STL only where meshes are
-  required (Blender, 3D printing).
+  required (viz, 3D printing).
 - Deterministic outputs: everything under `out/` is regenerable from source;
   generated files are never edited by hand.
 - Parameters are the single source of truth: derived values are computed, never

@@ -29,7 +29,7 @@ or the project already uses it, or the user asks. Limitations that disqualify it
 full products: mesh-only output (no STEP), no hidden-line projections, no dimensions,
 poor FEA input. If forced down this path, mirror the build123d template's structure
 in OpenSCAD terms: a `VIEW` dispatch variable selecting part/assembly renders,
-`echo()`-emitted BOM lines parsed from stdout, and per-part STL exports for Blender.
+`echo()`-emitted BOM lines parsed from stdout, and per-part STL exports for the viz stage.
 
 Hard-won rules for this path (from a real product on OpenSCAD 2021.01):
 
@@ -58,17 +58,17 @@ Hard-won rules for this path (from a real product on OpenSCAD 2021.01):
 
 ## Conventions that hold across the stack
 
-- Units: **millimetres** everywhere (CAD, drawings, Blender scale 0.001, FEA uses
+- Units: **millimetres** everywhere (CAD, drawings, viz scale 0.001, FEA uses
   the mm-N-s system — see [fea-recipe.md](fea-recipe.md)).
 - STEP is the hand-off format between stages; STL only where meshes are required
-  (Blender, 3D print).
+  (viz, 3D print).
 - Deterministic outputs: everything regenerable via `make`; no manual editing of
   generated files.
 
 ## Scaffold specifics
 
 Templates: `templates/common/` + `templates/solids/` (pyproject.toml, Makefile,
-model.py, drawings.py, cutlist.py, merge_pdfs.py, blender_viz.py, fea.py,
+model.py, drawings.py, cutlist.py, merge_pdfs.py, viz.py, fea.py,
 datauri.py, buildsheet.html, CLAUDE.md.template → CLAUDE.md). After `uv sync`,
 run `make font` (ISO 3098 lettering for drawings; skip offline — Arial
 fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
@@ -108,12 +108,15 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    *Gate:* `make drawings-png` and **Read each PNG** — view placement, dims
    outside outlines, legibility — before showing the user. Then
    `make drawings-pdf` → printable true-scale `out/drawings/drawings_A3.pdf`.
-3. **Viz** — headless Blender/Cycles via the `blender_viz.py` template (per-part
-   materials, PBR textures, bbox-driven camera/lights). `PARTS()` globs
-   `out/parts/*.stl` and picks the material by part name (`MATERIAL_BY_STEM`),
-   so variants and part families need no edit; `VIZ_SAMPLES=48
+3. **Viz** — `viz.py` + the `viz/` engine (three.js + a GPU path tracer in
+   headless Chrome; the same engine draws Robion's viewport and robion.app).
+   Per-part materials: presets (`powder_coat`, `plastic`, `brushed_metal`, `glass`,
+   `oak_sparovka`) and `pbr(...)` for anything else — every field of the physical
+   model plus box-projected texture maps. Bbox-driven camera/lights. `PARTS()` globs
+   `out/parts/*.stl` and picks the material by part name (`material_for`),
+   so variants and part families need no edit; `VIZ_SAMPLES=32
    VIZ_SHOTS=viz_hero` renders a quick preview (what `concept.py` does).
-   Known traps: [blender-gotchas.md](blender-gotchas.md). *Gate:* Read the
+   Known traps: [viz-gotchas.md](viz-gotchas.md). *Gate:* Read the
    render; user approves the hero shot.
 4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
    cross-checked against `Shape.volume × density`; include fasteners, adhesives,
@@ -142,8 +145,8 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
 
 ## Stack-specific traps
 
-- Blender headless exits 0 even when the script crashes — the Makefile greps the
-  log for Traceback; never trust the exit code.
+- `viz.py` needs Chrome with a working GPU: software GL takes minutes per image.
+  Exit 2 = no Chrome (degrade sentence in the build sheet), 1 = see `out/viz.log`.
 - Projected drawing views carry a mild perspective residual — CAM geometry must
   come from face wires, never projected views
   ([../verticals/cnc-router.md](../verticals/cnc-router.md)).
