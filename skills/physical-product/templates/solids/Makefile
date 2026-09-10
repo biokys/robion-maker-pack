@@ -5,6 +5,12 @@ UV ?= uv
 # re-sync — the main thread ran `make parts check` and `uv sync` before the fan-out.
 RUN := $(UV) run$(if $(LEAF), --no-sync,)
 DEPS_PARTS := $(if $(LEAF),,parts)
+# CalculiX: Homebrew installs the versioned `ccx_2.23` and no bare `ccx`. Take whatever is
+# there — a bare `ccx` on PATH, else any `ccx_*` in the PATH directories or the Homebrew
+# prefixes, newest version last. Override by hand: `make fea CCX=/path/to/ccx`. fea.py
+# honours the same variable (find_ccx), so the two never disagree again.
+CCX ?= $(shell command -v ccx 2>/dev/null || ls $(addsuffix /ccx_*,$(subst :, ,$(PATH))) \
+	/opt/homebrew/bin/ccx_* /usr/local/bin/ccx_* 2>/dev/null | sort -V | tail -1)
 BLENDER ?= blender
 CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KICAD_CLI ?= /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
@@ -89,9 +95,9 @@ frame-fea:
 	$(RUN) frame_fea.py
 
 fea:
-	@command -v ccx >/dev/null \
-		&& $(RUN) --extra fea fea.py \
-		|| { echo 'ccx (CalculiX) not installed -> analytic-only.'; \
+	@test -n "$(CCX)" \
+		&& CCX="$(CCX)" $(RUN) --extra fea fea.py \
+		|| { echo 'CalculiX not found (no ccx or ccx_* on PATH / under Homebrew) -> analytic-only.'; \
 		     echo 'Install (ask user first): brew install costerwi/calculix/calculix-ccx'; \
 		     $(RUN) fea.py --analytic-only; }
 
@@ -133,7 +139,7 @@ doctor:
 	@$(RUN) python -c "import b123d_recognisers;print('  recognisers OK')" 2>/dev/null || echo "  recognisers MISSING (uv sync --extra recognise; auto_holes degrades)"
 	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
-	@command -v ccx >/dev/null && echo "  ccx       OK" || echo "  ccx       MISSING (FEA -> analytic only)"
+	@test -n "$(CCX)" && echo "  ccx       OK ($(CCX))" || echo "  ccx       MISSING (no ccx / ccx_* on PATH or under Homebrew; FEA -> analytic only)"
 	@$(RUN) --extra fea python -c "import gmsh;print('  gmsh      OK')" 2>/dev/null || echo "  gmsh      MISSING (uv sync --extra fea)"
 	@test -x "$(KICAD_CLI)" && echo "  kicad-cli OK" || echo "  kicad-cli MISSING"
 

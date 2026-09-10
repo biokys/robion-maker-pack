@@ -9,6 +9,21 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.27.1
+
+**CalculiX found the same way everywhere.** 0.24.1 taught `fea.py` the versioned Homebrew
+name (`ccx_2.23`), but the Makefile's `fea` and `doctor` targets kept testing for a bare
+`ccx` — so `make fea` printed "not installed → analytic-only" on a Mac with CalculiX installed,
+project after project. Now the Makefile computes `CCX` once (a bare `ccx` on PATH, else any
+`ccx_<version>` in the PATH directories or the Homebrew prefixes, newest wins; `make fea
+CCX=/path` overrides), passes it to `fea.py`, and `find_ccx()` honours the variable, searches
+the same places and orders versions numerically. CI fails on any template that tests for a bare
+`ccx` and checks that a fake `ccx_2.23` on PATH is found by `make fea` and `make doctor`.
+
+**Migrate a running project:** in the Makefile replace the two `command -v ccx` tests with the
+template's `CCX` variable and the new `fea` / `doctor` lines; in `fea.py` replace `find_ccx()`
+with the template's. Then `make doctor` must print `ccx OK (/opt/homebrew/bin/ccx_2.23)`.
+
 ## v0.27.0
 
 **The production half runs as four subagents** (2026-09-10; SKILL.md §5): after the

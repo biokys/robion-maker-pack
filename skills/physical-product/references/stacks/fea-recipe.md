@@ -110,8 +110,10 @@ until the analytic-estimate header fields are filled in.
 
 - gmsh: comes with the uv environment (pip wheel bundles the library) — no system
   install.
-- ccx: check `command -v ccx`, then `ls "$(brew --prefix)/bin"/ccx_*` — Homebrew's formula
-  installs the versioned `ccx_2.23` and no bare `ccx`; `fea.py`'s `find_ccx()` accepts both
+- ccx: `make doctor` shows the solver the Makefile found (`CCX`); never test for a bare `ccx`
+  yourself — Homebrew's formula installs the versioned `ccx_2.23` and no bare `ccx`; the
+  Makefile's `CCX` and `fea.py`'s `find_ccx()` accept any `ccx_<version>` on PATH or under
+  Homebrew and pass it on (`CCX=… make fea` overrides)
   and hands the path to pygccx. "ccx missing" is only true when neither exists. If missing,
   offer the user:
   `brew install costerwi/calculix/calculix-ccx` (maintained tap, Apple Silicon

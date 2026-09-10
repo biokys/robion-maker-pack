@@ -99,6 +99,18 @@ jobs:
         working-directory: ${{ env.PROJ }}
         run: uv sync --extra recognise
 
+      - name: CalculiX discovery takes a versioned binary; no template tests for a bare ccx
+        run: |
+          if grep -rn "command -v ccx" skills/physical-product/templates; then
+            echo "a template still tests for a bare ccx"; exit 1; fi
+          mkdir -p "$PROJ/fakebin"
+          printf '#!/bin/sh\nexit 0\n' > "$PROJ/fakebin/ccx_2.23" && chmod +x "$PROJ/fakebin/ccx_2.23"
+          PATH="$PROJ/fakebin:$PATH" make -C "$PROJ" -n fea | grep -q 'fakebin/ccx_2.23' \
+            || { echo "make fea did not find fakebin/ccx_2.23"; exit 1; }
+          PATH="$PROJ/fakebin:$PATH" make -C "$PROJ" -s doctor 2>/dev/null | grep -q 'ccx       OK' \
+            || { echo "make doctor did not report ccx OK"; exit 1; }
+          rm -rf "$PROJ/fakebin"
+
       - name: Font (osifont — exercises the ISO 3098 lettering path)
         working-directory: ${{ env.PROJ }}
         run: make font

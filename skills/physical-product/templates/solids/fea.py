@@ -9,7 +9,7 @@ including the mandatory sanity checks).
 UNITS: mm-N-s system. E in MPa, density in t/mm^3 (steel 7.85e-9,
 oak ~7.0e-10), forces in N, output frequencies in Hz.
 
-Run:  uv run --extra fea fea.py          # full analysis (needs ccx on PATH)
+Run:  uv run --extra fea fea.py          # full analysis (CalculiX found via CCX / PATH / Homebrew)
       uv run fea.py --analytic-only      # print the analytic block only
 """
 
@@ -90,19 +90,33 @@ N_MODES = 8
 
 
 def find_ccx() -> str | None:
-    """CalculiX on PATH: `ccx`, else the versioned `ccx_2.23` Homebrew installs without a
-    bare `ccx` link. Returns the path to hand to pygccx (`ccx_path`), None when absent."""
+    """The CalculiX solver, wherever it is: the `CCX` environment variable (the Makefile passes
+    the same discovery result), a bare `ccx` on PATH, else the newest `ccx_<version>` in any PATH
+    directory or Homebrew prefix — the formula installs `ccx_2.23` and no bare `ccx` link.
+    Returns the path to hand to pygccx (`ccx_path`), None when absent."""
+    configured = os.environ.get("CCX")
+    if configured and os.access(configured, os.X_OK):
+        return configured
     found = shutil.which("ccx")
     if found:
         return found
-    for directory in os.environ.get("PATH", "").split(os.pathsep):
+    directories = os.environ.get("PATH", "").split(os.pathsep) + [
+        os.path.join(os.environ.get("HOMEBREW_PREFIX", "/opt/homebrew"), "bin"),
+        "/opt/homebrew/bin",
+        "/usr/local/bin",
+    ]
+    candidates: list[tuple[tuple[int, ...], str]] = []
+    for directory in directories:
         try:
-            names = sorted(n for n in os.listdir(directory) if re.fullmatch(r"ccx_\d+(\.\d+)*", n))
+            names = os.listdir(directory)
         except OSError:
             continue
-        if names:
-            return os.path.join(directory, names[-1])
-    return None
+        for name in names:
+            match = re.fullmatch(r"ccx_(\d+(?:\.\d+)*)", name)
+            path = os.path.join(directory, name)
+            if match and os.access(path, os.X_OK):
+                candidates.append((tuple(int(part) for part in match.group(1).split(".")), path))
+    return max(candidates)[1] if candidates else None
 
 
 def _require_complete(block, name: str) -> None:
