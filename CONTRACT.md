@@ -6,8 +6,9 @@ contract version**: pack `1.x` implements contract **v1**. Versions `0.x` are
 pre-releases that already implement contract v1. The app declares which contract
 major it supports and compares it against the installed pack.
 
-Everything below is contract **v1** — it describes conventions that exist in both
-codebases today.
+Sections 1–3 are contract **v1**; section 4 (the design record) is contract **v2**,
+binding from pack 0.26 and Robion 0.15. Everything describes conventions that exist
+in both codebases today.
 
 ## 1 · The `PARTS` registry (build123d scripts)
 
@@ -69,27 +70,52 @@ Rules that hold across every stage:
 - Parameters are the single source of truth: derived values are computed, never
   retyped; asserts guard impossible geometry.
 
-## 4 · Reserved for contract v2 (not yet binding)
+## 4 · The design record — contract v2 (binding from pack 0.26 / Robion 0.15)
+
+`design.json` in the project root is the design record and the wire format of
+Robion's design wizard. It is written only by the project's `design_record.py`
+(from `templates/common/`, tested by `templates/test_design_record.py`); the
+app reads it (`packages/shared/src/design.ts`) and writes back only by running
+that script. Binding:
+
+- **Stage ids and statuses.** Ten fixed ids — `idea brief concept model preview
+  drawings bom plan analysis buildsheet` — with `status` ∈ `pending | working |
+  needs_you | done | stale | skipped`. At most one stage is `needs_you`, nothing
+  is `working` beside it; several `working` only among `drawings, bom, plan,
+  analysis`.
+- **Asks.** A `needs_you` stage carries `ask: {kind: questions | choices |
+  approve, askedAt, title?, questions?, choices?, show?, next?, note?}` as
+  documented in `references/core/design-record.md`; question ids and variant
+  ids are `[a-z][a-z0-9_]*` ≤ 40 characters; the value `decide_for_me` is
+  reserved for the app; `show` entries are `gallery | image | table (≤ 64 rows)
+  | file` with project-relative paths.
+- **Replies.** The app runs `python3 design_record.py reply <stage> <file>
+  [--json]` in the project directory with `{kind, answers | chosen | approved,
+  note?, via?}`; the state machine (what each reply writes and commits, exit
+  code 2 for "no open ask", 1 for an invalid reply, nothing written on error)
+  is the table in design-record.md. After a reply the app types one line into
+  the agent's session: `Robion: the reply to the "<stage>" gate is recorded in
+  design.json (python3 design_record.py show). Continue.`
+- **Stamps.** Every write sets `updated` and `tool` (`design_record.py/<pack
+  version>`), stage moves set `stages[].updatedAt` (`startedAt` on `working`),
+  asks `askedAt`, replies `reply.at`; every gate, reply and change is a git
+  commit made by the script.
+- **Capability flag.** Robion exports `ROBION_DESIGN_ASKS=1` into the agent's
+  environment when it renders asks and runs replies; without it the skill
+  prints the ask in the chat and records the reply itself.
+- **Attachments.** Photos of the idea live in the committed `idea/` directory
+  (`init --attachment`, `attach` copy them from `.robion/uploads/`).
+
+The `brief` controls panel with `page: '<stage id>'` (pack 0.23–0.25) is the
+v1 fallback: Robion keeps rendering it for records without an `ask`.
+
+## 5 · Reserved for a later contract (not yet binding)
 
 - `bom.json` — a structured BOM (items, material, mass, price, supplier,
   bought-state) replacing `bom.md` as the machine-readable artifact.
 - The workshop profile — `~/.robion/workshop.yaml`, a persistent description of
   the user's machines, tools and materials. A **content-level convention since
   pack 0.3.0** (schema and rules:
-  `skills/physical-product/references/core/workshop-profile.md`); contract v2 will
-  make it app-binding (the app may read it — e.g. the printer bed for the
-  viewport outline).
-- `design.json` — the design record in the project root: idea, spec, every
-  answer with who decided it, the chosen concept, per-stage status
-  (`pending | working | needs_you | done | stale | skipped`) and a change log.
-  A **content-level convention since pack 0.22.0** (schema, stage ids and
-  rules: `skills/physical-product/references/core/design-record.md`; the
-  Robion 0.13 reads it: the design panel and the phone's design tab render
-  the map with the stale / needs-you states, and an answer the user edits
-  there reaches the agent as a change request). The stage ids and statuses
-  are therefore binding from pack 0.23 on, ahead of the contract bump.
-  Since pack 0.24.0 the record is written only by the project's
-  `design_record.py` (from `templates/common/`): every write stamps
-  `updated`, `stages[].updatedAt` and `tool` (`design_record.py/<version>`),
-  every gate is a git commit, and every control on the `brief` panel carries
-  `page: '<stage id>'` so the app can show the page of the current stage.
+  `skills/physical-product/references/core/workshop-profile.md`); a later
+  contract will make it app-binding (the app may read it — e.g. the printer
+  bed for the viewport outline).

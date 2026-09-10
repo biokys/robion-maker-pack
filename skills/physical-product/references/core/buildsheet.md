@@ -8,13 +8,16 @@ first): the machinery — slot filling, data-URI images, Markdown→HTML for the
 analysis reports, BOM and purchasing rows from `model.py` / `cutlist.py`,
 drawing figures from the manifest, README and `out/plan.md` mirrors — is
 fixed; the CONTENT block (name, concept paragraph, parameter rows, fastener
-rows, steps, assumptions) is what a project writes, in the user's language. **Load the `artifact-design` skill before composing
-the page** (required for artifacts). The aesthetic is the Robion brand
+rows, steps, assumptions) is what a project writes, in the user's language.
+The aesthetic is the Robion brand
 (robion.app): JetBrains Mono, hairlines instead of borders, dark cockpit palette
 with a paper-light print counterpart, and the violet→cyan gradient as the one
 saturated accent (section strips, step numbers) — keep the title-block
-*structure*, never reintroduce a second accent color. Publish via the Artifact
-tool and keep republishing to the same URL across iterations.
+*structure*, never reintroduce a second accent color. The build sheet is a
+local file: `out/build_sheet.html` (+ `make pdf`), shown with `open_file` and
+offered through the build-sheet gate (`gate buildsheet` with a `file` in
+`show`). Do not publish it with the Artifact tool unless the maker asks for a
+link.
 
 **Everything the reader sees on this page is written in the user's language**
 (SKILL.md, Language rule). The section names below are English labels for what

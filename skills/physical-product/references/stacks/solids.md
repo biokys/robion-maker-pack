@@ -83,10 +83,12 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    in `PARTS` with a material record. Export per-part STEP+STL (viz, drawings and FEA
    each need separate bodies). Run `make check` (mass/COG, pairwise interference,
    declared clearances) before investing in drawings — parts are in assembly
-   coordinates, so overlaps are real collisions. *Gate:* in Robion the cockpit is the gate — the user
-   tunes the sliders on the live viewport and approves; elsewhere show quick renders
-   (`make parts` + OpenSCAD-style screenshot or ocp preview) before investing in
-   drawings/viz.
+   coordinates, so overlaps are real collisions. *Gate:* `gate model ask.json`
+   (kind `approve`) — in Robion the cockpit viewport is the live geometry the
+   maker tunes with the sliders before pressing Continue; add a quick render
+   (`VIZ_SAMPLES=48 make viz`) as a `gallery` when the viewport is not enough.
+   Elsewhere show quick renders (`make parts` + ocp preview) before investing
+   in drawings/viz.
 2. **Drawings** — use the proven Sheet/View framework in `templates/solids/drawings.py`:
    fixed A3 landscape sheets with border frame and a localized title block
    (drawing number, scale, material, quantity, date), TRUE per-sheet scale (1:10
@@ -130,10 +132,11 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    *Gate:* sanity checks pass before any number reaches the user.
 7. **PCB (optional)** — KiCad authoring + `kicad-cli` exports, board STEP into the
    CAD assembly for fit-check: [pcb.md](pcb.md).
-8. **Build sheet** — assemble the localized build-sheet artifact from
-   `templates/common/buildsheet.html` per [../core/buildsheet.md](../core/buildsheet.md);
-   load the `artifact-design` skill before composing the page; mirror the content in
-   the project README.md. The template's `@media print` block makes the same
+8. **Build sheet** — assemble the localized build sheet from
+   `templates/common/buildsheet.html` per [../core/buildsheet.md](../core/buildsheet.md)
+   (`make buildsheet`); mirror the content in the project README.md; then
+   `gate buildsheet ask.json` (kind `approve`, `show: [{type: file, path:
+   out/build_sheet.html}]`) and `open_file` it. The template's `@media print` block makes the same
    `out/build_sheet.html` printable — `make pdf` → one complete PDF (A4 build
    sheet + all A3 drawing sheets), per the print-variant section of buildsheet.md.
 

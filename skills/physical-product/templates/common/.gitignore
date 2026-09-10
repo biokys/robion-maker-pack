@@ -4,3 +4,4 @@ out/
 __pycache__/
 *.pyc
 assets/
+design.json.lock

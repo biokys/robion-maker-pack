@@ -9,6 +9,41 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.26.0
+
+**The record is the only channel** (2026-09-10, after two real projects in
+Robion 0.14 showed the panel and the agent drifting apart at every gate). The
+`brief` controls panel with `page:` controls is gone; a gate is one command
+and Robion writes the maker's reply back through the same script. Changes in
+`templates/common/`:
+
+- **`design_record.py` 0.26.0** — new `gate <stage> ask.json` (stores an `ask`
+  of kind `questions` | `choices` | `approve`, stage → `needs_you`, commit),
+  `reply <stage> reply.json [--json]` (Robion runs it; the state machine in
+  design-record.md), `show [--json]` (where the design is, the open ask or the
+  last reply, the rules — the re-entry point after a compaction or a reply
+  prompt), `attach <path>…` and `commit -m`. `init` now leaves `brief`
+  `working` (the agent composes the questions) and copies `--attachment`
+  photos into the committed `idea/` directory. A file lock
+  (`design.json.lock`, git-ignored) serializes writers, so subagents may write
+  `--no-commit`; several `working` stages are allowed for `drawings`, `bom`,
+  `plan`, `analysis`. `change questions.<id>` needs `--by`; a change never
+  leaves the record without a current stage; invalidated stages drop their
+  ask. `check --strict` warns about delegated (`decide_for_me`) questions still
+  undecided. `next` stays for agent-side gates only.
+- **`.gitignore`** — `design.json.lock`.
+- **`CLAUDE.md.template`** (both stacks) — the "Design record" section lists
+  the six gate rules.
+- `templates/test_design_record.py` — unit tests, run by CI (`record` job).
+
+**Migrate a running project:** re-copy `design_record.py` and add
+`design.json.lock` to `.gitignore`; replace the "Design record" section of
+CLAUDE.md with the template's; `mkdir idea && python3 design_record.py attach
+.robion/uploads/*` for photos recorded under `.robion/`. From the next gate on
+use `gate` / the reply; leave the existing `brief` controls panel alone — Robion
+0.15 stops showing it once the record carries asks (`tool` ≥ 0.26.0). A record
+written by 0.24/0.25 passes `check --strict` unchanged.
+
 ## v0.25.0
 
 **What a welded planter stand taught the solids stack** (2026-09-10, Robion

@@ -1,0 +1,183 @@
+# Scaffold for the reply case: a project whose brief gate was just answered by
+# Robion (`reply` ran, concept is working, one question delegated). The record
+# script is copied from the plugin so the agent can run `show`. No build123d
+# here: the graders look only at design.json and the last message.
+# Runs only with `claude plugin eval --scaffold`.
+schema_version: "1.1"
+context:
+  scaffold_script: |
+    set -e
+    mkdir -p "$HOME/.robion"
+    cat > "$HOME/.robion/workshop.yaml" <<'YAML'
+    # eval fixture — a small hobby woodworking shop
+    updated: 2026-09-08
+    language: en
+    country: CZ
+    currency: CZK
+    machines:
+      printer: null
+      laser: null
+      cnc: null
+    tools: [track saw, router, drill press, random-orbit sander, cordless drill]
+    materials_on_hand:
+      - { name: "birch plywood 18 mm", size_mm: [1250, 600, 18], qty: 1 }
+    fasteners_on_hand: [screws 4x40, wall plugs 8 mm, PU glue]
+    suppliers: {}
+    workshop:
+      space: "garage, 2 m bench"
+      finishing_available: [hard wax oil]
+      no_go: [welding]
+    skill_level: advanced hobby
+    YAML
+
+    cp "$CLAUDE_PLUGIN_ROOT/skills/physical-product/templates/common/design_record.py" . 2>/dev/null || cp "$(dirname "$0")/../../skills/physical-product/templates/common/design_record.py" . || true
+    git init -q --initial-branch=main
+    cat > design.json <<'JSON'
+    {
+      "version": 1,
+      "updated": "2026-09-10T12:00:00Z",
+      "tool": "design_record.py/0.26.0",
+      "product": {
+        "name": "Wall shelf",
+        "slug": "wall-shelf",
+        "language": "en"
+      },
+      "idea": {
+        "text": "a wall shelf for paint tins, 600 wide, birch plywood 18 mm",
+        "attachments": []
+      },
+      "spec": {
+        "summary": "Wall shelf 600 x 200 mm, birch plywood 18 mm, two brackets, 20 kg of paint tins.",
+        "verticals": [
+          "woodworking"
+        ],
+        "stack": "solids",
+        "open": []
+      },
+      "questions": [
+        {
+          "id": "load_kg",
+          "group": "function",
+          "label": "Load",
+          "type": "number",
+          "unit": "kg",
+          "default": 20,
+          "answer": 30,
+          "decidedBy": "user",
+          "answeredAt": "2026-09-10T12:00:00Z"
+        },
+        {
+          "id": "bracket",
+          "group": "form",
+          "label": "Bracket style",
+          "type": "select",
+          "options": [
+            {
+              "value": "plywood_gusset",
+              "label": "plywood gusset"
+            },
+            {
+              "value": "steel_angle",
+              "label": "steel angle"
+            }
+          ],
+          "default": "plywood_gusset",
+          "answer": "plywood_gusset",
+          "decidedBy": "default",
+          "answeredAt": "2026-09-10T12:00:00Z"
+        },
+        {
+          "id": "finish",
+          "group": "materials",
+          "label": "Finish",
+          "type": "select",
+          "options": [
+            {
+              "value": "oil",
+              "label": "hard wax oil"
+            },
+            {
+              "value": "none",
+              "label": "none"
+            }
+          ],
+          "default": "oil",
+          "decidedBy": "claude",
+          "answeredAt": "2026-09-10T12:00:00Z"
+        }
+      ],
+      "concept": {
+        "variants": []
+      },
+      "stages": [
+        {
+          "id": "idea",
+          "label": "Idea",
+          "status": "done",
+          "updatedAt": "2026-09-10T11:50:00Z"
+        },
+        {
+          "id": "brief",
+          "label": "Brief",
+          "status": "done",
+          "updatedAt": "2026-09-10T12:00:00Z",
+          "startedAt": "2026-09-10T11:50:00Z",
+          "reply": {
+            "kind": "questions",
+            "at": "2026-09-10T12:00:00Z",
+            "askedAt": "2026-09-10T11:55:00Z",
+            "via": "app",
+            "answers": {
+              "load_kg": 30,
+              "finish": "decide_for_me"
+            }
+          }
+        },
+        {
+          "id": "concept",
+          "label": "Concept",
+          "status": "working",
+          "updatedAt": "2026-09-10T12:00:00Z",
+          "startedAt": "2026-09-10T12:00:00Z",
+          "estimate": "about 5 minutes"
+        },
+        {
+          "id": "model",
+          "label": "Model",
+          "status": "pending"
+        },
+        {
+          "id": "preview",
+          "label": "Previews",
+          "status": "pending"
+        },
+        {
+          "id": "drawings",
+          "label": "Drawings",
+          "status": "pending"
+        },
+        {
+          "id": "bom",
+          "label": "Materials & cuts",
+          "status": "pending"
+        },
+        {
+          "id": "plan",
+          "label": "Build plan",
+          "status": "pending"
+        },
+        {
+          "id": "analysis",
+          "label": "Strength",
+          "status": "pending"
+        },
+        {
+          "id": "buildsheet",
+          "label": "Build sheet",
+          "status": "pending"
+        }
+      ],
+      "changes": []
+    }
+    JSON
+    git add -A && git -c user.name=eval -c user.email=eval@robion.app commit -q -m 'brief: answered (1 user, 1 default, 1 claude)'

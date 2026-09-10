@@ -51,12 +51,25 @@ variables; blender is on PATH.
 ## Design record
 
 `design.json` in this folder is the design record: the idea, every answer and
-who decided it, the chosen concept, the ten stages with their status and the
-log of changes. It is written only by `design_record.py` next to it — never by
-hand: `python3 design_record.py stage <id> working|needs_you|done`, `next <id>`,
-`change <what> --from … --to … --invalidates …`, `check --strict` (rules: the
-maker pack's `references/core/design-record.md`). Robion draws its design
-panel from it, and a session that skips it leaves the panel lying.
+who decided it, the chosen concept, the ten stages with their status, the open
+ask and the log of changes. It is written only by `design_record.py` next to it
+— never by hand (`python3 design_record.py --help` is the reference). Robion
+draws its design panel from it. The rules that keep the panel truthful:
+
+1. Every stop for the maker is one command: `gate <stage> ask.json` (kind
+   `questions` | `choices` | `approve`). Never ask in the chat.
+2. The maker's reply arrives as one prompt line ("Robion: the reply to …"):
+   run `python3 design_record.py show` first, then continue from the stage it
+   started. Not replying is waiting.
+3. Before producing a stage: `stage <id> working --estimate "…"`; agent-side
+   stages close with `stage <id> done --artifact …`; maker gates close through
+   the reply.
+4. A change after a gate: `change <what> --from … --to … --invalidates …
+   --by user|claude` first, then regenerate the stale stages.
+5. drawings, bom, plan, analysis may work in parallel (subagents write with
+   `--no-commit`); the main thread runs `commit -m "…"` once.
+6. `check --strict` before every gate; after a compaction, `show` and `--help`
+   are enough to pick the work up.
 
 ## Cost of a change
 

@@ -17,10 +17,12 @@ on:
     branches: [main]
     paths:
       - "skills/physical-product/templates/**"
+      - ".claude-plugin/**"
       - ".github/workflows/templates.yml"
   pull_request:
     paths:
       - "skills/physical-product/templates/**"
+      - ".claude-plugin/**"
       - ".github/workflows/templates.yml"
 
 concurrency:
@@ -28,6 +30,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: design_record.py unit tests (stdlib only, real git)
+        run: python3 -m unittest skills/physical-product/templates/test_design_record.py -v
+
+      - name: Versions agree (plugin.json, marketplace.json, design_record.py)
+        run: |
+          v=$(python3 -c "import json; print(json.load(open('.claude-plugin/plugin.json'))['version'])")
+          grep -q "\"version\": \"$v\"" .claude-plugin/marketplace.json
+          grep -q "^VERSION = \"$v\"" skills/physical-product/templates/common/design_record.py
+
   solids:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -52,16 +69,31 @@ jobs:
           cp -R skills/physical-product/templates/common/. "$PROJ/"
           cp -R skills/physical-product/templates/solids/. "$PROJ/"
 
-      - name: Design record script (init, stage, next, check --strict)
+      - name: Design record script (init, gate, reply, concept, show, check --strict)
         working-directory: ${{ env.PROJ }}
         run: |
           python3 design_record.py init --name "CI solids" --slug ci-solids --language en \
             --idea "a smoke-test product" --summary "exercises the record script" \
             --verticals woodworking --stack solids
-          python3 design_record.py stage brief done
-          python3 design_record.py next concept --estimate "a minute"
+          cat > ask.json <<'EOF'
+          {"kind": "questions", "questions": [{"id": "width", "label": "Width", "type": "select",
+            "options": [{"value": 1600, "label": "1600 mm"}, {"value": 1800, "label": "1800 mm"}], "default": 1600}],
+           "next": {"stage": "concept", "estimate": "a minute"}}
+          EOF
+          python3 design_record.py gate brief ask.json
+          echo '{"kind": "questions", "answers": {"width": 1800}}' > reply.json
+          python3 design_record.py reply brief reply.json --json | grep -q '"next": "concept"'
+          echo '[{"id": "a", "title": "A"}, {"id": "b", "title": "B"}]' > variants.json
+          python3 design_record.py concept variants.json --recommended b
+          echo '{"kind": "choices"}' > ask.json
+          python3 design_record.py gate concept ask.json
+          echo '{"kind": "choices", "chosen": "b"}' > reply.json
+          python3 design_record.py reply concept reply.json
+          python3 design_record.py show | grep -q "Current: model working"
           python3 design_record.py check --strict
           git log --oneline | grep -q "idea: recorded"
+          git log --oneline | grep -q "concept: frozen (b)"
+          rm -f ask.json reply.json variants.json
 
       - name: uv sync (with the recognise extra — exercises auto_holes)
         working-directory: ${{ env.PROJ }}
@@ -163,16 +195,31 @@ jobs:
           cp -R skills/physical-product/templates/common/. "$PROJ/"
           cp -R skills/physical-product/templates/patterns2d/. "$PROJ/"
 
-      - name: Design record script (init, stage, next, check --strict)
+      - name: Design record script (init, gate, reply, concept, show, check --strict)
         working-directory: ${{ env.PROJ }}
         run: |
           python3 design_record.py init --name "CI patterns2d" --slug ci-patterns2d --language en \
             --idea "a smoke-test product" --summary "exercises the record script" \
             --verticals woodworking --stack patterns2d
-          python3 design_record.py stage brief done
-          python3 design_record.py next concept --estimate "a minute"
+          cat > ask.json <<'EOF'
+          {"kind": "questions", "questions": [{"id": "width", "label": "Width", "type": "select",
+            "options": [{"value": 1600, "label": "1600 mm"}, {"value": 1800, "label": "1800 mm"}], "default": 1600}],
+           "next": {"stage": "concept", "estimate": "a minute"}}
+          EOF
+          python3 design_record.py gate brief ask.json
+          echo '{"kind": "questions", "answers": {"width": 1800}}' > reply.json
+          python3 design_record.py reply brief reply.json --json | grep -q '"next": "concept"'
+          echo '[{"id": "a", "title": "A"}, {"id": "b", "title": "B"}]' > variants.json
+          python3 design_record.py concept variants.json --recommended b
+          echo '{"kind": "choices"}' > ask.json
+          python3 design_record.py gate concept ask.json
+          echo '{"kind": "choices", "chosen": "b"}' > reply.json
+          python3 design_record.py reply concept reply.json
+          python3 design_record.py show | grep -q "Current: model working"
           python3 design_record.py check --strict
           git log --oneline | grep -q "idea: recorded"
+          git log --oneline | grep -q "concept: frozen (b)"
+          rm -f ask.json reply.json variants.json
 
       - name: uv sync
         working-directory: ${{ env.PROJ }}

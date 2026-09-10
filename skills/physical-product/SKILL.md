@@ -11,83 +11,109 @@ same spine: **a parametric source of truth → derived artifacts (visuals,
 drawings/patterns, BOM, plans) → verification → gates → a build sheet the user
 makes the thing from.** Changing one parameter must reflow everything.
 
-The skill is layered — load only what the project needs:
+The skill is layered — load only what the stage needs, when it needs it:
 
-- **This file** — the spine: intake, routing, stages, gates, habits.
-- **`references/verticals/`** — playbooks: WHAT is being made (wood, metal,
-  print, laser, CNC, electronics, sewing). Read after routing; they refine
-  stages, never replace the spine.
+- **This file** — the spine: talking to the maker, intake, routing, stages, gates.
+- **`references/core/design-record.md`** — the design record and the gate
+  protocol; read once at intake. `python3 design_record.py --help` repeats the
+  commands and the rules and is enough after a compaction.
+- **`references/verticals/`** — playbooks: WHAT is being made. Read the routed
+  ones after the brief analysis; they refine stages, never replace the spine.
 - **`references/stacks/`** — recipes: HOW artifacts get produced (solids =
-  build123d, patterns2d = 2D cutting patterns, pcb = KiCad).
-- **`references/core/`** — shared conventions (workshop profile, design record,
-  toolchain & degrade, build sheet, fit partners = real dimensions of what the
+  build123d, patterns2d = 2D cutting patterns, pcb = KiCad). Read the section
+  for the stage you are starting, not the whole file up front.
+- **`references/core/`** — workshop profile, toolchain & degrade, build sheet
+  (read at the build-sheet stage), fit partners (real dimensions of what the
   product mates with).
 
-**Language rule.** This pack is English and language-neutral by design; the
-product it produces is not. Work out the user's language from how they write
-to you (`language:` in the workshop profile overrides it), then:
+**Language rule.** This pack is English and language-neutral; the product it
+produces is not. Work out the user's language from how they write to you
+(`language:` in the workshop profile overrides it), then: deliverables in the
+user's language (build sheet, README, drawing text and title blocks, BOM and
+cut-plan tables, assembly steps, safety warnings, dialogue, every `label`,
+`title`, `hint`, `estimate` and `note` in the record) with the vocabulary a
+workshop in that language actually speaks; everything else in English (code,
+comments, identifiers, commit messages, this pack). Localize once, at scaffold
+time: templates ship English strings tagged `L10N:`, `make l10n` lists them —
+translate them before the first `make`. Market facts (suppliers, stock sizes,
+standards, currency) come from the workshop profile or a question, never from
+the dictionary; never invent a supplier or a price.
 
-- **Deliverables in the user's language** — build sheet, README, drawing text
-  and title blocks, BOM and cut-plan tables, assembly steps, safety warnings,
-  dialogue. Use the vocabulary a workshop in that language actually speaks,
-  not a word-by-word translation of the English term: trade names for stock,
-  joints and operations differ from dictionary equivalents, and a literal
-  translation reads foreign to the person holding the drawing.
-- **Everything else in English** — code, comments, identifiers, commit
-  messages, file names, and this pack itself.
-- **Localize once, at scaffold time.** Templates ship English user-facing
-  strings tagged `L10N:`; `make l10n` lists every one. Translate them right
-  after copying the templates, before the first `make` — a half-translated
-  build sheet is worse than an English one.
-- **Market facts are not translation.** Suppliers, stock sizes actually sold,
-  standards and currency belong to the user's market, not to the pack: take
-  them from the workshop profile or ask. Never invent a supplier or a price.
+## 0 · Talking to the maker
 
-## 1 · Intake = brief analysis, then a question round (mandatory gate)
+The maker reads Robion's design panel and the phone, not this terminal. The
+panel is drawn from `design.json`; what you write there is what they see.
 
-**Workshop profile first:** read `~/.robion/workshop.yaml` before asking
-anything — it answers machines, tools and materials once for all projects.
-Missing file ⇒ run the one-time workshop interview and create it:
-[references/core/workshop-profile.md](references/core/workshop-profile.md).
+- **Every stop for a decision is a gate = one command:** `python3
+  design_record.py gate <stage> ask.json` (kind `questions`, `choices` or
+  `approve` — design-record.md). The panel renders the questions, the concept
+  cards or the approval screen from the record. **Never ask a question in the
+  chat**, never a numbered list of options for the maker to type back, never
+  an `AskUserQuestion` for a design decision.
+- **Not replying is waiting.** After `gate`, write at most three short lines
+  (what is ready, where to look) and stop. The reply arrives as one prompt
+  line — `Robion: the reply to the "<stage>" gate is recorded in design.json
+  (python3 design_record.py show). Continue.` — run `show`, read what was
+  decided and from which stage to continue, and go on. A free-text prompt
+  from the maker while a gate is open is a change request or a note (§7).
+- **Terse replies.** No "Insight" blocks, no restating the record — the maker
+  sees it in the panel. Numbers go into the record and the artifacts.
+- **Deliverables are local files.** Show them with `open_file` (the build
+  sheet is `out/build_sheet.html`, renders and drawings are PNGs the panel
+  lists as artifacts). Never publish them with the Artifact tool unless the
+  maker asks for a link.
+- **Bare terminal** (no `ROBION_DESIGN_ASKS` in the environment: an older
+  Robion or plain Claude Code): still run `gate`, then print the ask as text
+  in the chat and record the maker's answer yourself with `reply <stage>
+  reply.json` (`"via": "chat"`). The record stays the same either way.
+
+## 1 · Intake = brief analysis, then the question round (mandatory gate)
+
+**Workshop profile first:** read `~/.robion/workshop.yaml` before anything —
+it answers machines, tools and materials once for all projects. Missing file ⇒
+the workshop questions ([references/core/workshop-profile.md](references/core/workshop-profile.md))
+join the first question round as their own group, and you write the profile
+from the reply before the concept — no separate interview in the chat.
 
 **Design record second:** the project keeps its memory in `design.json` —
 idea, spec, every answer and who decided it, the chosen concept, the state of
 each stage, every change after a gate. It is written only by
 `design_record.py` (copied from the pack's `templates/common/` as the project's
-first file): one call per move, the script stamps the clock, keeps the record
-valid and commits every gate. Never edit `design.json` by hand. Before every
-stop-and-wait the waiting stage is `needs_you`, while you produce one it is
-`working`, after approval `done`; Robion draws the map of stages from it.
-Rules, commands, the brief panel:
-[references/core/design-record.md](references/core/design-record.md).
+first file, with `.gitignore`): one call per move; the script stamps the clock,
+keeps the record valid and commits every gate. Never edit `design.json` by
+hand. Read [references/core/design-record.md](references/core/design-record.md) now, once.
 
 Then STOP before any geometry. Three steps, dialogue in the user's language:
 
 1. **Brief analysis** — reading only (the profile, the playbooks); the only
-   files this step writes are the record and its script: restate the request
+   files this step writes are the record and its script. Restate the request
    as a spec — function, users, must-haves, constraints, what the brief leaves
    open. Route the vertical(s) now (§2; electronics inside ⇒ the pcb stack
    applies) so each playbook's *Intake additions* join the question round.
-   Post the spec, copy `templates/common/design_record.py` and `.gitignore`
-   into the working directory, then
+   Photos the user attached arrive as `[Attached image: <path>]` lines after
+   the prompt (Robion puts them in `.robion/uploads/`): look at every one
+   before writing the spec — the aesthetic reference, a sketch, the space the
+   thing goes into, the stock on hand — and say what you took from each. Then
+   copy `templates/common/design_record.py` and `.gitignore` into the working
+   directory and run
    `python3 design_record.py init --name … --slug … --language … --idea "…"
-   --summary "…" --verticals … --stack … --label brief=… …` — it writes the
-   record with `idea` done, `brief` needs_you (you are about to wait for the
-   answers) and the rest `pending`, and makes the first commit.
-2. **Question round** — ask everything the spec leaves open, batched into
-   groups, each question with a recommended default so the user can answer
-   "ok" per group. The generic groups:
+   --attachment .robion/uploads/<file> … --summary "…" --verticals … --stack …
+   --label brief=… …` — `idea` is done, `brief` is working (you are composing
+   the questions), photos are copied into the committed `idea/` directory, and
+   the first commit exists.
+2. **Question round** — everything the spec leaves open, as one `ask.json` of
+   kind `questions`, batched into groups, every question with a recommended
+   `default` (the panel adds *decide for me* as the first choice itself; the
+   value `decide_for_me` is reserved). The generic groups:
    - function and load case: what it carries/does, worst realistic load,
      static or dynamic (vibration source nearby?);
-   - dimensions: which are fixed (space constraints, stock on hand) vs
-     derived;
-   - form factor and ergonomics: handheld / desk / wall, orientation, size
-     or thickness limits;
-   - user interface, where there is one: controls, what each does, labels
-     and their language, display;
+   - dimensions: which are fixed (space constraints, stock on hand) vs derived;
+   - form factor and ergonomics: handheld / desk / wall, orientation, size or
+     thickness limits;
+   - user interface, where there is one: controls, labels and their language, display;
    - connectors and openings, and which face each sits on;
-   - materials and colours for THIS project beyond the profile (stock on
-     hand matters most);
+   - materials and colours for THIS project beyond the profile (stock on hand
+     matters most);
    - manufacturing reality beyond the profile: who makes the parts the user
      can't, anything borrowed or one-off for this build;
    - aesthetic reference (photo) if looks matter;
@@ -95,35 +121,31 @@ Then STOP before any geometry. Three steps, dialogue in the user's language:
    - what is fixed vs negotiable;
    - plus the *Intake additions* of every playbook routed in step 1.
 
-   More questions are fine here — it is the cheapest place to ask. In Robion
-   the preferred medium is a `brief` controls panel (task scope): `select` /
-   `toggle` / `text` controls, every select with `default` = the recommended
-   value and *decide for me* as its first option, every control with
-   `page: 'brief'`, and one `send` button that returns the answers as the next
-   prompt (the concept gate adds `choices` cards with `page: 'concept'` on the
-   same panel; every later call on it is `mode: 'merge'` — design-record.md). Robion draws the map of stages from the record, so the
-   panel carries no map. Keep that panel for the life of the project: a value
-   the user changes later arrives as a controls diff with their next prompt
-   and is a change request (§7). **Wait for the answers.** "Never stall" applies only to facts the
-   user cannot know (a material constant, a standard, a catalogue size) —
+   More questions are fine here — it is the cheapest place to ask. Types:
+   `select` (options with `value` + `label`, `default` mandatory), `toggle`,
+   `number` (with `unit`), `text`. Then `python3 design_record.py gate brief
+   ask.json` with `"next": {"stage": "concept", "estimate": "…"}`, one line in
+   the chat, stop. **Wait for the reply.** "Never stall" applies only to facts
+   the user cannot know (a material constant, a standard, a catalogue size) —
    assume those and record them in the build sheet's assumptions section.
    Taste decisions — shape, ergonomics, UI, labels, colour — are never
-   assumed, in any mode, autonomous runs included. Record every answer with
-   who decided it: `python3 design_record.py answers answers.json` (`user`,
-   `default`, or `claude` plus the reason), then move on — the concept
-   command below closes `brief`.
+   assumed, in any mode, autonomous runs included. The reply records every
+   answer with who decided it; questions answered *decide for me* come back as
+   `decidedBy: claude` without an answer — decide each one before the concept
+   with `answer <id> --value … --by claude --reason "…"` and repeat the reason
+   in the build sheet's assumptions.
 3. **Concept gate** — a 2D block layout (component rectangles, key
    dimensions), the part list with alternatives, quick previews — and an
-   explicit approval before the schematic or the detailed model exists.
-   On the solids stack the variants are parameter sets of one early
-   `model.py` (`templates/solids/concept.py`: `make concept` exports,
-   renders and collects the facts per variant), so nothing built for the
-   cards is thrown away after the freeze.
-   Approval freezes shape, UI and connector positions; §5 keys the expensive
-   stages on that freeze. Post the variants as `choices` cards and record
-   them: `python3 design_record.py concept variants.json --recommended b`
-   (brief done, concept needs_you); on approval `python3 design_record.py
-   freeze <variant>` — the `concept` stage is done only then.
+   explicit approval before the schematic or the detailed model exists. On the
+   solids stack the variants are parameter sets of one early `model.py`
+   (`templates/solids/concept.py`: `make concept` exports, renders and
+   collects the facts per variant), so nothing built for the cards is thrown
+   away after the freeze. Record them — `python3 design_record.py concept
+   variants.json --recommended b` — then `gate concept ask.json` with kind
+   `choices` (the cards come from `concept.variants`; add a `show` gallery when
+   the previews deserve a bigger view). The reply freezes the chosen variant
+   and starts `model`. Approval freezes shape, UI and connector positions; §5
+   keys the expensive stages on that freeze.
 
 ## 2 · Vertical routing
 
@@ -190,30 +212,36 @@ missing: [references/core/toolchain.md](references/core/toolchain.md).
 
 ## 5 · Stage pipeline — cost-aware ordering
 
-Run stages in order; each has a gate. Skipping a stage is fine when the user
-says so — note it in the build sheet: `python3 design_record.py stage <id>
-skipped --note …`. Starting a stage: `python3 design_record.py stage <id>
-working --estimate "…"` (or `next <id>`, which also closes the current one);
-before every stop for the user: `stage <id> needs_you`; passing the gate:
-`stage <id> done --artifact out/…`. The script stamps the times; Robion draws
-the map from these statuses — nothing to update on the panel. At every gate
-that waits, offer the next step as `send` buttons on the `brief` panel
-(Continue / Wait, `page: '<stage id>'`) so the user never needs the terminal
-to answer
-([references/core/design-record.md](references/core/design-record.md)). Concrete commands live in the stack
-recipe ([solids](references/stacks/solids.md),
-[patterns2d](references/stacks/patterns2d.md)); the vertical playbook refines
-what each stage must cover.
+Run the stages in order; each has a gate. Before producing a stage: `python3
+design_record.py stage <id> working --estimate "…"` (the panel shows the
+estimate and the clock). Two kinds of gate:
+
+- **Maker gates** (model, preview, build sheet — and any stage the maker asked
+  to see): `python3 design_record.py gate <id> ask.json` with kind `approve`
+  and a `show` list — the renders as a `gallery`, a drawing or a stress plot as
+  an `image`, the BOM as a `table` (≤ 64 rows) or a `file`, the build sheet as
+  a `file`. The reply marks the stage done and starts the next one (`next`
+  defaults to the following stage; pass an `estimate`). `approved: false`
+  comes back with a note: the stage is working again — fix, then gate again.
+- **Agent-side gates** (drawings, BOM, plan, analysis): you verify (§6) and
+  close the stage yourself: `stage <id> done --artifact out/… [--note …]`. Show
+  the result in one line and move on; the maker sees the artifacts on the
+  panel's map. Skipping a stage the stack has no equivalent for: `stage <id>
+  skipped --note …`, never removed.
 
 | # | Stage | Deliverable | Gate |
 |---|---|---|---|
-| 1 | **Model** | parametric source of truth (`model.py` / `pattern.py`) | user approves the live geometry |
-| 2 | **See it** | live viewport / rendered previews | user approves proportions |
-| 3 | **Drawings / pattern sheets** | dimensioned drawings or 1:1 pattern pages | every PNG Read and checked before the user sees it |
-| 4 | **BOM + cut plan** | bill of materials, cutting plan / marker layout | masses & consumption cross-checked |
-| 5 | **Make plan** | numbered assembly/sewing/welding steps + finishing schedule | ordered so it's actually executable |
-| 6 | **Analysis** (when load-bearing) | analytic estimates first, FEA to verify | sanity checks pass before numbers reach the user |
-| 7 | **Build sheet** | build sheet per [core/buildsheet.md](references/core/buildsheet.md) | user approves; mirror into README |
+| 1 | **Model** | parametric source of truth (`model.py` / `pattern.py`) | maker: `approve` — the cockpit viewport is the live geometry |
+| 2 | **See it** | live viewport / rendered previews | maker: `approve` + `gallery` of the renders |
+| 3 | **Drawings / pattern sheets** | dimensioned drawings or 1:1 pattern pages | agent: every PNG Read and checked |
+| 4 | **BOM + cut plan** | bill of materials, cutting plan / marker layout | agent: masses & consumption cross-checked |
+| 5 | **Make plan** | numbered assembly/sewing/welding steps + finishing schedule | agent: ordered so it is executable |
+| 6 | **Analysis** (when load-bearing) | analytic estimates first, FEA to verify | agent: sanity checks pass before numbers reach the maker |
+| 7 | **Build sheet** | build sheet per [core/buildsheet.md](references/core/buildsheet.md) | maker: `approve` + `file` `out/build_sheet.html`; mirror into README |
+
+Concrete commands live in the stack recipe ([solids](references/stacks/solids.md),
+[patterns2d](references/stacks/patterns2d.md)) — read the section of the
+stage you are starting; the vertical playbook refines what each stage must cover.
 
 **Artifacts have very different regeneration costs.** Cheap (seconds —
 regenerate freely): the parametric model, `make check`, previews and the live
@@ -221,13 +249,13 @@ viewport, board outline and placement, ERC. Expensive (minutes to an hour,
 and order-dependent — every moved button rebuilds them): routing, photoreal
 renders, dimensioned drawings, cut plans, FEA, the build sheet. Run the
 expensive stages only after shape, UI and connector positions are frozen at
-the concept gate (§1); until then iterate on the cheap ones. During any
-autonomous run longer than ~20 minutes, post a short status: what was
-decided, what is being built, what the next gate is.
+the concept gate (§1); until then iterate on the cheap ones. A run longer than
+~20 minutes without a gate: keep the record's `working` stage and `estimate`
+current — that is the status message; the chat needs none.
 
 **Robion cockpit — build it unprompted.** When the `set_controls` MCP tool
 exists, the cockpit is part of stage 1, not an optional extra (read
-`controls_help` first):
+`controls_help` first). It is a task-scoped panel named `model`:
 
 - `param: true` sliders **named exactly after the parameters in the model
   script** — the viewport and every run-button then receive them as
@@ -241,13 +269,13 @@ exists, the cockpit is part of stage 1, not an optional extra (read
   illustration (viz.py) on patterns2d.
 - `image` tiles for renders, drawings, cut plans — they refresh on their own
   whenever the files are regenerated.
-- A `set` preset button restoring the defaults.
-- The `brief` panel (answers, concept cards, next-step buttons) stays alongside
-  the cockpit; never fold it into the cockpit or remove it.
+- A `set` preset button restoring the defaults (defined in the same call as
+  the sliders it targets).
 
-Keep the cockpit current as stages advance (BOM stage: a shopping `checklist`;
-plans: image tiles of the sheets). No `set_controls` tool (a bare terminal) ⇒
-skip silently, never mention it.
+The questions, the concept cards and the gates are **not** controls: they live
+in the record and the design panel draws them. Keep the cockpit current as
+stages advance (BOM stage: a shopping `checklist`; plans: image tiles of the
+sheets). No `set_controls` tool ⇒ skip silently, never mention it.
 
 ## 6 · Verification habits (non-negotiable)
 
@@ -264,18 +292,27 @@ skip silently, never mention it.
 
 ## 7 · Iteration protocol
 
-User feedback → change parameters (never hardcode inside builders) → `make` → show.
-Keep the dialogue in the user's language, short iterations, one proposal at a time.
-Record design decisions in the project README; record newly discovered tool gotchas
+User feedback → change parameters (never hardcode inside builders) → `make` →
+show. Short iterations, one proposal at a time, in the user's language. Record
+design decisions in the project README; record newly discovered tool gotchas
 in the project CLAUDE.md ("Gotchas learned here").
 
-Change requests after the concept freeze: state which expensive artifacts the
-change invalidates (routing? renders? drawings?) before regenerating them —
-the project CLAUDE.md's "Cost of a change" section lists the chain. Log the
-change first — `python3 design_record.py change <what> --from … --to …
---invalidates …` marks the stages `stale` (change protocol in
-design-record.md); they are `done` again only once regenerated. A parameter
-edit forced by `make check` after the freeze is a change too.
+A change after a gate is logged first, never silently absorbed: `python3
+design_record.py change <what> --from … --to … --invalidates a,b --by user|claude
+[--reason …] [--cost …]` — a recorded answer (`questions.<id>`), the chosen
+concept, a spec sentence, or a parameter after the freeze (`model.<param>`; a
+value forced by `make check` is a change too, `--by claude --reason`). The
+script marks the stages `stale` and, when nothing is current any more, sets the
+first stale stage working. State which expensive artifacts are affected before
+regenerating them (the project CLAUDE.md "Cost of a change" section lists the
+chain); when the regeneration is long, `gate` first with kind `approve` so the
+maker decides. Stale stages are `done` again only once regenerated.
+
+A change from the app arrives as a prompt naming the question's label and id,
+the old and the new value (the maker edited an answer in the panel), or as a
+free-text note while a gate is open. Same protocol: `change … --by user` first,
+then regenerate from the first stale stage. The panel updates itself from the
+record — there is nothing to fix on any controls.
 
 ## 8 · Degrade & uncertainty
 

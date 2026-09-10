@@ -59,10 +59,12 @@ exactly what was skipped). For the full pipeline on macOS:
 
 ## With Robion
 
-Inside [Robion](https://robion.app), every artifact the skills produce shows up
-live: the design map and the question round on the `brief` panel, the 3D model
-panel with a slider-driven customizer, drawings and renders in the media panel,
-KiCad DRC/ERC checks — and the cockpit on your phone. The
+Inside [Robion](https://robion.app), the skill drives a wizard: the design
+panel draws the map of stages, the question round, the concept cards and every
+approval straight from the project's `design.json` (one `gate` command per
+stop; Robion writes the maker's reply back with `reply`), the 3D model panel
+is a slider-driven customizer, drawings and renders open in the media panel,
+KiCad DRC/ERC checks run live — and the same wizard sits on your phone. The
 conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
 
 ## Notes
@@ -74,11 +76,12 @@ conventions the app relies on are documented in [CONTRACT.md](CONTRACT.md).
   `~/.robion/workshop.yaml` — created once by a short interview, read at every
   project intake, yours to hand-edit.
 - Every project keeps a design record in `design.json` — the idea, the answers
-  and who decided them, the chosen concept, the state of each stage and a
-  change log. It is written only by the project's own `design_record.py`
-  (stamped by the clock, validated, committed at every gate), so the next
-  session reads it instead of the lost transcript and Robion draws the design
-  panel from it.
+  and who decided them, the chosen concept, the state of each stage, the open
+  ask and a change log. It is written only by the project's own
+  `design_record.py` (stamped by the clock, validated, committed at every
+  gate), so the next session reads it instead of the lost transcript and
+  Robion draws the design panel from it. `python3 -m unittest
+  skills/physical-product/templates/test_design_record.py` checks the script.
 - 3D-printed parts are delivered as STL + STEP plus a print plan in the words
   of your slicer; the pack never slices and never produces G-code.
 - Releases are git tags; the marketplace pins the plugin version per release.
