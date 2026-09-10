@@ -12,8 +12,11 @@
      fill them from the table in references/core/buildsheet.md (solids
      defaults / sewing values); never string-replace rendered headings.
      L10N: every visible string here (headings, table headers, field labels,
-     the footer line) ships in English — translate them all into the user's
-     language when scaffolding. -->
+     captions, the footer line) ships in English — translate them all into
+     the user's language when scaffolding; `make l10n` lists them.
+     Slots wrapped in HTML comments stay invisible until a generator fills
+     them — the generator (templates/solids/buildsheet.py) strips the
+     comment wrapper before substituting. -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap">
 <style>
   :root { --bg:#f4f6f8; --panel:#ffffff; --ink:#242b34; --bright:#111820;
@@ -112,6 +115,12 @@
 
   <section><h2>Concept</h2>
     <p class="lede">{{CONCEPT_PARAGRAPH}}</p>
+    <!-- parameter table: what is fixed, what is derived (buildsheet.md §3) -->
+    <div class="table-wrap" style="margin-bottom:1.25rem"><table>
+      <caption>Parameters</caption>
+      <thead><tr><th>Parameter</th><th>Value</th><th>Origin</th></tr></thead>
+      <tbody><!-- {{PARAMETER_ROWS}} --></tbody>
+    </table></div>
     <figure><img src="{{HERO_DATA_URI}}" alt="{{HERO_ALT}}">
       <figcaption><b>Visualization.</b> {{HERO_CAPTION}}</figcaption></figure>
     <!-- optional extra renders (detail/tunnel/exploded), same figure markup,
@@ -131,6 +140,15 @@
       <thead><tr><th>Pos.</th><th>Part</th><th>Size (mm)</th><th>Qty</th><th>Mass</th><th>Note</th></tr></thead>
       <tbody><!-- {{BOM_ROWS}} --></tbody>
     </table></div>
+    <!-- purchasing rows come from cutlist.purchase_rows(); the figure is
+         out/cutlist.png (line art -> PNG data URI) -->
+    <div class="table-wrap" style="margin-top:1.25rem"><table>
+      <caption>Purchasing (cutting plan)</caption>
+      <thead><tr><th>Material</th><th>Stock item</th><th>Buy</th><th>Utilization</th><th>Largest offcut</th></tr></thead>
+      <tbody><!-- {{PURCHASE_ROWS}} --></tbody>
+    </table></div>
+    <figure style="margin-top:1.25rem"><img src="{{CUTLIST_DATA_URI}}" alt="Cutting plan">
+      <figcaption><b>Cutting plan.</b> {{CUTLIST_CAPTION}}</figcaption></figure>
     <!-- optional second table — fasteners & finishing materials: -->
     <div class="table-wrap" style="margin-top:1.25rem"><table>
       <caption>Fasteners &amp; finishing materials</caption>

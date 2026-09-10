@@ -113,6 +113,13 @@ jobs:
           grep -q 'balance OK' frame.log
           test -f out/fea/stress.png && test -f out/fea/frame_report.md
 
+      - name: Build sheet generator (no render, no cut-plan PNG -> fallbacks)
+        working-directory: ${{ env.PROJ }}
+        run: |
+          uv run buildsheet.py
+          test -f out/build_sheet.html && test -f README.md && test -f out/plan.md
+          grep -q 'Parameters' out/build_sheet.html
+
       - name: Drawing lint selftest (deliberately broken sheet must trip)
         working-directory: ${{ env.PROJ }}
         run: uv run drawings.py lint-selftest

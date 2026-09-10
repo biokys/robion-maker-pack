@@ -61,11 +61,16 @@ drawings-pdf: drawings
 # One complete PDF: A4 build sheet + all A3 drawing sheets. The build-sheet
 # HTML carries its own @media print rules (A4 pages, forced light palette)
 # — see templates/common/buildsheet.html and the skill's buildsheet.md.
-pdf: drawings-pdf
+pdf: drawings-pdf buildsheet
 	"$(CHROME)" --headless --no-pdf-header-footer \
 		--print-to-pdf=$(OUT)/build_sheet.pdf \
 		"file://$(CURDIR)/$(OUT)/build_sheet.html" 2>/dev/null
 	$(UV) run merge_pdfs.py --complete
+
+# build sheet from the model, cut plan, analysis reports and figures:
+# out/build_sheet.html (artifact + print source), out/plan.md, README.md
+buildsheet: bom cutlist
+	$(UV) run buildsheet.py
 
 # Blender exits 0 even when the python script throws — the grep IS the check.
 viz: parts
@@ -108,7 +113,10 @@ assets/osifont/osifont.ttf:
 l10n:
 	@echo "user-facing strings to translate (L10N markers + template slots):"
 	@grep -rn "L10N" *.py *.html 2>/dev/null || true
-	@echo "--- buildsheet slots (fill with translated text) ---"
+	@echo "--- buildsheet.html visible strings (translate in the skeleton) ---"
+	@grep -oE "<(dt|th|caption|h2|b)>[^<{]+" buildsheet.html 2>/dev/null | sed "s/^<[a-z0-9]*>/  /" | sort -u || true
+	@grep -oE "<p class=\"lede\">[^{<]+" buildsheet.html 2>/dev/null | sed "s/^<p[^>]*>/  /" || true
+	@echo "--- buildsheet slots (filled by buildsheet.py; CONTENT block is L10N) ---"
 	@grep -o "{{[A-Z_]*}}" buildsheet.html 2>/dev/null | sort -u || true
 	@echo "--- also translate: PARTS local_name/note, Material names, STOCK keys ---"
 
@@ -133,4 +141,4 @@ concept:
 clean:
 	rm -rf $(OUT)
 
-.PHONY: frame-fea concept all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
+.PHONY: buildsheet frame-fea concept all parts bom check cutlist cutlist-png drawings drawings-png drawings-pdf pdf viz fea font l10n doctor clean
