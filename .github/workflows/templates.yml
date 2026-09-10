@@ -125,6 +125,15 @@ jobs:
           grep -q "Purchasing summary" out/cutlist.md
           uv run python -c "import json; json.load(open('out/drawings/manifest.json'))"
 
+      - name: Leaf targets (LEAF=1) skip the parts re-export and the uv sync
+        working-directory: ${{ env.PROJ }}
+        run: |
+          before=$(stat -c %Y out/parts/bracket.step)
+          sleep 1
+          make drawings LEAF=1
+          make bom LEAF=1
+          test "$(stat -c %Y out/parts/bracket.step)" = "$before" || { echo "LEAF=1 re-exported the parts"; exit 1; }
+
       - name: PNG smoke via preinstalled Chrome
         working-directory: ${{ env.PROJ }}
         run: |

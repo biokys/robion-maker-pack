@@ -71,7 +71,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
-VERSION = "0.26.1"
+VERSION = "0.27.0"
 TOOL = f"design_record.py/{VERSION}"
 FILE = "design.json"
 LOCK_FILE = "design.json.lock"

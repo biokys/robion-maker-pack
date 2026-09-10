@@ -9,6 +9,27 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.27.0
+
+**The production half runs as four subagents** (2026-09-10; SKILL.md §5): after the
+`preview` reply the main thread starts `drawings`, `bom`, `plan`, `analysis` with
+`--no-commit`, launches four Agent-tool subagents in one turn (Sonnet for the mechanical
+three, the main model for the analysis), each writing only its own `out/` files and closing
+its stage with `--no-commit`, then checks, commits once and moves to the build sheet. The
+main thread's context never carries render logs or drawing lint — the cost lever the
+cost & speed plan asked for, without compacting anything.
+
+- `templates/solids/Makefile`: `LEAF=1` — `make <target> LEAF=1` runs `uv run --no-sync`
+  and drops the `parts` prerequisite of `drawings`/`viz` and the `bom cutlist` one of
+  `buildsheet`, so four processes never re-export the same STEP files. `RUN` replaces
+  `$(UV) run` in every target; CI checks that `LEAF=1` leaves `out/parts` untouched.
+- `design_record.py` 0.27.0: no functional change (the lock, `--no-commit` and the
+  parallel `working` rule came in 0.26).
+
+**Migrate:** re-copy the Makefile (or add the two variables and the three `$(if $(LEAF),…)`
+prerequisites by hand). Projects on the patterns2d stack keep the sequential production
+half.
+
 ## v0.26.1
 
 `design_record.py`: the gate commit stages with plain `git add -A` and unstages the lock

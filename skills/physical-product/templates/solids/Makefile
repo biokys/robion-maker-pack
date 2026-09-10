@@ -1,6 +1,10 @@
 # Product pipeline. All targets are regenerable; out/ is disposable.
 # Machine defaults are overridable: `make viz BLENDER=/path/to/blender`.
 UV ?= uv
+# LEAF=1 (production subagents running side by side): no parts re-export, no uv
+# re-sync — the main thread ran `make parts check` and `uv sync` before the fan-out.
+RUN := $(UV) run$(if $(LEAF), --no-sync,)
+DEPS_PARTS := $(if $(LEAF),,parts)
 BLENDER ?= blender
 CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KICAD_CLI ?= /Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli
@@ -9,19 +13,19 @@ OUT := out
 all: parts check drawings bom cutlist
 
 parts:
-	$(UV) run model.py export
+	$(RUN) model.py export
 
 bom:
-	$(UV) run model.py bom
+	$(RUN) model.py bom
 
 # assembly gate: mass/COG + pairwise interference + declared clearances;
 # fails fast before the expensive drawing stage
 check:
-	$(UV) run model.py check
+	$(RUN) model.py check
 
 # cutting plan: purchasing tables + cut diagrams from STOCK in cutlist.py
 cutlist:
-	$(UV) run cutlist.py >/dev/null
+	$(RUN) cutlist.py >/dev/null
 
 $(OUT)/cutlist.png: $(OUT)/cutlist.svg $(OUT)/cutlist.html
 	"$(CHROME)" --headless --screenshot=$@ \
@@ -32,8 +36,8 @@ $(OUT)/cutlist.png: $(OUT)/cutlist.svg $(OUT)/cutlist.html
 
 cutlist-png: cutlist $(OUT)/cutlist.png
 
-drawings: parts
-	$(UV) run drawings.py
+drawings: $(DEPS_PARTS)
+	$(RUN) drawings.py
 
 # Drawings render to PNG via headless Chrome through the scaling .html
 # wrapper drawings.py emits (a bare SVG renders 1 px/unit and crops).
@@ -56,7 +60,7 @@ drawings-pdf: drawings
 			--print-to-pdf=$${f%.print.html}.pdf "file://$(CURDIR)/$$f" \
 			2>/dev/null; \
 		echo "  pdf $${f%.print.html}.pdf"; done
-	$(UV) run merge_pdfs.py
+	$(RUN) merge_pdfs.py
 
 # One complete PDF: A4 build sheet + all A3 drawing sheets. The build-sheet
 # HTML carries its own @media print rules (A4 pages, forced light palette)
@@ -65,15 +69,15 @@ pdf: drawings-pdf buildsheet
 	"$(CHROME)" --headless --no-pdf-header-footer \
 		--print-to-pdf=$(OUT)/build_sheet.pdf \
 		"file://$(CURDIR)/$(OUT)/build_sheet.html" 2>/dev/null
-	$(UV) run merge_pdfs.py --complete
+	$(RUN) merge_pdfs.py --complete
 
 # build sheet from the model, cut plan, analysis reports and figures:
 # out/build_sheet.html (artifact + print source), out/plan.md, README.md
-buildsheet: bom cutlist
-	$(UV) run buildsheet.py
+buildsheet: $(if $(LEAF),,bom cutlist)
+	$(RUN) buildsheet.py
 
 # Blender exits 0 even when the python script throws — the grep IS the check.
-viz: parts
+viz: $(DEPS_PARTS)
 	$(BLENDER) --background --python blender_viz.py -- $(OUT) 2>&1 \
 		| tee $(OUT)/viz.log \
 		| grep -E 'Saved|Traceback|Error' || true
@@ -82,14 +86,14 @@ viz: parts
 
 # beam-element frame model (numpy, no solver): out/fea/stress.png + report
 frame-fea:
-	$(UV) run frame_fea.py
+	$(RUN) frame_fea.py
 
 fea:
 	@command -v ccx >/dev/null \
-		&& $(UV) run --extra fea fea.py \
+		&& $(RUN) --extra fea fea.py \
 		|| { echo 'ccx (CalculiX) not installed -> analytic-only.'; \
 		     echo 'Install (ask user first): brew install costerwi/calculix/calculix-ccx'; \
-		     $(UV) run fea.py --analytic-only; }
+		     $(RUN) fea.py --analytic-only; }
 
 # CC0 PBR textures from Poly Haven, fetched on demand:
 #   make assets/<asset>/<asset>_diff_2k.jpg   (also rough/nor_gl/disp maps)
@@ -123,20 +127,20 @@ l10n:
 doctor:
 	@echo "tool availability:"
 	@$(UV) --version >/dev/null 2>&1 && echo "  uv        OK" || echo "  uv        MISSING"
-	@$(UV) run python -c "import build123d,sys;print('  build123d OK', build123d.__version__)" 2>/dev/null || echo "  build123d MISSING (uv sync)"
-	@$(UV) run python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
+	@$(RUN) python -c "import build123d,sys;print('  build123d OK', build123d.__version__)" 2>/dev/null || echo "  build123d MISSING (uv sync)"
+	@$(RUN) python -c "import build123d_drafting;print('  b3d-drafting OK')" 2>/dev/null || echo "  b3d-drafting MISSING (dims degrade to ExtensionLine)"
 	@test -f assets/osifont/osifont.ttf && echo "  osifont   OK" || echo "  osifont   MISSING (make font; drawings fall back to Arial)"
-	@$(UV) run python -c "import b123d_recognisers;print('  recognisers OK')" 2>/dev/null || echo "  recognisers MISSING (uv sync --extra recognise; auto_holes degrades)"
+	@$(RUN) python -c "import b123d_recognisers;print('  recognisers OK')" 2>/dev/null || echo "  recognisers MISSING (uv sync --extra recognise; auto_holes degrades)"
 	@command -v "$(BLENDER)" >/dev/null && echo "  blender   OK" || echo "  blender   MISSING"
 	@test -x "$(CHROME)" && echo "  chrome    OK" || echo "  chrome    MISSING"
 	@command -v ccx >/dev/null && echo "  ccx       OK" || echo "  ccx       MISSING (FEA -> analytic only)"
-	@$(UV) run --extra fea python -c "import gmsh;print('  gmsh      OK')" 2>/dev/null || echo "  gmsh      MISSING (uv sync --extra fea)"
+	@$(RUN) --extra fea python -c "import gmsh;print('  gmsh      OK')" 2>/dev/null || echo "  gmsh      MISSING (uv sync --extra fea)"
 	@test -x "$(KICAD_CLI)" && echo "  kicad-cli OK" || echo "  kicad-cli MISSING"
 
 # concept previews: every variant = a parameter set (ROBION_PARAMS) ->
 # out/concept/<id>/ (parts + quick render) and out/concept/facts.json
 concept:
-	$(UV) run concept.py
+	$(RUN) concept.py
 
 clean:
 	rm -rf $(OUT)

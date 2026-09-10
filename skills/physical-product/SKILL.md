@@ -243,6 +243,38 @@ Concrete commands live in the stack recipe ([solids](references/stacks/solids.md
 [patterns2d](references/stacks/patterns2d.md)) — read the section of the
 stage you are starting; the vertical playbook refines what each stage must cover.
 
+**Production half — four subagents, one commit (solids).** Drawings, BOM + cut plan,
+the make plan and the analysis do not depend on each other; after the `preview` reply
+(`model` and `preview` done) they run side by side, each in its own context, so the main
+thread never fills up with render logs and drawing lint:
+
+1. Once, in the main thread: `uv sync`, `make parts check`, then
+   `python3 design_record.py stage drawings working --estimate "…" --no-commit` and the
+   same for `bom`, `plan`, `analysis` (the record allows these four to work at once).
+2. In ONE turn, four Agent-tool subagents — `model: sonnet` for drawings, bom and plan;
+   analysis without a `model` (it inherits yours). Every brief is the same template:
+   the product name and the user's language; `design.json` (read it, `python3
+   design_record.py show` too) and `model.py` as the source of truth; the section of the
+   stack recipe for that stage pasted in (not the file name); the stage's exclusive
+   output — `out/drawings/` · `out/bom.md` + `out/cutlist.*` · `out/plan.md` (the numbered
+   steps and the finishing schedule, the build sheet copies them) · `out/fea/` — and
+   nothing outside it; leaf targets only, `make <target> LEAF=1` (`drawings-png`,
+   `drawings-pdf`, `bom`, `cutlist`, `cutlist-png`, `frame-fea`, `fea`; never `parts`,
+   never `viz`, never `uv sync`); §6 verification (Read every PNG); the closing command
+   `python3 design_record.py stage <id> done --no-commit --artifact out/…` (or `skipped
+   --note …`); **never** `git`, never `design_record.py` on another stage, never a
+   question — an unknown fact becomes a line in `out/<stage>_assumptions.md`. The
+   subagent returns at most ten lines: files written, the numbers the build sheet needs
+   (mass, governing stress and safety factor, sheet count), its assumptions.
+3. Back in the main thread: `python3 design_record.py check --strict`, one PNG per stage
+   Read yourself, the assumptions folded into the build sheet's section, then one commit:
+   `python3 design_record.py commit -m "production: drawings, bom, plan, analysis"`. A
+   stage still `working` after the subagents returned means one died — rerun that one.
+   Then `stage buildsheet working`, `make buildsheet`, `gate buildsheet ask.json`.
+
+A post-freeze change reruns only the stale stages the same way. Patterns2d and pcb stay
+sequential for now (their stages share files).
+
 **Artifacts have very different regeneration costs.** Cheap (seconds —
 regenerate freely): the parametric model, `make check`, previews and the live
 viewport, board outline and placement, ERC. Expensive (minutes to an hour,
