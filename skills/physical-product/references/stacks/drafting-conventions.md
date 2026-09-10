@@ -106,6 +106,23 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
   draws source circle + letter and destination ring + caption. Dim inside
   via `det.pt(x, y, z)` with TRUE model-mm labels (the lint knows k).
   Call only after the parent view is placed.
+- **Hollow sections: no hidden bore lines.** `add_views(..., hidden=False)`
+  (or `add_view(v, hidden=False)`) — a tube's bore as hidden lines is a
+  dashed double line 2 mm inside every outline at 1:3 .. 1:5 and reads as
+  a second part. The wall shows on the open-end view (`top` of a leg, the
+  mitered end of a rail) and in the profile note.
+- **Thin profiles: dimension the inner edge into the gap.** On a 30 mm
+  profile a dim on the inner edge placed `"below"` lands exactly on the
+  outer edge (offset 10 paper mm at 1:3 = the profile). Put it `"above"`
+  into the gap between the views (widen `gap_paper`), or dimension the
+  outer edge and give the inner length as a `(540)` reference.
+- **Notes are centered; leaders run away from the tip.** `note(text, at)`
+  centers the text on `at` — a long line "45 mm right of the view" spills
+  back over the view. Hang note blocks by their top-left corner
+  (`align=(Align.MIN, Align.MAX)`, lines ≤ ~48 chars, one `note` per
+  line). A leader's shelf text extends away from the tip, so put the
+  elbow outside the view on the side the text belongs; `at ==
+  leader_from` raises (the helpers crash on a zero-length shaft).
 - **Missing helpers degrade, not crash:** without `build123d_drafting`
   installed, dims fall back to `ExtensionLine`, callouts to plain text,
   center marks are skipped — each with a printed WARNING. `make doctor`

@@ -280,9 +280,14 @@ class Sheet:
         self._dim_checks: list[tuple[str, tuple, tuple]] = []
         self._details: list[tuple[tuple, float, float]] = []  # (at, r, k)
 
-    def add_view(self, view: View) -> None:
+    def add_view(self, view: View, hidden: bool = True) -> None:
+        """Add a placed view. `hidden=False` drops the hidden lines — use it
+        for hollow sections and tubes, whose bore would otherwise draw a
+        dashed double line 2 mm inside every outline at 1:3 .. 1:5 (the wall
+        shows on the open-end view and in the profile note instead)."""
         self.layers["visible"].extend(view.visible)
-        self.layers["hidden"].extend(view.hidden)
+        if hidden:
+            self.layers["hidden"].extend(view.hidden)
 
     def dim(self, p1: tuple[float, float], p2: tuple[float, float],
             side: str, offset_paper_mm: float = 10.0,
@@ -360,15 +365,30 @@ class Sheet:
             self._skipped_marks += 1
 
     def note(self, text: str, at: tuple[float, float],
-             leader_from: tuple[float, float] | None = None) -> None:
+             leader_from: tuple[float, float] | None = None,
+             align=None) -> None:
         """Free note at `at`; with `leader_from`, an arrowed leader from
-        that point (e.g. an edge) to the note shelf."""
+        that point (e.g. an edge) to the note shelf.
+
+        A plain note is CENTERED on `at` (the helpers' default) — a long
+        line placed "just right of the view" spills back over it. Pass
+        `align=(Align.MIN, Align.MAX)` to hang a note block by its top-left
+        corner (general notes, weld notes), and keep lines short.
+        A leader's shelf text runs AWAY from the tip: put the elbow outside
+        the view on the side the text should sit.
+        """
+        if leader_from is not None and math.hypot(
+                at[0] - leader_from[0], at[1] - leader_from[1]) < 0.5 * self.P:
+            raise ValueError(
+                f"note {text!r}: leader elbow coincides with its tip — offset "
+                "`at` from `leader_from` (the helpers crash on a zero-length shaft)")
         if _DRAFTING and leader_from is not None:
             self.layers["dims"].append(
                 Leader(leader_from, at, text, self.draft,
                        line_width=0.15 * self.P))
         elif _DRAFTING:
-            self.layers["text"].append(Note(text, at, self.draft))
+            self.layers["text"].append(Note(text, at, self.draft,
+                                            align=align))
         else:
             self.layers["text"].append(_text(text, 3.0 * self.P, at))
 
@@ -582,9 +602,10 @@ class Sheet:
             raise ValueError(f"unknown side {side!r}")
 
     def add_views(self, part: Part, kinds: list[str],
-                  gap_paper: float = 12.0) -> dict[str, View]:
+                  gap_paper: float = 12.0, hidden: bool = True) -> dict[str, View]:
         """Create and add views laid out in first angle (top BELOW front,
-        right view on the LEFT, left/back on the RIGHT); {kind: View}."""
+        right view on the LEFT, left/back on the RIGHT); {kind: View}.
+        `hidden=False` for hollow sections — see add_view."""
         views = {k: View(part, k) for k in kinds}
         base = views[kinds[0]]
         anchor_right = base
@@ -599,7 +620,7 @@ class Sheet:
                 self.place_view(v, "right", anchor_right, gap_paper)
                 anchor_right = v
         for v in views.values():
-            self.add_view(v)
+            self.add_view(v, hidden=hidden)
         return views
 
     def hatch(self, face2d, style: str) -> None:
