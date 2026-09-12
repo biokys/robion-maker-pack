@@ -182,7 +182,8 @@ jobs:
         working-directory: ${{ env.PROJ }}
         run: |
           uv run buildsheet.py
-          test -f out/build_sheet.html && test -f README.md && test -f out/plan.md
+          test -f out/build_sheet.html && test -f README.md
+          test ! -f out/plan.md   # the plan stage owns that file; the generator only reads it
           grep -q 'Parameters' out/build_sheet.html
 
       - name: Drawing lint selftest (deliberately broken sheet must trip)
