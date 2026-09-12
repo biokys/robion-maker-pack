@@ -47,6 +47,14 @@ a cross-stack parameter mechanism.
   BOM with pull allowances (~80–100 mm per side for stapling grip).
 - **BOM** — foam by block dims + grade, fabric from the marker, wadding,
   zips (length = boxing opening), staples, foam adhesive.
+- **Removable cushion on a lid** — hook-and-loop: the loop strips are sewn
+  on the cover's bottom panel, so their geometry (two cross strips near the
+  ends, or two lengthwise strips) is decided ONCE in `covers/pattern.py` and
+  the frame BOM copies the hook-side quantity from it — never size the two
+  sides in two places. A lid on a piano hinge is carried by the front panel
+  and the hinge line across its depth: the hinge leaf screws are the weak
+  member (leaning on the open lid), not the plate — size them (3.5×16 into a
+  plywood edge, or the leaf on the inner face) before worrying about the span.
 - **Make plan** — frame → finish → webbing/board → glue foam → wadding →
   cover (sew per covers/ plan, or staple: centers first, then work outward,
   hospital corners); pull evenly, no puckers.

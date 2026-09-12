@@ -9,6 +9,61 @@ version stamped in the project's CLAUDE.md.
 Migrating is always optional: projects keep working on the template vintage
 they were scaffolded with.
 
+## v0.28.1
+
+**What an upholstered hallway bench taught the pack** (2026-09-12, the retro of a
+1200 × 400 × 450 mm plywood bench on pack 0.28.0 — solids at the root, a patterns2d cover
+sub-project in `covers/`). Changes in `templates/` unless noted:
+
+- `solids/drawings.py`: `Sheet.detail` maps the clipped edges with one affine
+  `transform_geometry` matrix — chaining `translate().scale()` ignores a located shape's
+  Location in build123d 0.11 and the blown-up detail landed off the sheet. New third lint
+  pass, **anchors**: both ends of every dim must lie on drawn geometry (an edge, a circle
+  centre, a centerline / center-mark stroke; `ANCHOR_TOL_PAPER` = 0.5 paper mm) or, for an
+  axis-aligned dim, in line with an edge end no further than `ANCHOR_GAP_PAPER` = 15 paper
+  mm (an envelope dim taken from the floor past a recessed plinth). It catches `view.pt()`
+  of a coordinate that is not on the part — a dim of the right length hanging in the air,
+  invisible to the dim-truth pass. `lint-selftest` covers it; the bench's eight real
+  sheets pass it silently and its original floating dim trips it.
+- `common/buildsheet.html`: `{{ASSEMBLY_STEPS}}`, `{{FINISHING_STEPS}}` and
+  `{{ASSUMPTION_ITEMS}}` are `<div>` slots — the generator supplies the `<ol
+  class="steps">` / `<ul>` itself, so headings, tables and notes fit between the steps;
+  new `{{DRAWINGS_EXTRA}}` slot for notes and tables beside the drawings, outside the
+  figure grid (CNC data, pattern info); `td.qty` (a wrapping quantity cell) and
+  heading / list styles for the rendered plan.
+- `solids/buildsheet.py`: **reads `out/plan.md`, never writes it** — the make-plan stage
+  owns that file; its `## ` sections render under the assembly heading, the one whose
+  heading matches `FINISHING_HEADING` under surface finishing, the sub-project's plan
+  follows. Fastener rows are parsed from the tables of `out/hardware.md` (BOM stage; `item
+  | specification or purpose | quantity`, by position) — the hand-typed list survives only
+  as the fallback while that file is missing. Assumptions = the general list, every
+  question the record marks `decidedBy: claude` (with its reason), then each
+  `out/<stage>_assumptions.md` under its own heading. A patterns2d sub-project
+  (`SUBPROJECT`, default `covers/`) contributes its fabric row to the purchasing table,
+  its notions to the fasteners, its plan, assumptions and marker layout. The
+  Markdown→HTML converter handles headings, numbered steps, nested bullets, tables and
+  inline markup; the manifest and the hero image are optional.
+- SKILL.md §5: two more lines in every subagent brief — never stop to "wait for a
+  notification" (poll with `sleep`, kill after a stated budget), and every decision two
+  stages share is spelled out identically in all briefs; the production half is estimated
+  honestly (eight sheets + CAM DXFs ≈ 60 min, solid FEA of one plate ≈ 30 min). The BOM
+  stage's exclusive output includes `out/hardware.md`.
+- `references/verticals/upholstery.md`: a removable cushion on a lid — the hook-and-loop
+  geometry is decided once in `covers/pattern.py` and the frame BOM copies it; on a
+  piano-hinged lid the hinge screws, not the plate, are the weak member.
+- `references/stacks/solids.md`, `core/buildsheet.md`, `stacks/drafting-conventions.md`:
+  the conventions above (hardware.md columns, plan.md sections, the third lint pass).
+- `common/design_record.py` 0.28.1: no functional change.
+
+**Migrate a running project:** re-copy `drawings.py` (or graft `_seg_dist`,
+`_lint_anchors`, the two `ANCHOR_*` constants and the `write()` line), then
+`buildsheet.html` **and** `buildsheet.py` together — the new slot makes the old generator
+stop with `unfilled slots: ['{{DRAWINGS_EXTRA}}']`. Move the project's `ASSEMBLY_STEPS` /
+`FINISHING_STEPS` into `out/plan.md` (or keep the plan stage's file) and its fastener list
+into `out/hardware.md`; port `concept_paragraph`, `parameter_rows`, `size_by_row` and the
+heading strings, set `FINISHING_HEADING`, `SUBPROJECT*`, `DRAWINGS_NOTES` and
+`ASSUMPTION_SOURCES` in the user's language.
+
 ## v0.28.0
 
 **The viz stage moved from Blender to a browser path tracer** (2026-09-10). Same config

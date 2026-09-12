@@ -27,7 +27,7 @@ make check              # assembly gate: mass/COG, interference, clearance
 make cutlist            # cutting plan (out/cutlist.{md,svg}; -png variant)
 make fea                # analysis (degrades to analytic-only without ccx)
 make frame-fea          # beam-element frame model: stress plot + report
-make buildsheet         # build sheet (out/build_sheet.html) + README.md + out/plan.md
+make buildsheet         # build sheet (out/build_sheet.html) + README.md; renders out/plan.md
 make pdf                # one complete PDF: A4 build sheet + A3 drawing sheets
 make doctor             # tool availability
 ```

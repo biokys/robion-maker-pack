@@ -76,8 +76,9 @@ pdf: drawings-pdf buildsheet
 		"file://$(CURDIR)/$(OUT)/build_sheet.html" 2>/dev/null
 	$(RUN) merge_pdfs.py --complete
 
-# build sheet from the model, cut plan, analysis reports and figures:
-# out/build_sheet.html (artifact + print source), out/plan.md, README.md
+# build sheet from the model, cut plan, analysis reports and figures, plus
+# out/plan.md, out/hardware.md and out/*_assumptions.md written by the
+# production stages: out/build_sheet.html (artifact + print source), README.md
 buildsheet: $(if $(LEAF),,bom cutlist)
 	$(RUN) buildsheet.py
 

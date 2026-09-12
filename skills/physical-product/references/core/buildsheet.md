@@ -5,10 +5,13 @@ fabricator, mirroring the project README.md. Compose from
 `templates/common/buildsheet.html` through the generator
 `templates/solids/buildsheet.py` (`make buildsheet`; `make pdf` runs it
 first): the machinery — slot filling, data-URI images, Markdown→HTML for the
-analysis reports, BOM and purchasing rows from `model.py` / `cutlist.py`,
-drawing figures from the manifest, README and `out/plan.md` mirrors — is
-fixed; the CONTENT block (name, concept paragraph, parameter rows, fastener
-rows, steps, assumptions) is what a project writes, in the user's language.
+plan, the reports and the assumption files, BOM and purchasing rows from
+`model.py` / `cutlist.py`, fastener rows from `out/hardware.md`, drawing
+figures from the manifest, the README mirror — is fixed; the CONTENT block
+(name, concept paragraph, parameter rows, section headings, the sub-project
+paths, general assumptions) is what a project writes, in the user's language.
+The make plan is not the generator's content: the plan stage writes
+`out/plan.md` and the generator renders it — it never writes that file.
 The aesthetic is the Robion brand
 (robion.app): JetBrains Mono, hairlines instead of borders, dark cockpit palette
 with a paper-light print counterpart, and the violet→cyan gradient as the one
@@ -37,16 +40,22 @@ next section).
 3. **Concept** — one paragraph of the design idea + parameter table (what's fixed,
    what's derived).
 4. **Drawings** — dimensioned drawing PNGs, each in a figure with caption; note
-   that dimensions are in mm.
+   that dimensions are in mm. Notes and tables that belong beside the sheets
+   but not in their grid (CNC data, pattern info) go into `{{DRAWINGS_EXTRA}}`.
 5. **Bill of materials** — per-material tables, columns `Pos. | Part | Size (mm)
    | Qty | Mass | Note`; then a fasteners & finishing table (fasteners, glue,
-   finish, felt pads) with quantities and purpose. Purchasing rows come from
+   finish, felt pads) with quantities and purpose — its rows are parsed from
+   the tables of `out/hardware.md` (BOM stage; columns `item | specification
+   or purpose | quantity`, any headings between them). Purchasing rows come from
    `cutlist.purchase_rows()` (material, stock item, qty, utilization, offcut —
    never retype them), and the section gets a figure embedding `out/cutlist.png`
    (`datauri.data_uri(..., png=True)`, line art) with a one-line figcaption.
 6. **Assembly steps** — numbered steps; order so interior surfaces are finished
    while accessible; call out screw sizes and pre-drilling; wood-movement
-   provisions (oversized holes) explained.
+   provisions (oversized holes) explained. Rendered from `out/plan.md` (`## `
+   sections become sub-headings; the section whose heading matches the
+   generator's `FINISHING_HEADING` renders under Surface finishing instead),
+   followed by the sub-project's plan when there is one.
 7. **Surface finishing** — sanding schedule (grits, direction), grain raising,
    oil/paint coats with flash-off and cure times, inter-coat sanding, safety note
    (oil-rag self-ignition), metal finish note.
@@ -54,7 +63,9 @@ next section).
    factors), FEA/modal results table if run, excitation comparison.
 9. **Assumptions & uncertainties** — ALWAYS present; every assumed load, dimension
    guess, skipped stage (degrade sentences from toolchain.md), with the parameter
-   name that changes it.
+   name that changes it; then every answer the record marks `decidedBy: claude`
+   with its reason, and each stage's `out/<stage>_assumptions.md` (plus the
+   sub-project's) under its own heading.
 10. Footer: source files, `make` commands, material constants used — and the
     Robion credit line linking https://robion.app (already in the template; keep
     it).
@@ -130,9 +141,13 @@ Verify by Reading pages of the PDF (page count, sizes, light theme).
   downscale renders to ≤1200 px before embedding — use the shipped helper:
   `from datauri import data_uri` in the generator, or
   `uv run datauri.py <img> [--png]` (portable Pillow, no sips/ImageMagick).
-- Optional skeleton slots: `{{EXTRA_FIGURES}}` (more renders in Concept)
-  and `{{FASTENERS_TABLE}}` (fasteners rows in the BOM) — they
-  collapse via CSS until filled, so leaving them empty is fine. Slots that
+- Optional skeleton slots: `{{EXTRA_FIGURES}}` (more renders in Concept),
+  `{{FASTENERS_TABLE}}` (fasteners rows in the BOM) and `{{DRAWINGS_EXTRA}}`
+  (notes beside the drawings) — they collapse via CSS or render nothing until
+  filled, so leaving them empty is fine. `{{ASSEMBLY_STEPS}}`,
+  `{{FINISHING_STEPS}}` and `{{ASSUMPTION_ITEMS}}` are `<div>` slots: the
+  generator supplies the `<ol class="steps">` / `<ul>` itself, so headings,
+  tables and notes can sit between the steps. Slots that
   sit inside HTML comments in the skeleton (`<!-- {{BOM_ROWS}} -->`) are
   unwrapped by the generator's `fill()` before substitution — a plain
   string replace would leave the rows commented out.

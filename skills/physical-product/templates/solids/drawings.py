@@ -69,6 +69,8 @@ PAPER_W, PAPER_H = 420.0, 297.0  # A3 landscape, paper mm
 MARGIN = 8.0                     # frame inset from paper edge
 TB_W, TB_H = 190.0, 36.0         # title block size
 DIM_BLUE = (0, 90, 170)
+ANCHOR_TOL_PAPER = 0.5           # a dim anchor is "on" geometry within this (paper mm)
+ANCHOR_GAP_PAPER = 15.0          # …or in line with an edge end at most this far away
 # section-view hatching: material class -> [(angle_deg, spacing_paper_mm)]
 HATCH_STYLES = {"wood": [(45, 3.5)], "xps": [(45, 7.0), (-45, 7.0)],
                 "metal": [(45, 2.5)]}
@@ -213,6 +215,17 @@ def _clip_len(seg, box) -> float:
         else:
             t1 = min(t1, r)
     return 0.0 if t0 >= t1 else math.hypot(dx, dy) * (t1 - t0)
+
+
+def _seg_dist(p, seg) -> float:
+    """Distance from point p to a segment ((x0, y0), (x1, y1))."""
+    (x0, y0), (x1, y1) = seg
+    dx, dy = x1 - x0, y1 - y0
+    if dx == 0 and dy == 0:
+        return math.hypot(p[0] - x0, p[1] - y0)
+    t = ((p[0] - x0) * dx + (p[1] - y0) * dy) / (dx * dx + dy * dy)
+    t = min(1.0, max(0.0, t))
+    return math.hypot(p[0] - (x0 + t * dx), p[1] - (y0 + t * dy))
 
 
 def _label_of(sketch) -> str:
@@ -468,6 +481,12 @@ class Sheet:
         c = view.pt(*center_model)
         r_src, r_dst = radius_paper * P, radius_paper * P * k
         clip = (Pos(*c, 0) * Circle(r_src)).face()
+        # One affine map (scale about c by k, then move to `at`) applied with
+        # transform_geometry: chaining translate().scale() ignores a located
+        # shape's Location in build123d 0.11 and the pieces land off-sheet.
+        blow_up = Matrix([[k, 0, 0, at[0] - k * c[0]],
+                          [0, k, 0, at[1] - k * c[1]],
+                          [0, 0, 1, 0], [0, 0, 0, 1]])
         failed = 0
         for layer, edges in (("visible", view.visible),
                              ("hidden", view.hidden)):
@@ -480,8 +499,7 @@ class Sheet:
                 for piece in ([] if r is None else r.edges()):
                     if piece.length > 0.01 * P:
                         self.layers[layer].append(
-                            piece.translate((-c[0], -c[1], 0)).scale(k)
-                                 .translate((*at, 0)))
+                            piece.transform_geometry(blow_up))
         if failed:
             print(f"  WARNING {self.name}: {failed} detail edges failed "
                   "to clip")
@@ -737,6 +755,70 @@ class Sheet:
                     f"(Δ{abs(measured - want):.2f} > ±{tol:.2f})")
         return findings
 
+    def _lint_anchors(self) -> list[str]:
+        """Anchor check: both ends of every dim must sit on drawn geometry —
+        a visible or hidden edge, the centre of a circular edge (hole
+        pitches) or a centerline / center-mark stroke — within
+        ANCHOR_TOL_PAPER; for an axis-aligned dim an anchor may also be IN
+        LINE with an edge end (an envelope dim taken from the floor past a
+        recessed plinth) as long as its extension line reaches that edge
+        within ANCHOR_GAP_PAPER. Catches view.pt() of a coordinate that is
+        not on the part: the dim then floats beside the outline with a
+        correct length, which the dim-truth check cannot see."""
+        P = self.P
+        tol, gap = ANCHOR_TOL_PAPER * P, ANCHOR_GAP_PAPER * P
+        edges = [(e, e.bounding_box()) for e in
+                 self.layers["visible"] + self.layers["hidden"]
+                 + [m for m in self.layers["marks"] if isinstance(m, Edge)]]
+        strokes = [seg for m in self.layers["marks"]
+                   for seg in (getattr(m, "segments", None) or ())]
+
+        def off_by(p, exact: bool = False) -> float:
+            """Distance to the nearest drawn geometry; the bbox prefilter
+            keeps the common case cheap, `exact` reports a true number."""
+            x, y = p
+            best = math.inf
+            for e, bb in edges:
+                if e.geom_type in (GeomType.CIRCLE, GeomType.ELLIPSE):
+                    c = e.arc_center
+                    best = min(best, math.hypot(x - c.X, y - c.Y))
+                if not exact and (x < bb.min.X - tol or x > bb.max.X + tol
+                                  or y < bb.min.Y - tol or y > bb.max.Y + tol):
+                    continue
+                best = min(best, e.distance_to(Vector(x, y, 0)))
+                if best <= tol:
+                    return best
+            for seg in strokes:
+                best = min(best, _seg_dist(p, seg))
+            return best
+
+        def in_line(p, axis: int) -> bool:
+            """An edge ends or turns at the anchor's coordinate along the
+            measured axis, close enough for the extension line to reach."""
+            for e, bb in edges:
+                lo, hi = ((bb.min.X, bb.max.X) if axis == 0
+                          else (bb.min.Y, bb.max.Y))
+                if min(abs(lo - p[axis]), abs(hi - p[axis])) > tol:
+                    continue
+                if e.distance_to(Vector(p[0], p[1], 0)) <= gap:
+                    return True
+            return False
+
+        findings = []
+        for label, p1, p2 in self._dim_checks:
+            axis = (0 if abs(p1[1] - p2[1]) <= tol
+                    else 1 if abs(p1[0] - p2[0]) <= tol else None)
+            loose = [p for p in (p1, p2)
+                     if off_by(p) > tol
+                     and not (axis is not None and in_line(p, axis))]
+            if loose:
+                worst = max(off_by(p, exact=True) for p in loose)
+                findings.append(
+                    f"dim '{label}' anchors {worst / P:.1f} mm off any edge "
+                    "— view.pt() of a point that is not on the part? Anchor "
+                    "on an edge, a circle centre or a centerline")
+        return findings
+
     def _lint_collisions(self) -> list[str]:
         """Text must stay clear: label×label overlap, foreign annotation
         strokes through labels, visible part edges through labels. Uses the
@@ -798,7 +880,8 @@ class Sheet:
 
     def write(self, dxf: bool = False) -> None:
         P = self.P
-        findings = self._lint_dims() + self._lint_collisions()
+        findings = (self._lint_dims() + self._lint_anchors()
+                    + self._lint_collisions())
         for i, finding in enumerate(findings):
             if i == 10:
                 print(f"  WARNING {self.name}: (+{len(findings) - 10} more)")
@@ -1105,6 +1188,14 @@ def lint_selftest() -> None:
     if len(truth) != 1:
         print(f"SELFTEST FAIL: expected 1 dim-truth finding, got {truth}")
         ok = False
+    # envelope dim 10 mm under the part, in line with its ends -> silent;
+    # the same dim 20 mm under it floats -> 1 anchor finding
+    s.dim(v.pt(0, 0, -10), v.pt(length, 0, -10), "below", 34, f"{length:.0f}")
+    s.dim(v.pt(0, 0, -20), v.pt(length, 0, -20), "below", 42, f"{length:.0f}")
+    anchors = s._lint_anchors()
+    if len(anchors) != 1 or "off any edge" not in anchors[0]:
+        print(f"SELFTEST FAIL: expected 1 anchor finding, got {anchors}")
+        ok = False
     # duplicate dim at the same offset -> label x label overlap
     s.dim(a, b, "below", 10, f"{length:.0f}")
     # a note dropped on the part outline -> part-edge finding
@@ -1129,9 +1220,17 @@ def lint_selftest() -> None:
     det = s2.detail(v2, hole, 11.0, "2:1", at=(200.0, 0.0))
     s2.dim(det.pt(hole[0] - hole_d / 2, mid, 0), det.pt(hole[0] + hole_d / 2, mid, 0),
            "above", 10, f"{hole_d:.0f}")
-    extra = s2._lint_dims()
+    # hole centre -> edge: the circle centre counts as drawn geometry
+    s2.dim(v2.pt(hole_x, mid, 0), v2.pt(hole_x, width, 0), "right", 10,
+           f"{width - mid:.0f}")
+    extra = s2._lint_dims() + s2._lint_anchors()
     if extra:
-        print(f"SELFTEST FAIL: detail dim false positive: {extra}")
+        print(f"SELFTEST FAIL: detail / centre dim false positive: {extra}")
+        ok = False
+    # the bench retro: a true-length dim beside the plate, on nothing at all
+    s2.dim(v2.pt(0, -40, 0), v2.pt(hole_d, -40, 0), "below", 10, f"{hole_d:.0f}")
+    if len(s2._lint_anchors()) != 1:
+        print(f"SELFTEST FAIL: floating top-view dim not caught: {s2._lint_anchors()}")
         ok = False
     print("lint-selftest OK" if ok else "lint-selftest FAILED")
     if not ok:

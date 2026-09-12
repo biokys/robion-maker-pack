@@ -130,7 +130,7 @@ traces, balloons) 0.1 near-black filled, title text filled near-black.
 
 ## Machine lint (runs at every write())
 
-Two passes print `WARNING <sheet>: ...` lines — treat any warning as a
+Three passes print `WARNING <sheet>: ...` lines — treat any warning as a
 gate failure, fix and re-render:
 
 - **Dim truth:** every checkable `dim()` label must equal the measured
@@ -140,12 +140,21 @@ gate failure, fix and re-render:
   reference dims, `~`/`≈` approximations, counts with `×`, angles with
   `°`; `Ø`/`⌀`/`R` prefixes are stripped and CHECKED. Dims inside a
   detail are divided by its k first.
+- **Anchors:** both ends of every `dim()` must sit on drawn geometry —
+  a visible or hidden edge, the centre of a circular edge (hole pitches)
+  or a centerline / center-mark stroke — within 0.5 paper mm
+  (`ANCHOR_TOL_PAPER`); an axis-aligned dim may also anchor IN LINE with
+  an edge end up to 15 paper mm away (`ANCHOR_GAP_PAPER` — an envelope
+  dim taken from the floor past a recessed plinth). Catches `view.pt()`
+  of a coordinate that is not on the part: the dim then hangs in the air
+  with a correct length, which the truth pass cannot see. Dimension to a
+  hole axis only where it shows as a circle or has a centerline.
 - **Collisions:** labels must stay clear — label×label overlap
   (> 0.5 mm² / 15 % of the smaller), foreign annotation strokes through a
   label (> 1 mm chord), visible part edges through a label (> 1 mm).
   Powered by the helpers' label metadata; balloons and section letters
   are plain sketches and are not covered — check those on the PNG.
-- `uv run drawings.py lint-selftest` verifies both passes on deliberately
+- `uv run drawings.py lint-selftest` verifies all three passes on deliberately
   broken annotations (CI runs it); zero warnings on the demo is the
   shipped baseline.
 - Frame centering: `fy0 = cy − (PAPER_H − 2·MARGIN + TB_H)/2 · P` — do

@@ -120,13 +120,19 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    render; user approves the hero shot.
 4. **BOM** — computed from the same parameters as the geometry (`make bom`), masses
    cross-checked against `Shape.volume × density`; include fasteners, adhesives,
-   finish materials named as the user's market sells them. Then `make cutlist`
+   finish materials named as the user's market sells them — in `out/hardware.md`
+   as Markdown tables with the columns `item | specification or purpose |
+   quantity` (any headings between them; the build sheet parses every table
+   by position). Then `make cutlist`
    — declare the stock in
    `cutlist.py` STOCK (sizes from the workshop profile) and get the cutting
    plan: purchasing table + cut diagrams (`make cutlist-png`, Read the PNG).
 5. **Assembly + finishing plan** — numbered localized steps; include the surface-finish
    schedule (sanding grits, oil/paint coats, cure times) and safety notes; order
-   steps so interior surfaces get finished while still accessible.
+   steps so interior surfaces get finished while still accessible. Written to
+   `out/plan.md` in `## ` sections, the finish schedule in a section of its own
+   (the build sheet matches its heading with `FINISHING_HEADING`); the build
+   sheet renders that file and never writes it.
 6. **Analysis** — ALWAYS produce analytic estimates first (governing-member stress,
    deflection, first natural frequency, safety factor); frames of slender
    members then get the beam-element model (`make frame-fea`, numpy, no
@@ -137,7 +143,9 @@ fallback) and `make doctor`. Canonical outputs: `out/parts/*.{step,stl}`,
    CAD assembly for fit-check: [pcb.md](pcb.md).
 8. **Build sheet** — assemble the localized build sheet from
    `templates/common/buildsheet.html` per [../core/buildsheet.md](../core/buildsheet.md)
-   (`make buildsheet`); mirror the content in the project README.md; then
+   (`make buildsheet` — it reads `out/plan.md`, `out/hardware.md`,
+   `out/*_assumptions.md`, `design.json` and the `covers/` sub-project when
+   there is one); mirror the content in the project README.md; then
    `gate buildsheet ask.json` (kind `approve`, `show: [{type: file, path:
    out/build_sheet.html}]`) and `open_file` it. The template's `@media print` block makes the same
    `out/build_sheet.html` printable — `make pdf` → one complete PDF (A4 build

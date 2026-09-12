@@ -256,16 +256,24 @@ thread never fills up with render logs and drawing lint:
    the product name and the user's language; `design.json` (read it, `python3
    design_record.py show` too) and `model.py` as the source of truth; the section of the
    stack recipe for that stage pasted in (not the file name); the stage's exclusive
-   output — `out/drawings/` · `out/bom.md` + `out/cutlist.*` · `out/plan.md` (the numbered
-   steps and the finishing schedule, the build sheet copies them) · `out/fea/` — and
+   output — `out/drawings/` · `out/bom.md` + `out/hardware.md` + `out/cutlist.*` ·
+   `out/plan.md` (the numbered steps and the finishing schedule; the build sheet renders
+   that file, it never writes it) · `out/fea/` — and
    nothing outside it; leaf targets only, `make <target> LEAF=1` (`drawings-png`,
    `drawings-pdf`, `bom`, `cutlist`, `cutlist-png`, `frame-fea`, `fea`; never `parts`,
    never `viz`, never `uv sync`); §6 verification (Read every PNG); the closing command
    `python3 design_record.py stage <id> done --no-commit --artifact out/…` (or `skipped
    --note …`); **never** `git`, never `design_record.py` on another stage, never a
-   question — an unknown fact becomes a line in `out/<stage>_assumptions.md`. The
-   subagent returns at most ten lines: files written, the numbers the build sheet needs
-   (mass, governing stress and safety factor, sheet count), its assumptions.
+   question — an unknown fact becomes a line in `out/<stage>_assumptions.md`. Two more
+   lines every brief carries: **never stop to "wait for a notification"** — a long
+   solver or render is polled with `sleep` in a loop and killed after a stated budget;
+   and **every decision two stages share** (hinge screws, how the cushion attaches,
+   which parts the CNC cuts) is spelled out identically in all the briefs, because the
+   agents cannot see each other and the main thread otherwise reconciles three files
+   afterwards. The subagent returns at most ten lines: files written, the numbers the
+   build sheet needs (mass, governing stress and safety factor, sheet count), its
+   assumptions. Estimate the production half honestly: eight drawing sheets plus CAM
+   DXFs took ~60 min, solid FEA of one plate ~30 min (measured on a bench project).
 3. Back in the main thread: `python3 design_record.py check --strict`, one PNG per stage
    Read yourself, the assumptions folded into the build sheet's section, then one commit:
    `python3 design_record.py commit -m "production: drawings, bom, plan, analysis"`. A

@@ -78,6 +78,12 @@
   .wordmark { letter-spacing:.12em; font-weight:600; color:var(--bright); text-decoration:none; }
   .wordmark span { color:var(--muted); }
   p.lede { max-width:65ch; margin:0 0 1.25rem; }
+  section h3 { font-size:.95rem; font-weight:600; color:var(--bright); margin:1.6rem 0 .5rem; }
+  section h4, section h5 { font-size:.85rem; font-weight:600; color:var(--ink); margin:1rem 0 .3rem; }
+  .plan p, .assumptions p { margin:.4rem 0; }
+  .plan ul, .assumptions ul { margin:.3rem 0 .6rem; padding-left:1.4rem; }
+  .plan ol.steps { margin-bottom:.75rem; }
+  td.qty { font-variant-numeric:tabular-nums; min-width:8ch; }
   /* optional slots collapse until filled (EXTRA_FIGURES, FASTENERS_TABLE) */
   .figure-grid:not(:has(figure)) { display:none; }
   .table-wrap:not(:has(td)) { display:none; }
@@ -132,6 +138,8 @@
     <p class="lede">All dimensions in millimetres. The parametric model is the source of truth.</p>
     <div class="figure-grid screen-only"><!-- {{DRAWING_FIGURES}} --></div>
     <p class="print-only">{{PRINT_NOTE}}</p>
+    <!-- optional: notes, tables (CNC data, pattern info) — outside the grid -->
+    <div class="plan"><!-- {{DRAWINGS_EXTRA}} --></div>
   </section>
 
   <section><h2>Bill of materials</h2>
@@ -158,11 +166,11 @@
   </section>
 
   <section><h2>{{SECTION_ASSEMBLY}}</h2>
-    <ol class="steps"><!-- {{ASSEMBLY_STEPS}} --></ol>
+    <div class="plan"><!-- {{ASSEMBLY_STEPS}} --></div>
   </section>
 
   <section><h2>{{SECTION_FINISHING}}</h2>
-    <ol class="steps"><!-- {{FINISHING_STEPS}} --></ol>
+    <div class="plan"><!-- {{FINISHING_STEPS}} --></div>
   </section>
 
   <section><h2>{{SECTION_ANALYSIS}}</h2>
@@ -171,7 +179,7 @@
   </section>
 
   <section class="assumptions"><h2>Assumptions &amp; uncertainties</h2>
-    <ul><!-- {{ASSUMPTION_ITEMS}} — every assumption + parameter name that changes it --></ul>
+    <div><!-- {{ASSUMPTION_ITEMS}} — every assumption + parameter name that changes it --></div>
   </section>
 
   <footer>
